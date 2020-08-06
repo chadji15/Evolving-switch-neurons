@@ -162,8 +162,25 @@ class TMazeEnv(MiniGridEnv):
                 atMazeEnd = True
         #observation format = [is agent at home, is agent at turning point, is agent at maze end]
         obs = (float(atHome),float(atTurning),float(atMazeEnd))
-        print(obs)
+        #Comment out for debugging purposes
+        #print(obs)
         return obs, reward, done, {}
+
+    def reset(self):
+        super().reset()
+        atHome = list(self.agent_pos) == list(self.agent_start_pos)
+        atTurning = False
+        for turningPoint in self.TURNING_POINTS:
+            if list(turningPoint) == list(self.agent_pos):
+                atTurning = True
+        atMazeEnd = False
+        for maze_end in self.MAZE_ENDS:
+            if list(maze_end) == list(self.agent_pos):
+                atMazeEnd = True
+        # observation format = [is agent at home, is agent at turning point, is agent at maze end]
+        obs = (float(atHome), float(atTurning), float(atMazeEnd))
+        #print(obs)
+        return obs
 
     def _reward(self):
         return self.reward
