@@ -29,26 +29,25 @@ class TMazeEnv(MiniGridEnv):
         right = 1
         forward = 2
 
-    def __init__(self, highRewardEnd=1):
-        size = 7
-        self.actions = TMazeEnv.Actions
-        self.LEFT_END = (1, size - 2)
-        self.RIGHT_END = (size - 2, size - 2)
-        self.middle = size // 2
-        self.TURNING_POINTS = [(self.middle, size - 2)]
-        self.agent_start_pos = (self.middle,1)
+    def __init__(self, high_reward_end=0, size = 7, max_steps=17):
+        self.agent_start_pos = (size // 2, 1)
         self.agent_start_dir = 1
-        self.highRewardEnd = highRewardEnd
+        self.high_reward_end = high_reward_end
+        self.reward_range = (-1, 1)
+        self.actions = TMazeEnv.Actions
         super().__init__(
             grid_size= size,
-            max_steps = 17,
+            max_steps = max_steps,
             agent_view_size = 3
         )
 
-        self.reward_range = (-1,1)
-
 
     def _gen_grid(self, width, height):
+        self.LEFT_END = (1,self.height - 2)
+        self.RIGHT_END = (self.height - 2, self.height - 2)
+        self.MAZE_ENDS = [self.LEFT_END, self.RIGHT_END]
+        self.middle = self.width // 2
+        self.TURNING_POINTS = [(self.middle, self.width - 2)]
         self.reward = 0
         self.grid = Grid(width, height)
         for i in range(width):
@@ -75,23 +74,16 @@ class TMazeEnv(MiniGridEnv):
         else:
             self.place_agent()
 
-        self.put_obj(MazeEnd('high'),self.LEFT_END[0], self.LEFT_END[1])
-        self.put_obj(MazeEnd('low'),self.RIGHT_END[0], self.RIGHT_END[1])
-        if self.highRewardEnd == 2:
-            self.put_obj(MazeEnd('low'),self.LEFT_END[0], self.LEFT_END[1])
-            self.put_obj(MazeEnd('high'),self.RIGHT_END[0], self.RIGHT_END[1])
-
+        self.set_reward_pos(self.high_reward_end)
         self.put_obj(Goal(),self.agent_start_pos[0], self.agent_start_pos[1])
 
-    def switch_reward_pos(self):
-        if self.highRewardEnd == 1:
-            self.highRewardEnd = 2
-            self.put_obj(MazeEnd('low'),self.LEFT_END[0], self.LEFT_END[1])
-            self.put_obj(MazeEnd('high'),self.RIGHT_END[0], self.RIGHT_END[1])
-        else:
-            self.highRewardEnd = 1
-            self.put_obj(MazeEnd('high'), self.LEFT_END[0], self.LEFT_END[1])
-            self.put_obj(MazeEnd('low'), self.RIGHT_END[0], self.RIGHT_END[1])
+    def set_reward_pos(self, high_reward_end):
+        self.high_reward_end = high_reward_end
+        for i in range(len(self.MAZE_ENDS)):
+            if i == high_reward_end:
+                self.put_obj(MazeEnd('high'),self.MAZE_ENDS[i][0], self.MAZE_ENDS[i][1])
+            else:
+                self.put_obj(MazeEnd('low'), self.MAZE_ENDS[i][0], self.MAZE_ENDS[i][1])
 
 
     def step(self, action):
@@ -146,8 +138,10 @@ class TMazeEnv(MiniGridEnv):
         for turningPoint in self.TURNING_POINTS:
             if list(turningPoint) == list(self.agent_pos):
                 atTurning = True
-        atMazeEnd = list(self.agent_pos) == list(self.LEFT_END) or list(self.agent_pos) == list(self.RIGHT_END)
-
+        atMazeEnd = False
+        for maze_end in self.MAZE_ENDS:
+            if list(maze_end) == list(self.agent_pos):
+                atMazeEnd = True
         #observation format = [is agent at home, is agent at turning point, is agent at maze end]
         obs = (float(atHome),float(atTurning),float(atMazeEnd))
         print(obs)
@@ -157,13 +151,71 @@ class TMazeEnv(MiniGridEnv):
         return self.reward
 
 
+class DoubleTMazeEnv(TMazeEnv):
+
+    def __init__(self, high_reward_end = 0):
+        super().__init__(high_reward_end=high_reward_end,size=9,max_steps=24)
+
+    def _gen_grid(self, width, height):
+        if self.agent_start_pos is not None:
+            self.agent_pos = self.agent_start_pos
+            self.agent_dir = self.agent_start_dir
+        else:
+            self.place_agent()
+
+        self.mission = "Find the highest reward"
+        self.END1 = (1, self.height - 2)
+        self.END2 = (1, 1)
+        self.END3 = (self.width - 2, 1)
+        self.END4 = (self.width - 2, self.height - 2)
+        self.MAZE_ENDS = [self.END1, self.END2, self.END3, self.END4]
+        self.middle = self.width // 2
+        self.TURN1 = (self.middle, self.middle)
+        self.TURN2 = (1, self.middle)
+        self.TURN3 = (self.width-2, self.middle)
+        self.TURNING_POINTS = [self.TURN1, self.TURN2, self.TURN3]
+        self.reward = 0
+        self.grid = Grid(width, height)
+        for i in range(width):
+            for j in range(height):
+                self.put_obj(Lava(), i, j)
+
+        x, y = self.agent_start_pos[0], self.agent_start_pos[1]
+        self.put_obj(Goal(), x, y)
+        while (y < self.TURN1[1]):
+            y += 1
+            self.grid.set(x, y, None)
+
+        i = 0
+        while x + i < self.TURN3[0]:
+            i += 1
+            self.grid.set(x+i, y, None)
+            self.grid.set(x-i,y,None)
+
+        j = 0
+        while y+j < self.END4[1]:
+            j+=1
+            self.grid.set(x + i, y+j, None)
+            self.grid.set(x - i, y+j, None)
+            self.grid.set(x + i, y-j, None)
+            self.grid.set(x - i, y-j, None)
+
+        self.set_reward_pos(self.high_reward_end)
+        self.put_obj(Goal(),self.agent_start_pos[0], self.agent_start_pos[1])
+
 if __name__ == "__main__":
     #Matplotlib crashes on render for now but it is not going to be a problem
-    tmaze = TMazeEnv()
+    tmaze = DoubleTMazeEnv()
+    tmaze.set_reward_pos(1)
     tmaze.render()
     x = input("Press enter when finished")
 
 register(
         id='MiniGrid-TMaze-v0',
         entry_point='t_maze:TMazeEnv'
+)
+
+register(
+        id='MiniGrid-DoubleTMaze-v0',
+        entry_point='t_maze:DoubleTMazeEnv'
 )
