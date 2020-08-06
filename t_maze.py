@@ -6,6 +6,7 @@ HIGH = 1
 CRASH_REWARD = -0.4
 FAIL_HOME = -0.3
 
+#Helper class for keeping track of reward positions
 class MazeEnd(Ball):
     reward = LOW
     def __init__(self, reward='low'):
@@ -23,6 +24,7 @@ class MazeEnd(Ball):
 
 class TMazeEnv(MiniGridEnv):
 
+    #Actions that the agent is permited to make
     class Actions(IntEnum):
         # Turn left, turn right, move forward
         left = 0
@@ -32,6 +34,7 @@ class TMazeEnv(MiniGridEnv):
     def __init__(self, high_reward_end=0, size = 7, max_steps=17):
         self.agent_start_pos = (size // 2, 1)
         self.agent_start_dir = 1
+        #Which maze end has the high reward. The rest have the low reward
         self.high_reward_end = high_reward_end
         self.reward_range = (-1, 1)
         self.actions = TMazeEnv.Actions
@@ -43,13 +46,22 @@ class TMazeEnv(MiniGridEnv):
 
 
     def _gen_grid(self, width, height):
+        #Setting the coordinates for each maze end
         self.LEFT_END = (1,self.height - 2)
         self.RIGHT_END = (self.height - 2, self.height - 2)
         self.MAZE_ENDS = [self.LEFT_END, self.RIGHT_END]
         self.middle = self.width // 2
+        #Setting the coordinates for the turning points
         self.TURNING_POINTS = [(self.middle, self.width - 2)]
         self.reward = 0
         self.grid = Grid(width, height)
+
+        #Here we are creating the landscape which looks like this
+        #       X
+        #       X
+        #       X
+        # X X X X X X X
+        #
         for i in range(width):
             for j in range(height):
                 self.put_obj(Lava(),i,j)
@@ -68,13 +80,16 @@ class TMazeEnv(MiniGridEnv):
         self.grid.vert_wall(x, y, h,Lava)
         self.grid.vert_wall(x + w - 1, y, h,Lava)
 
+        #Place the agent
         if self.agent_start_pos is not None:
             self.agent_pos = self.agent_start_pos
             self.agent_dir = self.agent_start_dir
         else:
             self.place_agent()
 
+        #Set the maze ends with the correct rewards
         self.set_reward_pos(self.high_reward_end)
+        #Set the home square
         self.put_obj(Goal(),self.agent_start_pos[0], self.agent_start_pos[1])
 
     def set_reward_pos(self, high_reward_end):
@@ -87,8 +102,8 @@ class TMazeEnv(MiniGridEnv):
 
 
     def step(self, action):
+        #Some of the following code is copied from MiniGrid's step function
         self.step_count += 1
-
         reward = 0
         done = False
 
@@ -115,9 +130,11 @@ class TMazeEnv(MiniGridEnv):
             if fwd_cell != None and fwd_cell.type == 'goal':
                 done = True
                 reward = self._reward()
+            #If the agent crashes the episode ends and a negative reward is given
             if fwd_cell != None and fwd_cell.type == 'lava':
                 done = True
                 reward = CRASH_REWARD
+            # Because we are simulating the homing T-maze task, the reward is delayed
             if fwd_cell != None and fwd_cell.type == 'ball':
                 self.reward = fwd_cell.reward
                 self.grid.set(self.agent_pos[0],self.agent_pos[1],None)
@@ -129,6 +146,7 @@ class TMazeEnv(MiniGridEnv):
         else:
             assert False, "unknown action"
 
+        #Checking for number of step taken to punish the agent when it fails to return home
         if self.step_count >= self.max_steps:
             done = True
             reward = FAIL_HOME
@@ -154,7 +172,7 @@ class TMazeEnv(MiniGridEnv):
 class DoubleTMazeEnv(TMazeEnv):
 
     def __init__(self, high_reward_end = 0):
-        super().__init__(high_reward_end=high_reward_end,size=9,max_steps=24)
+        super().__init__(high_reward_end=high_reward_end,size=9,max_steps=25)
 
     def _gen_grid(self, width, height):
         if self.agent_start_pos is not None:
@@ -210,11 +228,12 @@ if __name__ == "__main__":
     tmaze.render()
     x = input("Press enter when finished")
 
+#The following code is executed when this file is imported and is necessary for this environment to work
+#with manual_control.py
 register(
         id='MiniGrid-TMaze-v0',
         entry_point='t_maze:TMazeEnv'
 )
-
 register(
         id='MiniGrid-DoubleTMaze-v0',
         entry_point='t_maze:DoubleTMazeEnv'
