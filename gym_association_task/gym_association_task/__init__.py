@@ -1,0 +1,16 @@
+from gym.envs.registration import register
+
+register(
+    id='OneToOne2x2-v0',
+    entry_point='gym_association_task.envs:OneToOne2x2',
+)
+
+register(
+    id='OneToMany3x3-v0',
+    entry_point='gym_association_task.envs:OneToMany3x3',
+)
+
+register(
+    id='ManyToMany2x2Rand-v0',
+    entry_point='gym_association_task.envs:ManyToMany2x2Rand',
+)

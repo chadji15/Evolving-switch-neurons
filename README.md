@@ -6,6 +6,9 @@ association tasks and T-maze tasks and comparing their results with those of neu
 
 Manual control:
 
-T-maze: python manual_control.py --env MiniGrid-TMaze-v0
+* T-maze: python manual_control.py --env MiniGrid-TMaze-v0
 
-Double T-maze: python manual_control.py --env MiniGrid-DoubleTMaze-v0
+* Double T-maze: python manual_control.py --env MiniGrid-DoubleTMaze-v0
+
+* Association Task: cd gym_association_task/gym_association_task/envs\
+python association_task_env.py

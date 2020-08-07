@@ -3,6 +3,7 @@ cycler==0.10.0
 future==0.18.2
 graphviz==0.14.1
 gym==0.17.2
+-e git+https://github.com/chadji15/Evolving-switch-neurons.git@e591ccd7bc063487c0ea89c0fd495a514356ab47#egg=gym_association_task&subdirectory=gym_association_task
 gym-minigrid==1.0.1
 kiwisolver==1.2.0
 matplotlib==3.3.0
