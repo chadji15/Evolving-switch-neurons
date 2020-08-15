@@ -1,5 +1,5 @@
 import neat
-import t_maze
+import gym_association_task
 import gym
 import os
 
@@ -10,32 +10,29 @@ def eval_genomes(genomes, config):
 
 def eval_network(network):
 
-    env = gym.make('MiniGrid-TMaze-v0').unwrapped
+    env = gym.make('OneToOne2x2-v0')
     sum = 0
     num_episodes = 2000
+    observation = env.reset()
     for i_episode in range(num_episodes):
-        if i_episode % 500 == 0:
-            reward_pos = num_episodes // 500 % 2
-            observation = env.reset(reward_pos)
-        else:
-            observation = env.reset()
-        done = False
-        while not done:
-            output = network.activate(observation)[0]
-            action = float_to_action(output)
-            observation, reward, done, info = env.step(action)
-
+        output = network.activate(observation)
+        action = convert_to_action(output)
+        if action == [1,1]:
+            print(output)
+        observation, reward, done, info = env.step(action)
         sum += reward
     env.close()
-    return float(sum)/num_episodes
+    return sum + num_episodes
 
-def float_to_action(output):
-
-    if output < -0.33:
-        return t_maze.TMazeEnv.Actions.left
-    if output > 0.33:
-        return t_maze.TMazeEnv.Actions.right
-    return t_maze.TMazeEnv.Actions.forward
+def convert_to_action(output):
+    max_idx = 0
+    for i in range(len(output)):
+        if output[i] == max(output):
+            max_idx = i
+            break
+    action = [0 for o in output]
+    action[max_idx] = 1
+    return action
 
 def run(config_file):
     # Load configuration.
@@ -61,7 +58,7 @@ def run(config_file):
     # Show output of the most fit genome against training data.
     print('\nAverage reward per episode:')
     winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-    print(eval_network())
+    print(eval_network(winner_net))
 
     #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
     #p.run(eval_genomes, 10)

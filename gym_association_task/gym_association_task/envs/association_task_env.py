@@ -75,14 +75,14 @@ class AssociationTaskEnv(gym.Env):
             if output == action:
                 isValid = True
         if not isValid:
-            raise ValueError('Invalid action taken')
+            raise ValueError('Invalid action taken {}'.format(str(action)))
         self.reward = -1
 
         if self.associations[self.observation] == action:
             self.reward = 0
 
         self.step_count += 1
-        if 0 < self.rand_inter <= self.step_count:
+        if self.rand_inter > 0 and self.step_count % self.rand_inter == 0:
             self.randomize_associations()
 
         self.observation = list(self.associations.keys())[self.step_count % len(self.associations)]
@@ -90,10 +90,12 @@ class AssociationTaskEnv(gym.Env):
 
         return self.observation, self.reward, done, {}
 
-    def reset(self):
+    def reset(self, rand_iter = -1):
         self.step_count = 0
         self.randomize_associations()
         self.observation = list(self.associations.keys())[0]
+        if rand_iter > 0:
+            self.rand_inter  = rand_iter
         return self.observation
 
     def render(self, mode='human'):
