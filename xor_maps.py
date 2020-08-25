@@ -15,7 +15,7 @@ xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
-        genome.fitness = 4.0
+        genome.fitness = 3.0
         net = maps.MapNetwork.create(genome,config,1)
         for xi, xo in zip(xor_inputs, xor_outputs):
             output = net.activate(xi)
@@ -38,7 +38,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 300)
+    winner = p.run(eval_genomes, 100)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))

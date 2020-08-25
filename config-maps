@@ -10,12 +10,12 @@ reset_on_extinction   = False
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0.3
-activation_options      = sigmoid, identity, clamped
+activation_options      = sigmoid identity clamped
 
 # node aggregation options
 aggregation_default     = sum
 aggregation_mutate_rate = 0.3
-aggregation_options     = sum, product
+aggregation_options     = sum product
 
 #Isolated neuron vs map
 is_isolated_default     = False
@@ -78,7 +78,7 @@ sigma_mutate_power       = 0.4
 sigma_mutate_rate        = 0.1
 sigma_replace_rate       = 0.1
 
-feed_forward            = False
+feed_forward            = True
 initial_connection      = full
 
 # node add/remove rates

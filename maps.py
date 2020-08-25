@@ -36,11 +36,15 @@ class MapNetwork():
             if o not in required and i not in required:
                 continue
 
-            if i < 0:
-                in_map = [i] + [i for _ in range(1,map_size)]
+
+            if i < 0 or nodes[i].is_isolated:
+                in_map = [i for _ in range(map_size)]
             else:
                 in_map = [i] + children[i]
-            out_map = [o] + children[o]
+            if nodes[o].is_isolated:
+                out_map = [o for _ in range(map_size)]
+            else:
+                out_map = [o] + children[o]
             if cg.c < 0.5:
                 #1 to 1
                 weight = 5 * cg.gamma
@@ -50,11 +54,13 @@ class MapNetwork():
                 #Have to revisit this, what about the Gaussian
                 #1 to all
                 if cg.k <= 0.5:
+                    #Uniform weights
                     weights = []
                     for _ in range(map_size**2):
                         weights.append(5.0 * cg.gamma)
                 else:
-                    weights = np.random.normal(cg.gamma,abs(cg.sigma),(1,map_size**2))
+                    #Weights from gaussian
+                    weights = np.random.normal(cg.gamma,abs(cg.sigma),map_size**2)
                 for x in range(map_size):
                     for y in range(map_size):
                         nodes[out_map[x]].links[in_map[y]] = weights[x*map_size + y]
@@ -68,31 +74,37 @@ class MapNetwork():
                 for child in children[key]:
                     s.append(child)
 
-        MapNetwork.organiseNodes(input_keys, nodes)
+        nodes = MapNetwork.organiseNodes(input_keys, nodes)
         return MapNetwork(nodes,input_keys, output_keys)
 
     def activate(self, inputs):
         if len(self.inputs) != len(inputs):
             raise RuntimeError("Expected {0:n} inputs, got {1:n}".format(len(self.inputs), len(inputs)))
 
+        activity = {}
         for i, v in zip(self.inputs, inputs):
-            self.nodes[i].activity = v
+            activity[i] = v
 
-        for node in self.nodes:
-            node.activate(self.nodes)
+        for key in self.nodes:
+            node = self.nodes[key]
+            activity [key] = node.activity
+            agg = node.aggregation_function([activity[i] * node.links[i] for i in node.links])
+            activity[key] = node.activation_function(agg)
+            node.activity = activity[key]
 
         return [self.nodes[idx].activity for idx in self.outputs]
 
     @staticmethod
     def organiseNodes(inputs,nodes):
         new_nodes = OrderedDict()
-        visited = set(inputs)
         for i in inputs:
             if i < 0:
                 continue
             new_nodes[i] = nodes[i]
             nodes.pop(i)
+        count = 0
         while len(nodes) > 0:
+            count += 1
             added = set()
             for node in itervalues(nodes):
                 if all([key in new_nodes or key == node.key or key < 0 for key in node.links.keys()]):
@@ -109,7 +121,8 @@ class MapConnectionGene(BaseGene):
                         FloatAttribute('k'),
                         FloatAttribute('gamma'),
                         FloatAttribute('sigma'),
-                        BoolAttribute('enabled')]
+                        BoolAttribute('enabled'),
+                        FloatAttribute('weight')] #weight is unused, here so that neat can work
 
     def __init__(self, key):
         assert isinstance(key, tuple), "DefaultConnectionGene key must be a tuple, not {!r}".format(key)
@@ -145,11 +158,6 @@ class MapNode():
         self.is_isolated = is_isolated
         self.links = links
         self.activity = 0
-
-    def activate(self,nodes):
-        agg = self.aggregation_function([nodes[i].activity * self.links[i] for i in self.links.keys()])
-        self.activity = self.activation_function(agg)
-        return self.activity
 
 class MapGenome(DefaultGenome):
     @classmethod
