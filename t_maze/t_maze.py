@@ -5,7 +5,7 @@ LOW = 0.2
 HIGH = 1
 CRASH_REWARD = -0.4
 FAIL_HOME = -0.3
-
+STEP_PENALTY = 0.005
 #Helper class for keeping track of reward positions
 class MazeEnd(Ball):
     reward = LOW
@@ -130,6 +130,8 @@ class TMazeEnv(MiniGridEnv):
             if fwd_cell != None and fwd_cell.type == 'goal':
                 done = True
                 reward = self._reward()
+                if reward == 0:
+                    reward = self.step_count * STEP_PENALTY
             #If the agent crashes the episode ends and a negative reward is given
             if fwd_cell != None and fwd_cell.type == 'lava':
                 done = True

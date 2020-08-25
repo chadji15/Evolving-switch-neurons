@@ -134,10 +134,10 @@ class ManyToMany2x2Rand(AssociationTaskEnv):
         super().__init__(2,2,'many-to-many',500)
 
 if __name__ == '__main__':
-    env = AssociationTaskEnv(input_num=2, output_num=2)
+    env = OneToMany3x3()
     while True:
         env.render(mode='human')
-        x = input("Select action with binary string e.g. 01 or quit: ")
+        x = input("Select action with binary string e.g. 011 or quit: ")
         if x == 'quit' or x == 'Quit' or x =='q':
             exit(0)
         action = tuple([int(c) for c in x])
