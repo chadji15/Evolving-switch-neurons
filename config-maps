@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 3.9
+fitness_threshold     = 3.95
 pop_size              = 150
 reset_on_extinction   = False
 
@@ -60,15 +60,6 @@ k_mutate_power       = 0.3
 k_mutate_rate        = 0.1
 k_replace_rate       = 0.1
 
-#Mean for normal distribution
-gamma_init_mean          = 0
-gamma_init_stdev         = 10
-gamma_max_value          = 30
-gamma_min_value          = -30
-gamma_mutate_power       = 0.5
-gamma_mutate_rate        = 0.7
-gamma_replace_rate       = 0.1
-
 #Stdev for normal distribution
 sigma_init_mean          = 1
 sigma_init_stdev         = 5
@@ -78,7 +69,7 @@ sigma_mutate_power       = 0.4
 sigma_mutate_rate        = 0.1
 sigma_replace_rate       = 0.1
 
-feed_forward            = True
+feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
@@ -90,7 +81,7 @@ num_hidden              = 0
 num_inputs              = 2
 num_outputs             = 1
 
-# connection weight options
+# connection weight options / used as mean for normal distribution
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
 weight_max_value        = 30

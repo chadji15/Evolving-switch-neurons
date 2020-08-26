@@ -15,7 +15,7 @@ xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
-        genome.fitness = 3.0
+        genome.fitness = 4
         net = maps.MapNetwork.create(genome,config,1)
         for xi, xo in zip(xor_inputs, xor_outputs):
             output = net.activate(xi)

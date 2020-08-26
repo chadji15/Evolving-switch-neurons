@@ -1,135 +1,177 @@
-from collections import OrderedDict
+
 from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import BaseGene, DefaultNodeGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome
-from neat.graphs import required_for_output, feed_forward_layers
-from neat.six_util import itervalues, iterkeys
+from neat.graphs import required_for_output
+from neat.six_util import itervalues, iteritems
 import numpy as np
+
+#Somehow a genotype can map to different phenotypes?
 
 class MapNetwork():
 
-    def __init__(self, nodes, inputs, outputs):
-        self.nodes = nodes
-        self.inputs = inputs
-        self.outputs = outputs
+    #A lot of this code is taken directly from neat.nn.RecurrentNetwork and modified because it is very close to
+    #the desired outcome
+    def __init__(self,inputs, outputs, node_evals):
+        self.input_nodes = inputs
+        self.output_nodes = outputs
+        self.node_evals = node_evals
+        self.values = [{}, {}]
+        for v in self.values:
+            for k in inputs + outputs:
+                v[k] = 0.0
+
+            for node, ignored_activation, ignored_aggregation, ignored_bias, ignored_is_isolated, links in self.node_evals:
+                v[node] = 0.0
+                for i, w in links:
+                    v[i] = 0.0
+        self.active = 0
+
+    def reset(self):
+        self.values = [dict((k, 0.0) for k in v) for v in self.values]
+        self.active = 0
 
     @staticmethod
     def create(genome, config, map_size):
+        """ Receives a genome and returns its phenotype (a MapNetwork). """
         genome_config = config.genome_config
         required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
-        nodes = OrderedDict()
+
+        # Gather inputs and expressed connections.
+        node_inputs = {}
         children = {}
-        for n in genome.nodes.keys():
-            ng = genome.nodes[n]
-            children[n] = []
-            activation_function = genome_config.activation_defs.get(ng.activation)
-            aggregation_function = genome_config.aggregation_function_defs.get(ng.aggregation)
-            if not ng.is_isolated:
-                for i in range(1,map_size):
-                    new_idx = max(list(required)) + 1
-                    children[n].append(new_idx)
-                    required = required.union(set(new_idx))
-            for idx in children[n] + [n]:
-                nodes[idx] = MapNode(idx, activation_function, aggregation_function, ng.bias,ng.is_isolated, {})
+        node_keys = list(genome.nodes.keys())[:] #+ list(genome_config.input_keys[:])
+        # for key in genome_config.input_keys + genome_config.output_keys:
+        #     children[key] = []
+        #     for i in range(1,map_size):
+        #         if key < 0:
+        #             new_idx = min(node_keys) - 1
+        #         else:
+        #             new_idx = max(node_keys) + 1
+        #         children[key].append(new_idx)
+        #         node_keys.append(new_idx)
+
         for cg in itervalues(genome.connections):
+            if not cg.enabled:
+                continue
+
             i, o = cg.key
             if o not in required and i not in required:
                 continue
 
-
-            if i < 0 or nodes[i].is_isolated:
-                in_map = [i for _ in range(map_size)]
-            else:
-                in_map = [i] + children[i]
-            if nodes[o].is_isolated:
-                out_map = [o for _ in range(map_size)]
-            else:
-                out_map = [o] + children[o]
-            if cg.c < 0.5:
-                #1 to 1
-                weight = 5 * cg.gamma
-                for x in range(map_size):
-                    nodes[out_map[x]].links[in_map[x]] = weight
-            else:
-                #Have to revisit this, what about the Gaussian
-                #1 to all
-                if cg.k <= 0.5:
-                    #Uniform weights
-                    weights = []
-                    for _ in range(map_size**2):
-                        weights.append(5.0 * cg.gamma)
-                else:
-                    #Weights from gaussian
-                    weights = np.random.normal(cg.gamma,abs(cg.sigma),map_size**2)
-                for x in range(map_size):
-                    for y in range(map_size):
-                        nodes[out_map[x]].links[in_map[y]] = weights[x*map_size + y]
-
-        genome_config = config.genome_config
-        input_keys, output_keys = genome_config.input_keys, genome_config.output_keys
-        for s in [input_keys, output_keys]:
-            for key in s[:]:
-                if key < 0:
+            for n in [i,o]:
+                if n in children.keys():
                     continue
-                for child in children[key]:
-                    s.append(child)
+                children[n] = []
+                if n in genome_config.input_keys or n in genome_config.output_keys:
+                    continue
+                if not genome.nodes[n].is_isolated:
+                    for _ in range(1,map_size):
+                        new_idx = max(node_keys) + 1
+                        children[n].append(new_idx)
+                        node_keys.append(new_idx)
 
-        nodes = MapNetwork.organiseNodes(input_keys, nodes)
-        return MapNetwork(nodes,input_keys, output_keys)
+            in_map = [i] + children[i]
+            out_map = [o] + children[o]
+            for n in out_map:
+                node_inputs[n] = []
+
+            if len(in_map) == map_size and len(out_map) == map_size:
+                #Map to map connectivity
+                if cg.c < 0.5:
+                    #1-to-1 mapping
+                    weight = 5*cg.weight
+                    for i in range(map_size):
+                        node_inputs[out_map[i]].append((in_map[i], weight))
+
+                else:
+                    #1-to-all
+                    if cg.k < 0.5:
+                        #Gaussian
+                        for o_n in out_map:
+                            for i_n in in_map:
+                                node_inputs[o_n].append((i_n,np.random.normal(cg.weight,cg.sigma)))
+                    else:
+                        #Uniform
+                        for o_n in out_map:
+                            for i_n in in_map:
+                                node_inputs[o_n].append((i_n, 5*cg.weight))
+
+            else:
+                #Map-to-isolated or isolated-to-isolated
+                if cg.k < 0.5:
+                    # Gaussian
+                    for o_n in out_map:
+                        for i_n in in_map:
+                            node_inputs[o_n].append((i_n, np.random.normal(cg.weight, cg.sigma)))
+                else:
+                    # Uniform
+                    for o_n in out_map:
+                        for i_n in in_map:
+                            node_inputs[o_n].append((i_n, 5 * cg.weight))
+
+        node_evals = []
+        for node_key, inputs in iteritems(node_inputs):
+            if node_key not in genome.nodes.keys():
+                continue
+            node = genome.nodes[node_key]
+            activation_function = genome_config.activation_defs.get(node.activation)
+            aggregation_function = genome_config.aggregation_function_defs.get(node.aggregation)
+            node_evals.append((node_key, activation_function, aggregation_function, node.bias, node.is_isolated, inputs))
+            for n in children[node_key]:
+                node_evals.append(
+                    (n, activation_function, aggregation_function, node.bias, node.is_isolated, node_inputs[n]))
+
+        input_keys = genome_config.input_keys
+        output_keys = genome_config.output_keys
+
+        # for key in genome_config.input_keys:
+        #     input_keys.append(key)
+        #     if key in children.keys():
+        #         for child in children[key]:
+        #             input_keys.append(child)
+        #
+        # for key in genome_config.output_keys:
+        #     output_keys.append(key)
+        #     if key in children.keys():
+        #         for child in children[key]:
+        #             output_keys.append(child)
+
+        return MapNetwork(input_keys, output_keys, node_evals)
 
     def activate(self, inputs):
-        if len(self.inputs) != len(inputs):
-            raise RuntimeError("Expected {0:n} inputs, got {1:n}".format(len(self.inputs), len(inputs)))
+        if len(self.input_nodes) != len(inputs):
+            raise RuntimeError("Expected {0:n} inputs, got {1:n}".format(len(self.input_nodes), len(inputs)))
 
-        activity = {}
-        for i, v in zip(self.inputs, inputs):
-            activity[i] = v
+        ivalues = self.values[self.active]
+        ovalues = self.values[1 - self.active]
+        self.active = 1 - self.active
 
-        for key in self.nodes:
-            node = self.nodes[key]
-            activity [key] = node.activity
-            agg = node.aggregation_function([activity[i] * node.links[i] for i in node.links])
-            activity[key] = node.activation_function(agg)
-            node.activity = activity[key]
+        for i, v in zip(self.input_nodes, inputs):
+            ivalues[i] = v
+            ovalues[i] = v
 
-        return [self.nodes[idx].activity for idx in self.outputs]
+        for node, activation, aggregation, bias, is_isolated, links in self.node_evals:
+            node_inputs = [ivalues[i] * w for i, w in links]
+            s = aggregation(node_inputs)
+            ovalues[node] = activation(bias +  s)
 
-    @staticmethod
-    def organiseNodes(inputs,nodes):
-        new_nodes = OrderedDict()
-        for i in inputs:
-            if i < 0:
-                continue
-            new_nodes[i] = nodes[i]
-            nodes.pop(i)
-        count = 0
-        while len(nodes) > 0:
-            count += 1
-            added = set()
-            for node in itervalues(nodes):
-                if all([key in new_nodes or key == node.key or key < 0 for key in node.links.keys()]):
-                    new_nodes[node.key] = node
-                    added.add(node.key)
-            for n in added:
-                nodes.pop(n)
-        nodes = new_nodes
-        return nodes
+        return [ovalues[i] for i in self.output_nodes]
 
 class MapConnectionGene(BaseGene):
 
     _gene_attributes = [FloatAttribute('c'),
                         FloatAttribute('k'),
-                        FloatAttribute('gamma'),
+                        FloatAttribute('weight'),#Weigth is used as the mean of the normal distribution for 1-to-all
                         FloatAttribute('sigma'),
-                        BoolAttribute('enabled'),
-                        FloatAttribute('weight')] #weight is unused, here so that neat can work
+                        BoolAttribute('enabled')]
 
     def __init__(self, key):
         assert isinstance(key, tuple), "DefaultConnectionGene key must be a tuple, not {!r}".format(key)
         BaseGene.__init__(self, key)
 
     def distance(self, other, config):
-        d = abs(self.c - other.c) + abs(self.k - other.k) + abs(self.gamma - other.gamma) + abs(self.sigma - other.sigma)
+        d = abs(self.c - other.c) + abs(self.k - other.k) + abs(self.sigma - other.sigma) + abs(self.weight - other.weight)
         return d * config.compatibility_weight_coefficient
 
 class MapNodeGene(DefaultNodeGene):
