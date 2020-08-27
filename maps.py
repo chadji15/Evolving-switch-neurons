@@ -90,7 +90,7 @@ class MapNetwork():
                         #Gaussian
                         for o_n in out_map:
                             for i_n in in_map:
-                                node_inputs[o_n].append((i_n,np.random.normal(cg.weight,cg.sigma)))
+                                node_inputs[o_n].append((i_n, np.random.normal(cg.weight,cg.sigma)))
                     else:
                         #Uniform
                         for o_n in out_map:

@@ -12,15 +12,23 @@ import maps
 xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
+TRIALS = 100
 
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
-        genome.fitness = 4
-        net = maps.MapNetwork.create(genome,config,1)
-        for xi, xo in zip(xor_inputs, xor_outputs):
-            output = net.activate(xi)
-            genome.fitness -= (output[0] - xo[0]) ** 2
-
+        sum = 0
+        for i in range(TRIALS):
+            fitness = 4
+            net = maps.MapNetwork.create(genome,config,50)
+            for xi, xo in zip(xor_inputs, xor_outputs):
+                output = net.activate(xi)
+                if output[0] < 0:
+                    output[0] = 0
+                elif output[0] > 1:
+                    output[0] =1
+                fitness -= abs(output[0] - xo[0])
+            sum += fitness
+        genome.fitness = sum/TRIALS
 
 def run(config_file):
     # Load configuration.
@@ -45,24 +53,27 @@ def run(config_file):
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = maps.MapNetwork.create(winner, config, 1)
+    winner_net = maps.MapNetwork.create(winner, config, 50)
     for xi, xo in zip(xor_inputs, xor_outputs):
         output = winner_net.activate(xi)
         print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
 
     node_names = {-1:'A', -2: 'B', 0:'A XOR B'}
-    visualize.draw_net(config, winner, True, node_names=node_names)
-    visualize.plot_stats(stats, ylog=False, view=True)
-    visualize.plot_species(stats, view=True)
+    # visualize.draw_net(config, winner, True, node_names=node_names)
+    # visualize.plot_stats(stats, ylog=False, view=True)
+    # visualize.plot_species(stats, view=True)
+    #
+    # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
+    # p.run(eval_genomes, 10)
 
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-    p.run(eval_genomes, 10)
-
-
-if __name__ == '__main__':
+def main():
     # Determine path to configuration file. This path manipulation is
     # here so that the script will run successfully regardless of the
     # current working directory.
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-maps')
     run(config_path)
+
+if __name__ == '__main__':
+    main()
+
