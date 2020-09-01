@@ -17,8 +17,8 @@ def eval_network(network):
     for i_episode in range(num_episodes):
         output = network.activate(observation)
         action = convert_to_action(output)
-        if action == [1,1]:
-            print(output)
+        #if action == [1,1]:
+        #    print(output)
         observation, reward, done, info = env.step(action)
         sum += reward
     env.close()

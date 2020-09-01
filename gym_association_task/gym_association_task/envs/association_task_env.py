@@ -39,6 +39,8 @@ class BinaryList(Space):
                 bin_space.append(BinaryList._bit_tuple(i, n))
         return bin_space
 
+#If the agent guessed correctly a reward of 0 is given, else -1
+
 class AssociationTaskEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
@@ -69,6 +71,7 @@ class AssociationTaskEnv(gym.Env):
 
     def step(self, action):
 
+        #print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
         action = tuple(action)
         isValid = False
         for output in self.action_space._to_list():
@@ -124,6 +127,10 @@ class AssociationTaskEnv(gym.Env):
 class OneToOne2x2(AssociationTaskEnv):
     def __init__(self):
         super().__init__(2,2)
+
+class OneToOne3x3(AssociationTaskEnv):
+    def __init__(self):
+        super().__init__(3,3)
 
 class OneToMany3x3(AssociationTaskEnv):
     def __init__(self):

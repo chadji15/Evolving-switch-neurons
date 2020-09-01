@@ -6,6 +6,11 @@ register(
 )
 
 register(
+    id='OneToOne3x3-v0',
+    entry_point='gym_association_task.envs:OneToOne3x3',
+)
+
+register(
     id='OneToMany3x3-v0',
     entry_point='gym_association_task.envs:OneToMany3x3',
 )
