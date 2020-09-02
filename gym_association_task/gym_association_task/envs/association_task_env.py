@@ -71,7 +71,7 @@ class AssociationTaskEnv(gym.Env):
 
     def step(self, action):
 
-        #print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
+        print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
         action = tuple(action)
         isValid = False
         for output in self.action_space._to_list():
@@ -132,16 +132,16 @@ class OneToOne3x3(AssociationTaskEnv):
     def __init__(self):
         super().__init__(3,3)
 
-class OneToMany3x3(AssociationTaskEnv):
+class OneToMany3x2(AssociationTaskEnv):
     def __init__(self):
-        super().__init__(3,3,'one-to-many')
+        super().__init__(3,2,'one-to-many')
 
 class ManyToMany2x2Rand(AssociationTaskEnv):
     def __init__(self):
         super().__init__(2,2,'many-to-many',500)
 
 if __name__ == '__main__':
-    env = OneToMany3x3()
+    env = OneToMany3x2()
     while True:
         env.render(mode='human')
         x = input("Select action with binary string e.g. 011 or quit: ")

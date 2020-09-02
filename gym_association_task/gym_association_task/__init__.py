@@ -11,8 +11,8 @@ register(
 )
 
 register(
-    id='OneToMany3x3-v0',
-    entry_point='gym_association_task.envs:OneToMany3x3',
+    id='OneToMany3x2-v0',
+    entry_point='gym_association_task.envs:OneToMany3x2',
 )
 
 register(

@@ -1,6 +1,9 @@
 from math import floor
 
 
+def identity(activity):
+    return activity
+
 class Neuron():
 
     def __init__(self,key, standard_dict, modulatory_dict = None):
@@ -16,7 +19,7 @@ class SwitchNeuron(Neuron):
 
     def __init__(self,key, std_weights, mod_weights):
 
-        std_dict = {'activation_function': self.identity,
+        std_dict = {'activation_function': identity,
                     'integration_function': self.std_integration_function,
                     'activity': 0,
                     'output': 0,
@@ -24,7 +27,7 @@ class SwitchNeuron(Neuron):
 
         mod_activity = 1 / (2 * len(std_weights))
         mod_dict = {
-            'activation_function': self.identity,
+            'activation_function': identity,
             'integration_function': self.mod_integration_function,
             'activity': mod_activity,
             'output': mod_activity,
@@ -38,13 +41,40 @@ class SwitchNeuron(Neuron):
         idx = floor(len(self.standard['weights']) * self.modulatory['output'])
         return w_inputs[idx]
 
-    def identity(self, activity):
-        return activity
 
     def mod_integration_function(self, w_inputs):
         self.modulatory['activity'] += sum(w_inputs)
         self.modulatory['activity'] -= floor(self.modulatory['activity'])
         return self.modulatory['activity']
+
+class IntegratingNeuron(Neuron):
+
+    THETA = 1
+    BASELINE = 0
+
+    def __init__(self, key, weights):
+        params = {
+            'activation_function' : self.tri_step,
+            'integration_function' : self.perfect_integration,
+            'activity' : IntegratingNeuron.BASELINE,
+            'output' : 0,
+            'weights': weights
+        }
+
+        super().__init__(key,params)
+
+    def perfect_integration(self, w_inputs):
+        self.standard['activity'] += sum(w_inputs)
+        return self.standard['activity']
+
+    def tri_step(self, activity):
+        if activity >= IntegratingNeuron.THETA:
+            self.standard['activity'] = 0
+            return 1
+        elif activity < -IntegratingNeuron.THETA:
+            self.standard['activity'] = 0
+            return -1
+        return 0
 
 class SwitchNeuronNetwork():
 
@@ -86,3 +116,58 @@ class SwitchNeuronNetwork():
             node.standard['output'] = node.standard['activation_function'](node.standard['activity'])
 
         return [self.nodes_dict[key].standard['output'] for key in self.outputs]
+
+    #Check if a switch neuron needs to be converted to a module AND converts it if so
+    def make_switch_module(self, key):
+        s_node = self.nodes_dict[key]
+        assert isinstance(s_node, SwitchNeuron), \
+            "Argument passed in is {} instead of SwitchNeuron type".format(s_node.__class__.__name__)
+        out_mod = []
+        for node in self.nodes:
+            if node.has_modulatory:
+                found = False
+                for i, w in node.modulatory['weights']:
+                    if i == key:
+                        out_mod.append(i)
+                        found = True
+                        break
+                if found:
+                    break
+        if not out_mod:
+            return
+
+        modulating_key = max(list(self.nodes_dict.keys())) + 1
+        modulating_weights = s_node.modulatory['weights']
+        modulating_dict = {
+            'activation_function': identity,
+            'integration_function': sum,
+            'activity' : 0,
+            'output' : 0,
+            'weights': modulating_weights
+        }
+        modulating_neuron = Neuron(modulating_key,modulating_dict)
+        self.nodes_dict[modulating_key] = modulating_neuron
+
+        s_node.modulatory['weights'] = [(modulating_key, 1/len(s_node.standard['weights']))]
+
+        integrating_key = max(list(self.nodes_dict.keys())) + 1
+        integrating_weights = [(modulating_key, 1/len(s_node.standard['weights']))]
+        integrating_neuron = IntegratingNeuron(integrating_key,integrating_weights)
+        self.nodes_dict[integrating_key] = integrating_neuron
+
+        idx = None
+        for i, node in enumerate(self.nodes):
+            if node.key == key:
+                idx = i
+                break
+
+        assert idx != None, "Switch Neuron passed not found in the network nodes"
+
+        self.nodes.insert(idx,integrating_neuron)
+        self.nodes.insert(idx,modulating_neuron)
+
+        for n in out_mod:
+            node = self.nodes_dict[n]
+            for ind, (i, w) in enumerate(node.modulatory['weights']):
+                if i == key:
+                    node.modulatory['weights'][ind] = (integrating_neuron, w)
