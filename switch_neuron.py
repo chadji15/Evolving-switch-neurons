@@ -115,7 +115,8 @@ class SwitchNeuronNetwork():
             node.standard['activity'] = node.standard['integration_function'](standard_inputs)
             node.standard['output'] = node.standard['activation_function'](node.standard['activity'])
 
-        return [self.nodes_dict[key].standard['output'] for key in self.outputs]
+        output =  [self.nodes_dict[key].standard['output'] for key in self.outputs]
+        return output
 
     #Check if a switch neuron needs to be converted to a module AND converts it if so
     def make_switch_module(self, key):
@@ -128,11 +129,12 @@ class SwitchNeuronNetwork():
                 found = False
                 for i, w in node.modulatory['weights']:
                     if i == key:
-                        out_mod.append(i)
+                        out_mod.append(node.key)
                         found = True
                         break
                 if found:
                     break
+
         if not out_mod:
             return
 
@@ -170,4 +172,4 @@ class SwitchNeuronNetwork():
             node = self.nodes_dict[n]
             for ind, (i, w) in enumerate(node.modulatory['weights']):
                 if i == key:
-                    node.modulatory['weights'][ind] = (integrating_neuron, w)
+                    node.modulatory['weights'][ind] = (integrating_key, w)
