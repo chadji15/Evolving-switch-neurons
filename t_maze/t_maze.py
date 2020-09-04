@@ -5,7 +5,7 @@ LOW = 0.2
 HIGH = 1
 CRASH_REWARD = -0.4
 FAIL_HOME = -0.3
-STEP_PENALTY = 0.005
+STEP_PENALTY = -0.005
 #Helper class for keeping track of reward positions
 class MazeEnd(Ball):
     reward = LOW
@@ -31,13 +31,17 @@ class TMazeEnv(MiniGridEnv):
         right = 1
         forward = 2
 
-    def __init__(self, high_reward_end=0, size = 7, max_steps=17):
+    def __init__(self, high_reward_end=0, size = 7, isHoming = False):
         self.agent_start_pos = (size // 2, 1)
         self.agent_start_dir = 1
         #Which maze end has the high reward. The rest have the low reward
         self.high_reward_end = high_reward_end
         self.reward_range = (-1, 1)
         self.actions = TMazeEnv.Actions
+        self.isHoming = isHoming
+        max_steps = 8
+        if self.isHoming:
+            max_steps = 17
         super().__init__(
             grid_size= size,
             max_steps = max_steps,
@@ -136,10 +140,13 @@ class TMazeEnv(MiniGridEnv):
             if fwd_cell != None and fwd_cell.type == 'lava':
                 done = True
                 reward = CRASH_REWARD
-            # Because we are simulating the homing T-maze task, the reward is delayed
+            # When we are simulating the homing T-maze task, the reward is delayed
             if fwd_cell != None and fwd_cell.type == 'ball':
                 self.reward = fwd_cell.reward
                 self.grid.set(self.agent_pos[0],self.agent_pos[1],None)
+                if not self.isHoming:
+                    done = True
+                    reward = self.reward
 
         # Done action (not used by default)
         elif action == self.actions.done:
@@ -192,8 +199,13 @@ class TMazeEnv(MiniGridEnv):
 
 class DoubleTMazeEnv(TMazeEnv):
 
-    def __init__(self, high_reward_end = 0):
-        super().__init__(high_reward_end=high_reward_end,size=9,max_steps=25)
+    def __init__(self, high_reward_end = 0, isHoming = False):
+        super().__init__(high_reward_end=high_reward_end,size=9, isHoming= isHoming)
+        if self.isHoming:
+            self.max_steps = 25
+        else:
+             self.max_steps = 12
+
 
     def _gen_grid(self, width, height):
         if self.agent_start_pos is not None:
@@ -251,6 +263,11 @@ if __name__ == "__main__":
 
 #The following code is executed when this file is imported and is necessary for this environment to work
 #with manual_control.py
+class TMazeHoming(TMazeEnv):
+
+    def __init__(self):
+        super().__init__(isHoming = True)
+
 register(
         id='MiniGrid-TMaze-v0',
         entry_point='t_maze:TMazeEnv'
@@ -258,4 +275,9 @@ register(
 register(
         id='MiniGrid-DoubleTMaze-v0',
         entry_point='t_maze:DoubleTMazeEnv'
+)
+
+register(
+        id='MiniGrid-TMazeHoming-v0',
+        entry_point='t_maze:TMazeEnv'
 )

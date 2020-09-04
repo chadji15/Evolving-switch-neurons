@@ -1,7 +1,10 @@
+from math import tanh
+
 from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork
 import gym
 import copy
 import gym_association_task
+import t_maze
 
 #In this script I try to recreate a network designed by hand which solves 3x3 one-to-one association tasks using
 #switch neuron.
@@ -31,7 +34,7 @@ def convert_to_action(scalar):
         return (0,0,1)
     return (0,1,0)
 
-def eval_network(network):
+def eval_one_to_one(network):
     env = gym.make('OneToOne3x3-v0')
     num_episodes = 2000
     s = num_episodes
@@ -111,7 +114,7 @@ def solve_one_to_one_3x3():
     nodes.append(Neuron(0, node_0_std))
 
     net = SwitchNeuronNetwork(input_keys, output_keys, nodes)
-    score = eval_network(net)
+    score = eval_one_to_one(net)
     print("Score: {}".format(score))
 
 def solve_one_to_many():
@@ -163,11 +166,70 @@ def solve_one_to_many():
         nodes.append(Neuron(key,params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
-    temp_nodes = net.nodes[:]
-    for node in temp_nodes:
-        if isinstance(node, SwitchNeuron):
-            net.make_switch_module(node.key)
     score = eval_one_to_many(net)
+    print("Score: {}".format(score))
+
+
+def eval_tmaze(network):
+    env = gym.make('MiniGrid-TMaze-v0')
+    num_episodes = 100
+    s = num_episodes
+    observation = env.reset(reward_pos=0)
+    input = tuple([1] + list(observation) + [0])
+    for i_episode in range(num_episodes):
+        output = network.activate(input)[0]
+        action = None
+        raise NotImplementedError()
+        observation, reward, done, info = env.step(action)
+        input = list(input)
+        input[-1] = reward
+        network.activate(input)
+        input = tuple(list(observation) + [0])
+        s += reward
+    env.close()
+    return s
+
+
+def solve_tmaze():
+
+    input_keys = [-1,-2,-3,-4,-5]
+    output_keys = [0]
+    node_keys = [1,2,3]
+
+    nodes = []
+    params = {
+        'activation_function' : sum,
+        'integration_function' : lambda x : clamp(x,0,1),
+        'activity': 0,
+        'output' : 0,
+        'weights' : [(-1,-1), (-5,1)]
+    }
+    nodes.append(Neuron(1,params))
+
+    m_params = {
+        'activation_function': lambda x: clamp(mult(x), -0.8,0),
+        'integration_function': lambda x: x,
+        'activity': 0,
+        'output': 0,
+        'weights': [(1, 1), (-4, 1)]
+    }
+    nodes.append(Neuron(2,m_params))
+
+    std_weights = [(-3,5), (-3,-5)]
+    mod_weights = [(2,0.5)]
+    nodes.append(SwitchNeuron(3,std_weights,mod_weights))
+
+    o_params = {
+        'activation_function': tanh,
+        'integration_function': sum,
+        'activity': 0,
+        'output': 0,
+        'weights': [(3,1)]
+    }
+    nodes.append(Neuron(0,o_params))
+
+    net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
+    score = eval_tmaze(net)
     print("Score: {}".format(score))
 
 if __name__ == '__main__':
