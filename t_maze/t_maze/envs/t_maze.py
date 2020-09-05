@@ -24,7 +24,7 @@ class MazeEnd(Ball):
 
 class TMazeEnv(MiniGridEnv):
 
-    #Actions that the agent is permited to make
+    #Actions that the agent is permitted to make
     class Actions(IntEnum):
         # Turn left, turn right, move forward
         left = 0
@@ -41,7 +41,7 @@ class TMazeEnv(MiniGridEnv):
         self.isHoming = isHoming
         max_steps = 8
         if self.isHoming:
-            max_steps = 17
+            max_steps = 15
         super().__init__(
             grid_size= size,
             max_steps = max_steps,
@@ -111,31 +111,31 @@ class TMazeEnv(MiniGridEnv):
         reward = 0
         done = False
 
+        # Rotate left
+        if action == self.actions.left:
+            self.agent_dir -= 1
+            if self.agent_dir < 0:
+                self.agent_dir += 4
+            action = self.actions.forward
+
+        # Rotate right
+        elif action == self.actions.right:
+            self.agent_dir = (self.agent_dir + 1) % 4
+            action = self.actions.forward
+
         # Get the position in front of the agent
         fwd_pos = self.front_pos
 
         # Get the contents of the cell in front of the agent
         fwd_cell = self.grid.get(*fwd_pos)
 
-        # Rotate left
-        if action == self.actions.left:
-            self.agent_dir -= 1
-            if self.agent_dir < 0:
-                self.agent_dir += 4
-
-        # Rotate right
-        elif action == self.actions.right:
-            self.agent_dir = (self.agent_dir + 1) % 4
-
         # Move forward
-        elif action == self.actions.forward:
+        if action == self.actions.forward:
             if fwd_cell == None or fwd_cell.can_overlap():
                 self.agent_pos = fwd_pos
             if fwd_cell != None and fwd_cell.type == 'goal':
                 done = True
                 reward = self._reward()
-                if reward == 0:
-                    reward = self.step_count * STEP_PENALTY
             #If the agent crashes the episode ends and a negative reward is given
             if fwd_cell != None and fwd_cell.type == 'lava':
                 done = True
@@ -147,6 +147,7 @@ class TMazeEnv(MiniGridEnv):
                 if not self.isHoming:
                     done = True
                     reward = self.reward
+                self.agent_dir = (self.agent_dir + 2) % 4
 
         # Done action (not used by default)
         elif action == self.actions.done:
@@ -202,7 +203,7 @@ class DoubleTMazeEnv(TMazeEnv):
     def __init__(self, high_reward_end = 0, isHoming = False):
         super().__init__(high_reward_end=high_reward_end,size=9, isHoming= isHoming)
         if self.isHoming:
-            self.max_steps = 25
+            self.max_steps = 23
         else:
              self.max_steps = 12
 
@@ -268,16 +269,3 @@ class TMazeHoming(TMazeEnv):
     def __init__(self):
         super().__init__(isHoming = True)
 
-register(
-        id='MiniGrid-TMaze-v0',
-        entry_point='t_maze:TMazeEnv'
-)
-register(
-        id='MiniGrid-DoubleTMaze-v0',
-        entry_point='t_maze:DoubleTMazeEnv'
-)
-
-register(
-        id='MiniGrid-TMazeHoming-v0',
-        entry_point='t_maze:TMazeEnv'
-)

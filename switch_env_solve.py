@@ -4,6 +4,7 @@ from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork
 import gym
 import copy
 import gym_association_task
+from t_maze.envs.t_maze import TMazeEnv
 import t_maze
 
 #In this script I try to recreate a network designed by hand which solves 3x3 one-to-one association tasks using
@@ -173,22 +174,50 @@ def solve_one_to_many():
 def eval_tmaze(network):
     env = gym.make('MiniGrid-TMaze-v0')
     num_episodes = 100
-    s = num_episodes
-    observation = env.reset(reward_pos=0)
-    input = tuple([1] + list(observation) + [0])
+    s = 0
+    pos = 0
     for i_episode in range(num_episodes):
-        output = network.activate(input)[0]
-        action = None
-        raise NotImplementedError()
-        observation, reward, done, info = env.step(action)
-        input = list(input)
-        input[-1] = reward
-        network.activate(input)
-        input = tuple(list(observation) + [0])
+        reward = 0
+        if i_episode % 20 == 0:
+            pos = (pos + 1) % 2
+        observation = env.reset(reward_pos= pos)
+        # 1 for the bias term and 0 for the reward
+        input = list(observation)
+        input.insert(0, 1)
+        input.append(0)
+        done = False
+        #DEBUG INFO
+        #print("Episode: {}".format(i_episode))
+        #print("High pos: {}".format(pos))
+        while not done:
+            output = network.activate(input)[0]
+            if output < -0.33:
+                action = TMazeEnv.Actions.left
+            elif output > 0.33:
+                action = TMazeEnv.Actions.right
+            else:
+                action = TMazeEnv.Actions.forward
+            observation, reward, done, info = env.step(action)
+            input = list(observation)
+            input.insert(0,1)
+            input.append(reward)
+            #DEBUG INFO
+            #print("     {}".format(int_to_action(action)))
+        #print(input)
         s += reward
+        network.activate(input)
+        #DEBUG INFO
+        #print("Reward: {}".format(reward))
+        #print("--------------")
     env.close()
     return s
 
+def int_to_action(x):
+    if x == 0:
+        return "Left"
+    if x ==1:
+        return "Right"
+    return "Forward"
 
 def solve_tmaze():
 
@@ -197,9 +226,11 @@ def solve_tmaze():
     node_keys = [1,2,3]
 
     nodes = []
+
+    #Aggregating neuron
     params = {
-        'activation_function' : sum,
-        'integration_function' : lambda x : clamp(x,0,1),
+        'activation_function' : lambda x : x,
+        'integration_function' : sum,
         'activity': 0,
         'output' : 0,
         'weights' : [(-1,-1), (-5,1)]
@@ -216,7 +247,7 @@ def solve_tmaze():
     nodes.append(Neuron(2,m_params))
 
     std_weights = [(-3,5), (-3,-5)]
-    mod_weights = [(2,0.5)]
+    mod_weights = [(2,-1.25*0.5)]
     nodes.append(SwitchNeuron(3,std_weights,mod_weights))
 
     o_params = {
@@ -230,8 +261,8 @@ def solve_tmaze():
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
     score = eval_tmaze(net)
-    print("Score: {}".format(score))
+    print("Score: {:.3f}".format(score))
 
 if __name__ == '__main__':
 
-    solve_one_to_many()
+    solve_tmaze()

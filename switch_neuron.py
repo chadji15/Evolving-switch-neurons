@@ -82,14 +82,14 @@ class SwitchNeuronNetwork():
         self.inputs = inputs
         self.outputs = outputs
         self.nodes = nodes
+        self.nodes_dict = {}
+        for node in nodes:
+            self.nodes_dict[node.key] = node
+
         temp_nodes = nodes[:]
         for node in temp_nodes:
             if isinstance(node, SwitchNeuron):
                 self.make_switch_module(node.key)
-
-        self.nodes_dict = {}
-        for node in nodes:
-            self.nodes_dict[node.key] = node
 
     def activate(self, inputs):
         assert len(self.inputs) == len(inputs), "Expected {:d} inputs, got {:d}".format(len(self.inputs), len(inputs))
