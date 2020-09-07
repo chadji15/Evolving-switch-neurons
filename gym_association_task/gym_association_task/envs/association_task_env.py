@@ -71,7 +71,7 @@ class AssociationTaskEnv(gym.Env):
 
     def step(self, action):
 
-        print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
+        #print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
         action = tuple(action)
         isValid = False
         for output in self.action_space._to_list():

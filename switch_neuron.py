@@ -1,5 +1,7 @@
 from math import floor
 
+from neat.graphs import required_for_output
+
 
 def identity(activity):
     return activity
@@ -25,7 +27,10 @@ class SwitchNeuron(Neuron):
                     'output': 0,
                     'weights': std_weights}
 
-        mod_activity = 1 / (2 * len(std_weights))
+        if not std_weights:
+            mod_activity = 0
+        else:
+            mod_activity = 1 / (2 * len(std_weights))
         mod_dict = {
             'activation_function': identity,
             'integration_function': self.mod_integration_function,
@@ -178,3 +183,5 @@ class SwitchNeuronNetwork():
             for ind, (i, w) in enumerate(node.modulatory['weights']):
                 if i == key:
                     node.modulatory['weights'][ind] = (integrating_key, w)
+
+
