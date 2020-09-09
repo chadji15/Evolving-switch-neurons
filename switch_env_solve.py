@@ -43,6 +43,7 @@ def eval_one_to_one(network):
     input = tuple(list(observation) + [0])
     for i_episode in range(num_episodes):
         output = network.activate(input)[0]
+        output = clamp(output,-10,10)
         action = convert_to_action(output)
         observation, reward, done, info = env.step(action)
         input = list(input)

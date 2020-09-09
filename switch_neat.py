@@ -9,6 +9,7 @@ from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron
 import os
 import neat
 import visualize
+import _pickle as pickle
 
 class SwitchNodeGene(DefaultNodeGene):
 
@@ -47,6 +48,27 @@ class SwitchGenome(DefaultGenome):
         param_dict['connection_gene_type'] = SwitchConnectionGene
         return DefaultGenomeConfig(param_dict)
 
+def topological_sort_rec(key, visited, new_keys, connections):
+    visited.add(key)
+    for i, o in connections:
+        if o == key:
+            if i not in visited and i != key:
+                topological_sort_rec(i, visited, new_keys, connections)
+    new_keys.append(key)
+
+
+def topological_sort(keys, genome, inputs):
+
+    visited = set(inputs)
+    new_keys = []
+
+    for key in keys:
+        if key not in visited:
+            topological_sort_rec(key, visited, new_keys, genome.connections.keys())
+
+    new_keys = [n for n in new_keys if n in keys]
+    return new_keys
+
 #Return SwitchNeuronNetwork
 def create(genome, config):
     genome_config = config.genome_config
@@ -67,23 +89,24 @@ def create(genome, config):
         if genome.nodes[o].is_switch:
             if cg.is_mod:
                 if o not in mod_weights.keys():
-                    mod_weights[o] = [(o,cg.weight)]
+                    mod_weights[o] = [(i,cg.weight)]
                 else:
-                    mod_weights[o].append((o,cg.weight))
+                    mod_weights[o].append((i,cg.weight))
                 continue
 
         if o not in std_weights.keys():
-            std_weights[o] = [(o,cg.weight)]
+            std_weights[o] = [(i,cg.weight)]
         else:
-            std_weights[o].append((o,cg.weight))
+            std_weights[o].append((i,cg.weight))
 
     nodes = []
-    keys = list(mod_weights.keys()) + list(std_weights.keys())
+    keys = list(set(mod_weights.keys()).union(set(std_weights.keys())))
     for okey in output_keys:
         if okey not in keys:
             keys.append(okey)
             std_weights[okey] = []
 
+    keys = topological_sort(keys, genome, input_keys)
     for node_key in keys:
         node = genome.nodes[node_key]
         if node.is_switch:
@@ -102,15 +125,34 @@ def create(genome, config):
         }
         nodes.append(Neuron(node_key,params))
 
-
     return SwitchNeuronNetwork(input_keys,output_keys,nodes)
 
 from switch_env_solve import eval_one_to_one
 
-def eval_genomes(genomes, config):
+def eval_genomes_xor(genomes, config):
     for genome_id, genome in genomes:
         net = create(genome,config)
-        genome.fitness = eval_one_to_one(net)
+        genome.fitness = eval_net_xor(net)
+
+xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
+xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
+
+TRIALS = 100
+
+def eval_net_xor(net):
+
+    sum = 0
+    for i in range(TRIALS):
+        fitness = 4
+        for xi, xo in zip(xor_inputs, xor_outputs):
+            output = net.activate(xi)
+            if output[0] < 0:
+                output[0] = 0
+            elif output[0] > 1:
+                output[0] =1
+            fitness -= abs(output[0] - xo[0])
+        sum += fitness
+    return sum/TRIALS
 
 def run(config_file):
     # Load configuration.
@@ -128,7 +170,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 100)
+    winner = p.run(eval_genomes_xor, 100)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -136,8 +178,10 @@ def run(config_file):
     # Show output of the most fit genome against training data.
     print('\nOutput:')
     winner_net = create(winner, config)
-    print("Score in task: {}".format(eval_one_to_one(winner_net)))
-
+    print("Score in task: {}".format(eval_net_xor(winner_net)))
+    fp = open('winner_net.bin','wb')
+    pickle.dump(winner_net,fp)
+    fp.close()
     visualize.draw_net(config, winner, True)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
