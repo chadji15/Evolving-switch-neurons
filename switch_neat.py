@@ -19,7 +19,7 @@ class SwitchNodeGene(DefaultNodeGene):
                         BoolAttribute('is_switch')]
 
     def distance(self, other, config):
-        d = 0
+        d = abs(self.bias + other.bias)
         if self.activation != other.activation:
             d += 1.0
         if self.aggregation != other.aggregation:
@@ -55,19 +55,19 @@ def topological_sort_rec(key, visited, new_keys, connections):
             if i not in visited and i != key:
                 topological_sort_rec(i, visited, new_keys, connections)
     new_keys.append(key)
-
-
-def topological_sort(keys, genome, inputs):
-
-    visited = set(inputs)
-    new_keys = []
-
-    for key in keys:
-        if key not in visited:
-            topological_sort_rec(key, visited, new_keys, genome.connections.keys())
-
-    new_keys = [n for n in new_keys if n in keys]
-    return new_keys
+#
+#
+# def topological_sort(keys, genome, inputs):
+#
+#     visited = set(inputs)
+#     new_keys = []
+#
+#     for key in keys:
+#         if key not in visited:
+#             topological_sort_rec(key, visited, new_keys, genome.connections.keys())
+#
+#     new_keys = [n for n in new_keys if n in keys]
+#     return new_keys
 
 #Return SwitchNeuronNetwork
 def create(genome, config):
@@ -78,14 +78,17 @@ def create(genome, config):
 
     mod_weights = {}
     std_weights = {}
+    keys = set()
     for cg in itervalues(genome.connections):
-        if not cg.enabled:
-            continue
+        #if not cg.enabled:
+        #    continue
 
         i, o = cg.key
         if o not in required and i not in required:
             continue
-
+        if i not in input_keys:
+            keys.add(i)
+        keys.add(o)
         if genome.nodes[o].is_switch:
             if cg.is_mod:
                 if o not in mod_weights.keys():
@@ -100,13 +103,12 @@ def create(genome, config):
             std_weights[o].append((i,cg.weight))
 
     nodes = []
-    keys = list(set(mod_weights.keys()).union(set(std_weights.keys())))
+
     for okey in output_keys:
         if okey not in keys:
-            keys.append(okey)
+            keys.add(okey)
             std_weights[okey] = []
 
-    keys = topological_sort(keys, genome, input_keys)
     for node_key in keys:
         node = genome.nodes[node_key]
         if node.is_switch:
@@ -116,15 +118,24 @@ def create(genome, config):
             elif node_key not in std_weights.keys():
                 std_weights[node_key] = mod_weights[node_key]
 
+        if node_key not in std_weights:
+            std_weights[node_key] = []
+
         params = {
             'activation_function' : genome_config.activation_defs.get(node.activation),
             'integration_function' : genome_config.aggregation_function_defs.get(node.aggregation),
+            'bias' : node.bias,
             'activity' : 0,
             'output' : 0,
             'weights' : std_weights[node_key]
         }
         nodes.append(Neuron(node_key,params))
 
+        stop = False
+        for node in nodes:
+            if  len(node.standard["weights"]) == 0 and len(node.standard['weights']) == 0:
+                stop = True
+        pass
     return SwitchNeuronNetwork(input_keys,output_keys,nodes)
 
 from switch_env_solve import eval_one_to_one

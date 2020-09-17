@@ -10,6 +10,7 @@ class Neuron():
 
     def __init__(self,key, standard_dict, modulatory_dict = None):
         #Each dictionary contains the following: activation_function, integration_function, activity, output, weights
+        #Standard dictionary also contains bias
         self.key = key
         self.standard= standard_dict
         self.modulatory = modulatory_dict
@@ -23,6 +24,7 @@ class SwitchNeuron(Neuron):
 
         std_dict = {'activation_function': identity,
                     'integration_function': self.std_integration_function,
+                    'bias' : 0,
                     'activity': 0,
                     'output': 0,
                     'weights': std_weights}
@@ -61,6 +63,7 @@ class IntegratingNeuron(Neuron):
         params = {
             'activation_function' : self.tri_step,
             'integration_function' : self.perfect_integration,
+            'bias' : 0,
             'activity' : IntegratingNeuron.BASELINE,
             'output' : 0,
             'weights': weights
@@ -93,7 +96,7 @@ class SwitchNeuronNetwork():
 
         temp_nodes = nodes[:]
         for node in temp_nodes:
-            if isinstance(node, SwitchNeuron):
+            if isinstance(node, SwitchNeuron) and len(node.standard["weights"]) > 0:
                 self.make_switch_module(node.key)
 
     def activate(self, inputs):
@@ -122,6 +125,7 @@ class SwitchNeuronNetwork():
                 else:
                     val = self.nodes_dict[key].standard['output']
                 standard_inputs.append(val * weight)
+            standard_inputs.append(node.standard['bias'])
             node.standard['activity'] = node.standard['integration_function'](standard_inputs)
             node.standard['output'] = node.standard['activation_function'](node.standard['activity'])
 
@@ -153,6 +157,7 @@ class SwitchNeuronNetwork():
         modulating_dict = {
             'activation_function': identity,
             'integration_function': sum,
+            'bias' : 0,
             'activity' : 0,
             'output' : 0,
             'weights': modulating_weights
