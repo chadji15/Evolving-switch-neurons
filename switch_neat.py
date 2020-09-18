@@ -10,6 +10,7 @@ import os
 import neat
 import visualize
 import _pickle as pickle
+from switch_env_solve import eval_one_to_one
 
 class SwitchNodeGene(DefaultNodeGene):
 
@@ -115,11 +116,13 @@ def create(genome, config):
             if node_key in std_weights.keys() and node_key in mod_weights.keys():
                 nodes.append(SwitchNeuron(node_key, std_weights[node_key], mod_weights[node_key]))
                 continue
-            elif node_key not in std_weights.keys():
+            elif node_key not in std_weights.keys() and node_key in mod_weights:
                 std_weights[node_key] = mod_weights[node_key]
-
-        if node_key not in std_weights:
-            std_weights[node_key] = []
+            else:
+                std_weights[node_key] = []
+        else:
+            if node_key not in std_weights:
+                std_weights[node_key] = []
 
         params = {
             'activation_function' : genome_config.activation_defs.get(node.activation),
@@ -138,12 +141,11 @@ def create(genome, config):
         pass
     return SwitchNeuronNetwork(input_keys,output_keys,nodes)
 
-from switch_env_solve import eval_one_to_one
 
-def eval_genomes_xor(genomes, config):
+def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         net = create(genome,config)
-        genome.fitness = eval_net_xor(net)
+        genome.fitness = eval_one_to_one(net)
 
 xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
@@ -181,7 +183,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes_xor, 100)
+    winner = p.run(eval_genomes, 100)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -189,7 +191,7 @@ def run(config_file):
     # Show output of the most fit genome against training data.
     print('\nOutput:')
     winner_net = create(winner, config)
-    print("Score in task: {}".format(eval_net_xor(winner_net)))
+    print("Score in task: {}".format(eval_one_to_one(winner_net)))
     fp = open('winner_net.bin','wb')
     pickle.dump(winner_net,fp)
     fp.close()

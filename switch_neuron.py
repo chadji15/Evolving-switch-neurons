@@ -1,3 +1,5 @@
+import math
+import sys
 from math import floor
 
 from neat.graphs import required_for_output
@@ -51,6 +53,9 @@ class SwitchNeuron(Neuron):
 
     def mod_integration_function(self, w_inputs):
         self.modulatory['activity'] += sum(w_inputs)
+        self.modulatory['activity'] = max(min(self.modulatory['activity'], sys.maxsize), -sys.maxsize)
+        if math.isnan(self.modulatory['activity']):
+            self.modulatory['activity'] = 0
         self.modulatory['activity'] -= floor(self.modulatory['activity'])
         return self.modulatory['activity']
 

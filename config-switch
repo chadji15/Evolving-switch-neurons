@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 3.9
+fitness_threshold     = 2000
 pop_size              = 150
 reset_on_extinction   = False
 
@@ -55,7 +55,7 @@ node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 0
-num_inputs              = 2
+num_inputs              = 4
 num_outputs             = 1
 
 # connection weight options / used as mean for normal distribution
