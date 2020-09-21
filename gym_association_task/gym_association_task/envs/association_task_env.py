@@ -1,3 +1,5 @@
+import random
+
 import gym
 import numpy as np
 from gym import Space
@@ -22,7 +24,7 @@ class BinaryList(Space):
         return False
 
     def _to_list(self):
-        return self.actions
+        return self.actions[:]
 
     @staticmethod
     def _bit_tuple(x, padding=0):
@@ -52,6 +54,7 @@ class AssociationTaskEnv(gym.Env):
         self.m = output_num
         self.reward_range = (-1,0)
         self.rand_inter = rand_inter
+        self.obs_gen = self.next_obs()
         if mode == 'one-to-one':
             self.action_space = BinaryList(output_num, one_hot= True)
             self.observation_space = BinaryList(input_num, one_hot= True)
@@ -88,7 +91,8 @@ class AssociationTaskEnv(gym.Env):
         if self.rand_inter > 0 and self.step_count % self.rand_inter == 0:
             self.randomize_associations()
 
-        self.observation = list(self.associations.keys())[self.step_count % len(self.associations)]
+        #self.observation = list(self.associations.keys())[self.step_count % len(self.associations)]
+        self.observation = next(self.obs_gen)
         done = True
 
         return self.observation, self.reward, done, {}
@@ -96,7 +100,8 @@ class AssociationTaskEnv(gym.Env):
     def reset(self, rand_iter = -1):
         self.step_count = 0
         self.randomize_associations()
-        self.observation = list(self.associations.keys())[0]
+        #self.observation = list(self.associations.keys())[0]
+        self.observation = next(self.obs_gen)
         if rand_iter > 0:
             self.rand_inter  = rand_iter
         return self.observation
@@ -123,6 +128,13 @@ class AssociationTaskEnv(gym.Env):
                 output = [o for o in self.action_space._to_list()]
 
         return self.associations
+
+    def next_obs(self):
+        while(True):
+            obs = self.observation_space._to_list()
+            random.shuffle(obs)
+            while(len(obs) > 0):
+                yield obs.pop()
 
 class OneToOne2x2(AssociationTaskEnv):
     def __init__(self):
