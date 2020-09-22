@@ -5,12 +5,11 @@ from neat.genes import DefaultNodeGene, DefaultConnectionGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome
 from neat.graphs import required_for_output
 from neat.six_util import itervalues
-from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron
+from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron, Agent
 import os
 import neat
 import visualize
 import _pickle as pickle
-from switch_env_solve import eval_one_to_one
 
 class SwitchNodeGene(DefaultNodeGene):
 
@@ -49,13 +48,13 @@ class SwitchGenome(DefaultGenome):
         param_dict['connection_gene_type'] = SwitchConnectionGene
         return DefaultGenomeConfig(param_dict)
 
-def topological_sort_rec(key, visited, new_keys, connections):
-    visited.add(key)
-    for i, o in connections:
-        if o == key:
-            if i not in visited and i != key:
-                topological_sort_rec(i, visited, new_keys, connections)
-    new_keys.append(key)
+# def topological_sort_rec(key, visited, new_keys, connections):
+#     visited.add(key)
+#     for i, o in connections:
+#         if o == key:
+#             if i not in visited and i != key:
+#                 topological_sort_rec(i, visited, new_keys, connections)
+#     new_keys.append(key)
 #
 #
 # def topological_sort(keys, genome, inputs):
@@ -142,32 +141,25 @@ def create(genome, config):
     return SwitchNeuronNetwork(input_keys,output_keys,nodes)
 
 
-def eval_genomes(genomes, config):
-    for genome_id, genome in genomes:
-        net = create(genome,config)
-        genome.fitness = eval_one_to_one(net)
+def make_eval_fun(evaluation_func, in_proc, out_proc):
 
-xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
-xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
+    def eval_genomes (genomes, config):
+        for genome_id, genome in genomes:
+            net = create(genome,config)
+            agent = Agent(net, in_proc, out_proc)
+            genome.fitness = evaluation_func(agent)
 
-TRIALS = 100
-
-def eval_net_xor(net):
-
-    sum = 0
-    for i in range(TRIALS):
-        fitness = 4
-        for xi, xo in zip(xor_inputs, xor_outputs):
-            output = net.activate(xi)
-            if output[0] < 0:
-                output[0] = 0
-            elif output[0] > 1:
-                output[0] =1
-            fitness -= abs(output[0] - xo[0])
-        sum += fitness
-    return sum/TRIALS
+    return eval_genomes
 
 def run(config_file):
+
+
+    #Configuring the agent and the evaluation function
+    from eval import eval_one_to_one_3x3
+    eval_func = eval_one_to_one_3x3
+    in_func = lambda x: x
+    from solve import convert_to_action
+    out_func = convert_to_action
     # Load configuration.
     config = neat.Config(SwitchGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -183,7 +175,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 100)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -191,16 +183,17 @@ def run(config_file):
     # Show output of the most fit genome against training data.
     print('\nOutput:')
     winner_net = create(winner, config)
-    print("Score in task: {}".format(eval_one_to_one(winner_net)))
-    fp = open('winner_net.bin','wb')
-    pickle.dump(winner_net,fp)
-    fp.close()
+    winner_agent = Agent(winner_net,in_func, out_func)
+    print("Score in task: {}".format(eval_func(winner_agent)))
+    #Uncomment the following if you want to save the network in a binary file
+    #fp = open('winner_net.bin','wb')
+    #pickle.dump(winner_net,fp)
+    #fp.close()
     visualize.draw_net(config, winner, True)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
     #
     # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-    # p.run(eval_genomes, 10)
 
 def main():
     # Determine path to configuration file. This path manipulation is

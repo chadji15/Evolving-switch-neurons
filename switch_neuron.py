@@ -8,6 +8,18 @@ from neat.graphs import required_for_output
 def identity(activity):
     return activity
 
+class Agent():
+
+    def __init__(self, network, setup_inputs, prepare_outputs):
+        self.network = network
+        self.setup_inputs = setup_inputs
+        self.prepare_outputs = prepare_outputs
+
+    def activate(self,inputs):
+        proc_inputs = self.setup_inputs(inputs)
+        output = self.network.activate(inputs)
+        return self.prepare_outputs(output)
+
 class Neuron():
 
     def __init__(self,key, standard_dict, modulatory_dict = None):

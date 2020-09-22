@@ -1,26 +1,13 @@
-from math import tanh
-
-from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork
-import gym
 import copy
-import gym_association_task
-from t_maze.envs.t_maze import TMazeEnv
-import t_maze
+from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork, Agent
+from math import tanh
+from t_maze.envs import TMazeEnv
 
-#In this script I try to recreate a network designed by hand which solves 3x3 one-to-one association tasks using
-#switch neuron.
 
 def heaviside(x):
     if x < 0:
         return 0
     return 1
-
-def clamp(x,low,high):
-    if x < low:
-        return low
-    if x > high:
-        return high
-    return x
 
 def mult(w_inputs):
     product = 1
@@ -35,42 +22,10 @@ def convert_to_action(scalar):
         return (0,0,1)
     return (0,1,0)
 
-def eval_one_to_one(network):
-    env = gym.make('OneToOne3x3-v0')
-    num_episodes = 2000
-    s = num_episodes
-    observation = env.reset(rand_iter=500)
-    input = tuple(list(observation) + [0])
-    for i_episode in range(num_episodes):
-        output = network.activate(input)[0]
-        output = clamp(output,-10,10)
-        action = convert_to_action(output)
-        observation, reward, done, info = env.step(action)
-        input = list(input)
-        input[-1] = reward
-        network.activate(input)
-        input = tuple(list(observation) + [0])
-        s += reward
-    env.close()
-    return s
 
-def eval_one_to_many(network):
-    env = gym.make('OneToMany3x2-v0')
-    num_episodes = 2000
-    sum = num_episodes
-    observation = env.reset(rand_iter=500)
-    input = tuple(list(observation) + [0])
-    for i_episode in range(num_episodes):
-        output = network.activate(input)
-        action = tuple(output)
-        observation, reward, done, info = env.step(action)
-        input = list(input)
-        input[-1] = reward
-        network.activate(input)
-        input = tuple(list(observation) + [0])
-        sum += reward
-    env.close()
-    return sum
+#Returns an agent which solves the 3x3 one-to-one association task
+#We say that a network solves this problem when it manages to learn a new association within n*(m-1) steps,
+#in this case 6 steps.
 
 def solve_one_to_one_3x3():
     input_keys = [-1, -2, -3, -4]
@@ -116,9 +71,12 @@ def solve_one_to_one_3x3():
     nodes.append(Neuron(0, node_0_std))
 
     net = SwitchNeuronNetwork(input_keys, output_keys, nodes)
-    score = eval_one_to_one(net)
-    print("Score: {}".format(score))
+    agent = Agent(net,lambda x: x,lambda x: convert_to_action(x))
+    return agent
 
+#Returns an agent which solves the 3x3 one-to-one association task
+#We say that a network solves this problem when it manages to learn a new association within n*(2^m - 1) steps,
+#in this case 9 steps.
 def solve_one_to_many():
 
     input_keys = [-1, -2, -3, -4]
@@ -168,58 +126,18 @@ def solve_one_to_many():
         nodes.append(Neuron(key,params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
-    score = eval_one_to_many(net)
-    print("Score: {}".format(score))
+    return net
 
+def scalar_to_direction(x):
+    if x < -0.33:
+        return  TMazeEnv.Actions.left
+    if x > 0.33:
+        return TMazeEnv.Actions.right
+    return TMazeEnv.Actions.forward
 
-def eval_tmaze(network):
-    env = gym.make('MiniGrid-TMaze-v0')
-    num_episodes = 100
-    s = 0
-    pos = 0
-    for i_episode in range(num_episodes):
-        reward = 0
-        if i_episode % 20 == 0:
-            pos = (pos + 1) % 2
-        observation = env.reset(reward_pos= pos)
-        # 1 for the bias term and 0 for the reward
-        input = list(observation)
-        input.insert(0, 1)
-        input.append(0)
-        done = False
-        #DEBUG INFO
-        #print("Episode: {}".format(i_episode))
-        #print("High pos: {}".format(pos))
-        while not done:
-            output = network.activate(input)[0]
-            if output < -0.33:
-                action = TMazeEnv.Actions.left
-            elif output > 0.33:
-                action = TMazeEnv.Actions.right
-            else:
-                action = TMazeEnv.Actions.forward
-            observation, reward, done, info = env.step(action)
-            input = list(observation)
-            input.insert(0,1)
-            input.append(reward)
-            #DEBUG INFO
-            #print("     {}".format(int_to_action(action)))
-        #print(input)
-        s += reward
-        network.activate(input)
-        #DEBUG INFO
-        #print("Reward: {}".format(reward))
-        #print("--------------")
-    env.close()
-    return s
-
-def int_to_action(x):
-    if x == 0:
-        return "Left"
-    if x ==1:
-        return "Right"
-    return "Forward"
-
+#Returns an agent which solves the single t-maze non-homing task.
+#We say a network solves the problem when it it needs at most one step figure out that the high reward has switched
+#positions.
 def solve_tmaze():
 
     input_keys = [-1,-2,-3,-4,-5]
@@ -261,9 +179,5 @@ def solve_tmaze():
     nodes.append(Neuron(0,o_params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
-    score = eval_tmaze(net)
-    print("Score: {:.3f}".format(score))
-
-if __name__ == '__main__':
-
-    solve_tmaze()
+    agent = Agent(net, lambda x: x.insert(0,1), lambda x: scalar_to_direction(x[0]))
+    return agent
