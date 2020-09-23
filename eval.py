@@ -46,14 +46,16 @@ def eval_one_to_many_3x2(agent):
     num_episodes = 2000
     sum = num_episodes
     observation = env.reset(rand_iter=500)
-    input = tuple(list(observation) + [0])
+    input = list(observation)
+    input.append(0)
     for i_episode in range(num_episodes):
         action = agent.activate(input)
         observation, reward, done, info = env.step(action)
         input = list(input)
         input[-1] = reward
         agent.activate(input)
-        input = list(observation).append(0)
+        input = list(observation)
+        input.append(0)
         sum += reward
     env.close()
     return sum
@@ -82,9 +84,8 @@ def eval_tmaze(agent):
         if i_episode % 20 == 0:
             pos = (pos + 1) % 2
         observation = env.reset(reward_pos= pos)
-        # 1 for the bias term and 0 for the reward
+        #append 0 for the reward
         input = list(observation)
-        input.insert(0, 1)
         input.append(0)
         done = False
         #DEBUG INFO

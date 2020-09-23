@@ -9,7 +9,6 @@ from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron, Agent
 import os
 import neat
 import visualize
-import _pickle as pickle
 
 class SwitchNodeGene(DefaultNodeGene):
 
@@ -47,27 +46,6 @@ class SwitchGenome(DefaultGenome):
         param_dict['node_gene_type'] = SwitchNodeGene
         param_dict['connection_gene_type'] = SwitchConnectionGene
         return DefaultGenomeConfig(param_dict)
-
-# def topological_sort_rec(key, visited, new_keys, connections):
-#     visited.add(key)
-#     for i, o in connections:
-#         if o == key:
-#             if i not in visited and i != key:
-#                 topological_sort_rec(i, visited, new_keys, connections)
-#     new_keys.append(key)
-#
-#
-# def topological_sort(keys, genome, inputs):
-#
-#     visited = set(inputs)
-#     new_keys = []
-#
-#     for key in keys:
-#         if key not in visited:
-#             topological_sort_rec(key, visited, new_keys, genome.connections.keys())
-#
-#     new_keys = [n for n in new_keys if n in keys]
-#     return new_keys
 
 #Return SwitchNeuronNetwork
 def create(genome, config):

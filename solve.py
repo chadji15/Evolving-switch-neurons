@@ -22,6 +22,12 @@ def convert_to_action(scalar):
         return (0,0,1)
     return (0,1,0)
 
+def clamp(x,low,high):
+    if x < low:
+        return low
+    if x > high:
+        return high
+    return x
 
 #Returns an agent which solves the 3x3 one-to-one association task
 #We say that a network solves this problem when it manages to learn a new association within n*(m-1) steps,
@@ -40,6 +46,7 @@ def solve_one_to_one_3x3():
         'integration_function': mult,
         'activity': 0,
         'output': 0,
+        'bias':1
     }
 
     node_weights = {4: [(-1, 1), (-4, 1)], 5: [(-2, 1), (-4, 1)], 6: [(-3, 1), (-4, 1)]}
@@ -66,12 +73,13 @@ def solve_one_to_one_3x3():
         'integration_function': sum,
         'activity': 0,
         'output': 0,
-        'weights': [(1, 1), (2, 1), (3, 1)]
+        'weights': [(1, 1), (2, 1), (3, 1)],
+        'bias' : 0
     }
     nodes.append(Neuron(0, node_0_std))
 
     net = SwitchNeuronNetwork(input_keys, output_keys, nodes)
-    agent = Agent(net,lambda x: x,lambda x: convert_to_action(x))
+    agent = Agent(net,lambda x: x,lambda x: convert_to_action(x[0]))
     return agent
 
 #Returns an agent which solves the 3x3 one-to-one association task
@@ -92,6 +100,7 @@ def solve_one_to_many():
         'integration_function': mult,
         'activity': 0,
         'output': 0,
+        'bias' : 1
     }
     for i in node_keys:
         node_dict = copy.deepcopy(modulating_nodes_dict)
@@ -107,8 +116,8 @@ def solve_one_to_many():
         fast+=1
         slow+=1
 
-    w = 0.5
-    switch_mod_w = {7: [(3,w)], 8: [(7,w)], 9: [(4,w)], 10:[(9,w)], 11: [(5,w)], 12: [(11,w)]}
+    w1, w2 = 0.5, 1
+    switch_mod_w = {7: [(3,w2)], 8: [(7,w1)], 9: [(4,w2)], 10:[(9,w1)], 11: [(5,w2)], 12: [(11,w1)]}
 
     for key in switch_keys:
         nodes.append(SwitchNeuron(key,switch_std_w[key],switch_mod_w[key]))
@@ -119,6 +128,7 @@ def solve_one_to_many():
         'integration_function': sum,
         'activity': 0,
         'output': 0,
+        'bias' : 0
     }
     for key in output_keys:
         params = copy.deepcopy(out_dict)
@@ -152,16 +162,18 @@ def solve_tmaze():
         'integration_function' : sum,
         'activity': 0,
         'output' : 0,
-        'weights' : [(-1,-1), (-5,1)]
+        'weights' : [(-1,-1), (-5,1)],
+        'bias':0
     }
     nodes.append(Neuron(1,params))
 
     m_params = {
-        'activation_function': lambda x: clamp(mult(x), -0.8,0),
-        'integration_function': lambda x: x,
+        'activation_function': lambda x: clamp(x, -0.8,0),
+        'integration_function': mult,
         'activity': 0,
         'output': 0,
-        'weights': [(1, 1), (-4, 1)]
+        'weights': [(1, 1), (-4, 1)],
+        'bias' : 1
     }
     nodes.append(Neuron(2,m_params))
 
@@ -174,7 +186,8 @@ def solve_tmaze():
         'integration_function': sum,
         'activity': 0,
         'output': 0,
-        'weights': [(3,1)]
+        'weights': [(3,1)],
+        'bias' : 0
     }
     nodes.append(Neuron(0,o_params))
 

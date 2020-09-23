@@ -257,7 +257,7 @@ class DoubleTMazeEnv(TMazeEnv):
 
 if __name__ == "__main__":
     #Matplotlib crashes on render for now but it is not going to be a problem
-    tmaze = DoubleTMazeEnv()
+    tmaze = TMazeEnv()
     tmaze.set_reward_pos(1)
     tmaze.render()
     x = input("Press enter when finished")
