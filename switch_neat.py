@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import pickle
+
 from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import DefaultNodeGene, DefaultConnectionGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome
@@ -132,21 +134,28 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
 
 def run(config_file):
 
-
     #Configuring the agent and the evaluation function
-    from eval import eval_net_xor
-    eval_func = eval_net_xor
+    from eval import eval_one_to_one_3x3
+    eval_func = eval_one_to_one_3x3
     in_func = lambda x: x
-    def clamp(x):
-        ret = [0 if elem < 0 else elem for elem in x]
-        return [1 if elem > 1 else elem for elem in ret]
 
-    out_func = clamp
+    def out_func(x):
+        midx = x.index(max(x))
+        return [1 if i == midx else 0 for i in range(len(x))]
+
     # Load configuration.
     config = neat.Config(SwitchGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
-
+    from solve import heaviside
+    config.genome_config.add_activation('heaviside', heaviside)
+    def tristep(x):
+        if x >= 1:
+            return 1
+        if x < -1:
+            return -1
+        return 0
+    config.genome_config.add_activation('tristep', tristep)
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
@@ -169,9 +178,9 @@ def run(config_file):
     print("Score in task: {}".format(eval_func(winner_agent)))
 
     #Uncomment the following if you want to save the network in a binary file
-    #fp = open('winner_net.bin','wb')
-    #pickle.dump(winner_net,fp)
-    #fp.close()
+    fp = open('winner_net.bin','wb')
+    pickle.dump(winner_net,fp)
+    fp.close()
     #visualize.draw_net(config, winner, True)
     #visualize.plot_stats(stats, ylog=False, view=True)
     #visualize.plot_species(stats, view=True)

@@ -11,7 +11,7 @@ def clamp(x,low,high):
 
 
 ###
-#All the following evaluation functions take as arguement an agent variable. It is assumed that the agent has
+#All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
 #of the agent. The actions are described in each environment
 ##############
