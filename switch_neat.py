@@ -10,9 +10,9 @@ from neat.six_util import itervalues
 from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron, Agent
 import os
 import neat
-import visualize
-from stat_collection import StatReporterv2
+import Reporters
 
+#The class for the gene representing the neurons in our network.
 class SwitchNodeGene(DefaultNodeGene):
 
     _gene_attributes = [FloatAttribute('bias'),
@@ -30,10 +30,11 @@ class SwitchNodeGene(DefaultNodeGene):
             d =3
         return d * config.compatibility_weight_coefficient
 
+#The gene for the connections in our network.
 class SwitchConnectionGene(DefaultConnectionGene):
     _gene_attributes = [FloatAttribute('weight'),
                         BoolAttribute('is_mod'),
-                        BoolAttribute('enabled')]
+                        BoolAttribute('enabled')] #The neat package complains if this attribute is not present.
 
     def distance(self, other, config):
         d = abs(self.weight - other.weight)
@@ -43,6 +44,7 @@ class SwitchConnectionGene(DefaultConnectionGene):
             d += 1
         return d * config.compatibility_weight_coefficient
 
+#Create a switch genome class to replace the default genome class in our experiments.
 class SwitchGenome(DefaultGenome):
     @classmethod
     def parse_config(cls, param_dict):
@@ -50,52 +52,77 @@ class SwitchGenome(DefaultGenome):
         param_dict['connection_gene_type'] = SwitchConnectionGene
         return DefaultGenomeConfig(param_dict)
 
-#Return SwitchNeuronNetwork
+#Takes a genome and the configuration object and returns the network encoded in the genome.
 def create(genome, config):
     genome_config = config.genome_config
     required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
     input_keys = genome_config.input_keys
     output_keys = genome_config.output_keys
 
+    #A dictionary where we keep the modulatory weights for every node
     mod_weights = {}
+    #A dictionary where we keep the standard weights for every node
     std_weights = {}
+    #Create a set with the keys of the nodes in the network
     keys = set()
+    #Iterate over the connections
     for cg in itervalues(genome.connections):
         #if not cg.enabled:
         #    continue
 
         i, o = cg.key
+        #If neither of the nodes in the connection are required for output then skip this connection
         if o not in required and i not in required:
             continue
+
         if i not in input_keys:
             keys.add(i)
         keys.add(o)
+        #In this implementation, only switch neurons have a modulatory part
         if genome.nodes[o].is_switch:
+            #Add the weight to the modulatory part of the o node and continue with the next connection
             if cg.is_mod:
                 if o not in mod_weights.keys():
                     mod_weights[o] = [(i,cg.weight)]
                 else:
                     mod_weights[o].append((i,cg.weight))
                 continue
-
+        #If the connection is not modulatory
+        #Add the weight to the standard weight of the o node.
         if o not in std_weights.keys():
             std_weights[o] = [(i,cg.weight)]
         else:
             std_weights[o].append((i,cg.weight))
-
+    #Create the array with the network's nodes
     nodes = []
 
+    #Sometimes the output neurons end up not having any connections during the evolutionary process. While we do not
+    #desire such networks, we should still allow them to make predictions to avoid fatal errors.
     for okey in output_keys:
         if okey not in keys:
             keys.add(okey)
             std_weights[okey] = []
 
-    for node_key in keys:
+    #While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
+    #schemes, we certainly want the output neurons to activate last.
+    sorted_keys = list(genome.nodes.keys())[:]
+    for k in output_keys:
+        sorted_keys.remove(k)
+        sorted_keys.append(k)
+
+    #Create the nodes of the network based on the weights dictionaries created above and the genome.
+    for node_key in sorted_keys:
+        if node_key not in keys:
+            continue
         node = genome.nodes[node_key]
         if node.is_switch:
+            #If the switch neuron has both modulatory and standard weights then we can add it normally to the nodes
+            #of the network.
             if node_key in std_weights.keys() and node_key in mod_weights.keys():
                 nodes.append(SwitchNeuron(node_key, std_weights[node_key], mod_weights[node_key]))
                 continue
+            #if the switch neuron only has modulatory weights then we copy those weights for the standard part as well.
+            #this is not the desired behaviour but it is done to avoid errors during forward pass.
             elif node_key not in std_weights.keys() and node_key in mod_weights:
                 std_weights[node_key] = mod_weights[node_key]
             else:
@@ -104,6 +131,7 @@ def create(genome, config):
             if node_key not in std_weights:
                 std_weights[node_key] = []
 
+        #Create the standard part dictionary for the neuron
         params = {
             'activation_function' : genome_config.activation_defs.get(node.activation),
             'integration_function' : genome_config.aggregation_function_defs.get(node.aggregation),
@@ -114,59 +142,51 @@ def create(genome, config):
         }
         nodes.append(Neuron(node_key,params))
 
-        stop = False
-        for node in nodes:
-            if  len(node.standard["weights"]) == 0 and len(node.standard['weights']) == 0:
-                stop = True
-        pass
     return SwitchNeuronNetwork(input_keys,output_keys,nodes)
 
-
+#This function wraps a given evaluation function to make it suitable for evaluating an array of genomes
+#produced by neat and returns it.
 def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     def eval_genomes (genomes, config):
         for genome_id, genome in genomes:
             net = create(genome,config)
+            #Wrap the network around an agent
             agent = Agent(net, in_proc, out_proc)
+            #Evaluate its fitness based on the function given above.
             genome.fitness = evaluation_func(agent)
 
     return eval_genomes
 
+#A dry test run for the one to one association task. I haven't ran it to end yet because it needs too much time as of now and at some point
+#it even reaches a plateau.
 def run(config_file):
 
     #Configuring the agent and the evaluation function
-    from eval import eval_one_to_one_3x3
-    eval_func = eval_one_to_one_3x3
-    in_func = lambda x: x
+    from eval import eval_net_xor
+    eval_func = eval_net_xor
+    #Preprocessing for inputs: none
+    in_func = out_func = lambda x: x
+    #Preprocessing for outputs: one-hot max encoding.
 
-    def out_func(x):
-        midx = x.index(max(x))
-        return [1 if i == midx else 0 for i in range(len(x))]
 
     # Load configuration.
     config = neat.Config(SwitchGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
-    from solve import heaviside
-    config.genome_config.add_activation('heaviside', heaviside)
-    def tristep(x):
-        if x >= 1:
-            return 1
-        if x < -1:
-            return -1
-        return 0
-    config.genome_config.add_activation('tristep', tristep)
+
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
-    stats = StatReporterv2()
+    stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
+    p.add_reporter(Reporters.NetRetriever())
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 100)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -176,7 +196,9 @@ def run(config_file):
     winner_net = create(winner, config)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
-
+    print()
+    for i, o in (((0,0),0), ((0,1),1), ((1,0),1), ((1,1),0)):
+        print(f"Input: {i}, Expected: {o}, got {winner_agent.activate(i)}")
     #Uncomment the following if you want to save the network in a binary file
     fp = open('winner_net.bin','wb')
     pickle.dump(winner_net,fp)
@@ -184,8 +206,6 @@ def run(config_file):
     #visualize.draw_net(config, winner, True)
     #visualize.plot_stats(stats, ylog=False, view=True)
     #visualize.plot_species(stats, view=True)
-    #
-    # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
 
 def main():
     # Determine path to configuration file. This path manipulation is

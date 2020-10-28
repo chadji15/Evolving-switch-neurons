@@ -2,24 +2,25 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 1975
-pop_size              = 100
+fitness_threshold     = 3.99
+pop_size              = 150
 reset_on_extinction   = False
 
 [SwitchGenome]
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0
-activation_options      = sigmoid #tanh identity heaviside tristep
+activation_options      = sigmoid
+#tanh identity heaviside tristep
 
 # node aggregation options
 aggregation_default     = sum
 aggregation_mutate_rate = 0
-aggregation_options     = sum product
+aggregation_options     = sum
 
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0.3
+is_switch_mutate_rate   = 0
 
 # node bias options
 bias_init_mean          = 1
@@ -35,8 +36,8 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 1
 
 # connection add/remove rates
-conn_add_prob           = 0.2
-conn_delete_prob        = 0.1
+conn_add_prob           = 0.5
+conn_delete_prob        = 0.3
 
 # connection enable options
 enabled_default         = True
@@ -50,13 +51,13 @@ feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.2
-node_delete_prob        = 0.1
+node_add_prob           = 0.5
+node_delete_prob        = 0.3
 
 # network parameters
 num_hidden              = 0
-num_inputs              = 4
-num_outputs             = 3
+num_inputs              = 2
+num_outputs             = 1
 
 # connection weight options / used as mean for normal distribution
 weight_init_mean        = 0.0

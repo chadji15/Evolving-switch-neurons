@@ -1,5 +1,6 @@
 """
 2-input XOR example -- this is most likely the simplest possible example.
+Mainly for testing purposes.
 """
 
 from __future__ import print_function
@@ -19,7 +20,7 @@ def eval_genomes(genomes, config):
         sum = 0
         for i in range(TRIALS):
             fitness = 4
-            net = maps.MapNetwork.create(genome,config,100)
+            net = maps.MapNetwork.create(genome, config, 1)
             for xi, xo in zip(xor_inputs, xor_outputs):
                 output = net.activate(xi)
                 if output[0] < 0:
@@ -53,18 +54,17 @@ def run(config_file):
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = maps.MapNetwork.create(winner, config, 100)
+    winner_net = maps.MapNetwork.create(winner, config, 1)
     for xi, xo in zip(xor_inputs, xor_outputs):
         output = winner_net.activate(xi)
         print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
 
     node_names = {-1:'A', -2: 'B', 0:'A XOR B'}
+    #The following visualization is not accurate
     visualize.draw_net(config, winner, True, node_names=node_names)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
-    #
-    # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-    # p.run(eval_genomes, 10)
+
 
 def main():
     # Determine path to configuration file. This path manipulation is

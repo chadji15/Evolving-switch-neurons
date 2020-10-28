@@ -74,7 +74,8 @@ class MapNetwork():
             in_map = [i] + children[i]
             out_map = [o] + children[o]
             for n in out_map:
-                node_inputs[n] = []
+                if n not in node_inputs.keys():
+                    node_inputs[n] = []
 
             if len(in_map) == map_size and len(out_map) == map_size:
                 #Map to map connectivity
@@ -139,6 +140,9 @@ class MapNetwork():
 
         return MapNetwork(input_keys, output_keys, node_evals)
 
+    #Perform a forward pass in the network with the given inputs. Since we are working with recurrent networks
+    #and arbitrary connections, no separation of the neurons is performed between the neurons and the activation
+    #sequence is determined from their order in the node_evals array.
     def activate(self, inputs):
         if len(self.input_nodes) != len(inputs):
             raise RuntimeError("Expected {0:n} inputs, got {1:n}".format(len(self.input_nodes), len(inputs)))
@@ -160,25 +164,28 @@ class MapNetwork():
 
 class MapConnectionGene(BaseGene):
 
-    _gene_attributes = [FloatAttribute('c'),
-                        FloatAttribute('k'),
+    #Various parameters for defining a connection.
+    _gene_attributes = [FloatAttribute('c'), #1-to-1 or 1-to-all scheme
+                        FloatAttribute('k'),  #Gaussian or uniform distribution
                         FloatAttribute('weight'),#Weigth is used as the mean of the normal distribution for 1-to-all
-                        FloatAttribute('sigma'),
-                        BoolAttribute('enabled')]
+                        FloatAttribute('sigma'), #The standard deviation for the gaussian
+                        BoolAttribute('enabled')] #<- maybe remove this trait
 
     def __init__(self, key):
         assert isinstance(key, tuple), "DefaultConnectionGene key must be a tuple, not {!r}".format(key)
         BaseGene.__init__(self, key)
 
+    #Define the distance between two genes
     def distance(self, other, config):
         d = abs(self.c - other.c) + abs(self.k - other.k) + abs(self.sigma - other.sigma) + abs(self.weight - other.weight)
         return d * config.compatibility_weight_coefficient
 
 class MapNodeGene(DefaultNodeGene):
-    _gene_attributes = [FloatAttribute('bias'),
-                        StringAttribute('activation', options='sigmoid'),
-                        StringAttribute('aggregation', options='sum'),
-                        BoolAttribute('is_isolated')]
+
+    _gene_attributes = [FloatAttribute('bias'), #The bias of the neuron
+                        StringAttribute('activation', options='sigmoid'), # The activation function, tunable from the config
+                        StringAttribute('aggregation', options='sum'), #The aggregation function
+                        BoolAttribute('is_isolated')] #Map vs isolated neuron
 
     def distance(self, other, config):
         d = 0

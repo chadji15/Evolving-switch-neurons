@@ -3,23 +3,27 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 3.95
-pop_size              = 150
+pop_size              = 100
 reset_on_extinction   = False
 
-[MapGenome]
+[SwitchMapGenome]
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0
-activation_options      = sigmoid identity clamped
+activation_options      = sigmoid
 
 # node aggregation options
 aggregation_default     = sum
 aggregation_mutate_rate = 0
-aggregation_options     = sum product
+aggregation_options     = sum
 
 #Isolated neuron vs map
 is_isolated_default     = False
 is_isolated_mutate_rate = 0.3
+
+#Switch Neuron
+is_switch_default       = False
+is_switch_mutate_rate   = 0.2
 
 # node bias options
 bias_init_mean          = 0.0
@@ -35,30 +39,24 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.5
-conn_delete_prob        = 0.5
+conn_add_prob           = 0.2
+conn_delete_prob        = 0.1
 
 # connection enable options
 enabled_default         = True
 enabled_mutate_rate     = 0
 
 #One-to-one vs One-to-all
-c_init_mean          = 0.5
-c_init_stdev         = 0.5
-c_max_value          = 1
-c_min_value          = 0
-c_mutate_power       = 0.3
-c_mutate_rate        = 0.1
-c_replace_rate       = 0.1
+one2one_default         = True
+one2one_mutate_rate     = 0.3
 
 #Uniform vs Gaussian
-k_init_mean          = 0.5
-k_init_stdev         = 0.5
-k_max_value          = 1
-k_min_value          = 0
-k_mutate_power       = 0.3
-k_mutate_rate        = 0.1
-k_replace_rate       = 0.1
+gaussian_default        = True
+gaussian_mutate_rate    = 0.3
+
+#standard vs modulatory connection
+is_mod_default          = False
+is_mod_mutate_rate      = 0.1
 
 #Stdev for normal distribution
 sigma_init_mean          = 1
@@ -74,7 +72,7 @@ initial_connection      = full
 
 # node add/remove rates
 node_add_prob           = 0.2
-node_delete_prob        = 0.2
+node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 0
@@ -95,8 +93,8 @@ compatibility_threshold = 3.0
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation       = 20
-species_elitism      = 2
+max_stagnation       = 15
+species_elitism      = 4
 
 [DefaultReproduction]
 elitism            = 2
