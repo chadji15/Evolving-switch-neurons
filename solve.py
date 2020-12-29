@@ -2,18 +2,7 @@ import copy
 from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork, Agent
 from math import tanh
 from t_maze.envs import TMazeEnv
-
-
-def heaviside(x):
-    if x < 0:
-        return 0
-    return 1
-
-def mult(w_inputs):
-    product = 1
-    for w_i in w_inputs:
-        product *= w_i
-    return product
+from utilities import mult, clamp, heaviside
 
 def convert_to_action(scalar):
     if scalar > 3.3:
@@ -21,14 +10,6 @@ def convert_to_action(scalar):
     if scalar < -3.3:
         return (0,0,1)
     return (0,1,0)
-
-def clamp(x,low,high):
-    if x < low:
-        return low
-    if x > high:
-        return high
-    return x
-
 #Returns an agent which solves the 3x3 one-to-one association task
 #We say that a network solves this problem when it manages to learn a new association within n*(m-1) steps,
 #in this case 6 steps.

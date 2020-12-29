@@ -8,25 +8,26 @@ import os
 import neat
 import visualize
 import maps
-
+import pickle
+from utilities import shuffle_lists
 # 2-input XOR inputs and expected outputs.
 xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
-TRIALS = 100
+TRIALS = 10
 
+########################################
+#Randomize inputs and outputs
+#It appears that winning neural networks learn immitate the cyclical pattern through recurrent connections
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         sum = 0
         for i in range(TRIALS):
             fitness = 4
-            net = maps.MapNetwork.create(genome, config, 1)
-            for xi, xo in zip(xor_inputs, xor_outputs):
+            net = maps.MapNetwork.create(genome, config, 10)
+            trial_in, trial_out = shuffle_lists(xor_inputs, xor_outputs)
+            for xi, xo in zip(trial_in, trial_out):
                 output = net.activate(xi)
-                if output[0] < 0:
-                    output[0] = 0
-                elif output[0] > 1:
-                    output[0] =1
                 fitness -= abs(output[0] - xo[0])
             sum += fitness
         genome.fitness = sum/TRIALS
@@ -44,17 +45,17 @@ def run(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(5))
+    #p.add_reporter(neat.Checkpointer(100))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 100)
+    winner = p.run(eval_genomes, 1000)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = maps.MapNetwork.create(winner, config, 1)
+    winner_net = maps.MapNetwork.create(winner, config, 10)
     for xi, xo in zip(xor_inputs, xor_outputs):
         output = winner_net.activate(xi)
         print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
@@ -64,7 +65,7 @@ def run(config_file):
     visualize.draw_net(config, winner, True, node_names=node_names)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
-
+    pickle.dump(winner_net, open("mapsw.bin", "wb"))
 
 def main():
     # Determine path to configuration file. This path manipulation is

@@ -3,13 +3,7 @@
 import re
 import subprocess
 import xor_maps
-
-def clamp(x):
-    if x < 0:
-        return 0
-    if x > 1:
-        return 1
-    return x
+from utilities import clamp
 
 if __name__ == "__main__":
 

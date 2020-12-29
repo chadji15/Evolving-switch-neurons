@@ -1,9 +1,7 @@
 import math
 import sys
 from math import floor
-
 from neat.graphs import required_for_output
-
 
 def identity(activity):
     return activity

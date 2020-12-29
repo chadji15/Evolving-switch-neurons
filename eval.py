@@ -2,14 +2,6 @@ import gym
 import gym_association_task
 import t_maze
 
-def clamp(x,low,high):
-    if x < low:
-        return low
-    if x > high:
-        return high
-    return x
-
-
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
@@ -20,6 +12,9 @@ def clamp(x,low,high):
 #to achieve a score of at least 1976 (2000 - 4*(3*2) = steps - association_changes*(n*m)).
 #Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
 #The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
+from utilities import shuffle_lists
+
+
 def eval_one_to_one_3x3(agent):
     env = gym.make('OneToOne3x3-v0')
     num_episodes = 2000
@@ -114,18 +109,15 @@ def eval_tmaze(agent):
 xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
-TRIALS = 100
+TRIALS = 10
 
 def eval_net_xor(net):
     sum = 0
     for i in range(TRIALS):
         fitness = 4
-        for xi, xo in zip(xor_inputs, xor_outputs):
+        trial_in, trial_out = shuffle_lists(xor_inputs, xor_outputs)
+        for xi, xo in zip(trial_in, trial_out):
             output = net.activate(xi)
-            if output[0] < 0:
-                output[0] = 0
-            elif output[0] > 1:
-                output[0] =1
             fitness -= abs(output[0] - xo[0])
         sum += fitness
     return sum/TRIALS
