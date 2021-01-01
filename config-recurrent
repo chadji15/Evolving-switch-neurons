@@ -2,24 +2,20 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 3.95
-pop_size              = 150
+fitness_threshold     = 3.9
+pop_size              = 1000
 reset_on_extinction   = False
 
-[MapGenome]
+[DefaultGenome]
 # node activation options
 activation_default      = sigmoid
-activation_mutate_rate  = 0
-activation_options      = sigmoid identity clamped
+activation_mutate_rate  = 0.0
+activation_options      = sigmoid
 
 # node aggregation options
 aggregation_default     = sum
-aggregation_mutate_rate = 0
-aggregation_options     = sum product
-
-#Isolated neuron vs map
-is_isolated_default     = True
-is_isolated_mutate_rate = 0.3
+aggregation_mutate_rate = 0.0
+aggregation_options     = sum
 
 # node bias options
 bias_init_mean          = 0.0
@@ -42,28 +38,11 @@ conn_delete_prob        = 0.1
 enabled_default         = True
 enabled_mutate_rate     = 0
 
-#One-to-one vs One-to-all
-one_to_one_default      = False
-one_to_one_mutate_rate  = 0.1
-
-#Uniform vs Gaussian
-is_gaussian_default     = False
-is_gaussian_mutate_rate = 0.1
-
-#Stdev for normal distribution
-sigma_init_mean          = 1
-sigma_init_stdev         = 5
-sigma_max_value          = 0
-sigma_min_value          = 10
-sigma_mutate_power       = 0.4
-sigma_mutate_rate        = 0.1
-sigma_replace_rate       = 0.1
-
 feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.2
+node_add_prob           = 0.1
 node_delete_prob        = 0.1
 
 # network parameters
@@ -71,11 +50,20 @@ num_hidden              = 0
 num_inputs              = 2
 num_outputs             = 1
 
-# connection weight options / used as mean for normal distribution
+# node response options
+response_init_mean      = 1.0
+response_init_stdev     = 0.0
+response_max_value      = 30.0
+response_min_value      = -30.0
+response_mutate_power   = 0.0
+response_mutate_rate    = 0.0
+response_replace_rate   = 0.0
+
+# connection weight options
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 10
-weight_min_value        = -10
+weight_max_value        = 30
+weight_min_value        = -30
 weight_mutate_power     = 0.5
 weight_mutate_rate      = 0.8
 weight_replace_rate     = 0.1

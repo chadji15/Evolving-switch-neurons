@@ -79,15 +79,15 @@ class MapNetwork():
 
             if len(in_map) == map_size and len(out_map) == map_size:
                 #Map to map connectivity
-                if cg.c < 0.5:
+                if cg.one_to_one:
                     #1-to-1 mapping
                     weight = 5*cg.weight
-                    for i in range(map_size):
-                        node_inputs[out_map[i]].append((in_map[i], weight))
+                    for i_n in range(map_size):
+                        node_inputs[out_map[i_n]].append((in_map[i_n], weight))
 
                 else:
                     #1-to-all
-                    if cg.k < 0.5:
+                    if cg.is_gaussian:
                         #Gaussian
                         for o_n in out_map:
                             for i_n in in_map:
@@ -100,7 +100,7 @@ class MapNetwork():
 
             else:
                 #Map-to-isolated or isolated-to-isolated
-                if cg.k < 0.5:
+                if cg.is_gaussian:
                     # Gaussian
                     for o_n in out_map:
                         for i_n in in_map:
@@ -108,7 +108,7 @@ class MapNetwork():
                 else:
                     # Uniform
                     for o_n in out_map:
-                        for i_n in in_map:
+                        for i_n in in_map:\
                             node_inputs[o_n].append((i_n, 5 * cg.weight))
 
         node_evals = []
@@ -165,8 +165,8 @@ class MapNetwork():
 class MapConnectionGene(BaseGene):
 
     #Various parameters for defining a connection.
-    _gene_attributes = [FloatAttribute('c'), #1-to-1 or 1-to-all scheme
-                        FloatAttribute('k'),  #Gaussian or uniform distribution
+    _gene_attributes = [BoolAttribute('one_to_one'), #1-to-1 or 1-to-all scheme
+                        BoolAttribute('is_gaussian'),  #Gaussian or uniform distribution
                         FloatAttribute('weight'),#Weigth is used as the mean of the normal distribution for 1-to-all
                         FloatAttribute('sigma'), #The standard deviation for the gaussian
                         BoolAttribute('enabled')] #<- maybe remove this trait
@@ -177,7 +177,8 @@ class MapConnectionGene(BaseGene):
 
     #Define the distance between two genes
     def distance(self, other, config):
-        d = abs(self.c - other.c) + abs(self.k - other.k) + abs(self.sigma - other.sigma) + abs(self.weight - other.weight)
+        d = abs(self.sigma - other.sigma) + abs(self.weight - other.weight) + int(self.one_to_one != other.one_to_one)
+        + int(self.is_gaussian != other.is_gaussian)
         return d * config.compatibility_weight_coefficient
 
 class MapNodeGene(DefaultNodeGene):

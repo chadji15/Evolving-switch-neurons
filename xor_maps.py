@@ -15,7 +15,7 @@ xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
 TRIALS = 10
-
+MAP_SIZE = 1
 ########################################
 #Randomize inputs and outputs
 #It appears that winning neural networks learn immitate the cyclical pattern through recurrent connections
@@ -24,7 +24,7 @@ def eval_genomes(genomes, config):
         sum = 0
         for i in range(TRIALS):
             fitness = 4
-            net = maps.MapNetwork.create(genome, config, 10)
+            net = maps.MapNetwork.create(genome, config, MAP_SIZE)
             trial_in, trial_out = shuffle_lists(xor_inputs, xor_outputs)
             for xi, xo in zip(trial_in, trial_out):
                 output = net.activate(xi)
@@ -55,7 +55,7 @@ def run(config_file):
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = maps.MapNetwork.create(winner, config, 10)
+    winner_net = maps.MapNetwork.create(winner, config, MAP_SIZE)
     for xi, xo in zip(xor_inputs, xor_outputs):
         output = winner_net.activate(xi)
         print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))

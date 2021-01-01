@@ -27,3 +27,40 @@ def shuffle_lists(list1, list2):
         list1.append(a)
         list2.append(b)
     return list1, list2
+
+#Return the order of neuron activation in a cyclical directed graph.
+#conns is a dictionary with:
+#   key: the name of the node
+#   value: the nodes inputs in this form: [node1, node2, node3]
+def order_of_activation(conns, inputs, outputs):
+    ordered_list = []
+    visited = set()
+    frontier = list(inputs)
+    magnitude = {k: len(conns[k]) for k in conns.keys()}
+    for i in inputs:
+        magnitude[i] = 0
+
+    def activate_n(node):
+        new_nodes = []
+        for k in magnitude.keys():
+            if k in inputs:
+                continue
+            if node in conns[k]:
+                magnitude[k] -= 1
+                new_nodes.append(k)
+        return new_nodes
+
+    while len(frontier) > 0:
+        minn = frontier[0]
+        for node in frontier:
+            if magnitude[node] < magnitude[minn]:
+                minn = node
+
+        if minn not in inputs:
+            ordered_list.append(minn)
+        frontier.remove(minn)
+        visited.add(minn)
+        new_nodes = activate_n(minn)
+        frontier.extend([n for n in new_nodes if n not in visited and n not in frontier])
+
+    return ordered_list
