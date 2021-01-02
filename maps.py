@@ -3,33 +3,23 @@ from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import BaseGene, DefaultNodeGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome
 from neat.graphs import required_for_output
-from neat.six_util import itervalues, iteritems
+from neat.six_util import itervalues
 import numpy as np
+from switch_neuron import Neuron
+from utilities import order_of_activation
 
-#Somehow a genotype can map to different phenotypes?
-
-class MapNetwork():
+class MapNetwork:
 
     #A lot of this code is taken directly from neat.nn.RecurrentNetwork and modified because it is very close to
     #the desired outcome
-    def __init__(self,inputs, outputs, node_evals):
+    def __init__(self,inputs, outputs, nodes):
         self.input_nodes = inputs
         self.output_nodes = outputs
-        self.node_evals = node_evals
-        self.values = [{}, {}]
-        for v in self.values:
-            for k in inputs + outputs:
-                v[k] = 0.0
+        self.nodes = nodes
+        self.nodes_dict = {}
+        for node in nodes:
+            self.nodes_dict[node.key] = node
 
-            for node, ignored_activation, ignored_aggregation, ignored_bias, ignored_is_isolated, links in self.node_evals:
-                v[node] = 0.0
-                for i, w in links:
-                    v[i] = 0.0
-        self.active = 0
-
-    def reset(self):
-        self.values = [dict((k, 0.0) for k in v) for v in self.values]
-        self.active = 0
 
     @staticmethod
     def create(genome, config, map_size):
@@ -111,20 +101,48 @@ class MapNetwork():
                         for i_n in in_map:\
                             node_inputs[o_n].append((i_n, 5 * cg.weight))
 
-        node_evals = []
-        for node_key, inputs in iteritems(node_inputs):
+        input_keys = genome_config.input_keys
+        output_keys = genome_config.output_keys
+        conns = {}
+        for k in genome.nodes.keys():
+            if k not in node_inputs:
+                node_inputs[k] = []
+                if k in children:
+                    for c in children[k]:
+                        node_inputs[c] = []
+            conns[k] = [i for i, _ in node_inputs[k]]
+        sorted_keys = order_of_activation(conns, input_keys, output_keys)
+        nodes = []
+        for node_key in sorted_keys:
             if node_key not in genome.nodes.keys():
                 continue
             node = genome.nodes[node_key]
+
             activation_function = genome_config.activation_defs.get(node.activation)
             aggregation_function = genome_config.aggregation_function_defs.get(node.aggregation)
-            node_evals.append((node_key, activation_function, aggregation_function, node.bias, node.is_isolated, inputs))
-            for n in children[node_key]:
-                node_evals.append(
-                    (n, activation_function, aggregation_function, node.bias, node.is_isolated, node_inputs[n]))
+            nodes.append(Neuron(node_key, {
+                'activation_function': activation_function,
+                'integration_function': aggregation_function,
+                'bias': node.bias,
+                'activity': 0,
+                'output': 0,
+                'weights': node_inputs[node_key]
+            }))
 
-        input_keys = genome_config.input_keys
-        output_keys = genome_config.output_keys
+            if node_key not in children:
+                continue
+
+            for n in children[node_key]:
+                nodes.append(Neuron(n, {
+                    'activation_function': activation_function,
+                    'integration_function': aggregation_function,
+                    'bias': node.bias,
+                    'activity': 0,
+                    'output': 0,
+                    'weights': node_inputs[n]
+                }))
+
+
 
         # for key in genome_config.input_keys:
         #     input_keys.append(key)
@@ -138,7 +156,7 @@ class MapNetwork():
         #         for child in children[key]:
         #             output_keys.append(child)
 
-        return MapNetwork(input_keys, output_keys, node_evals)
+        return MapNetwork(input_keys, output_keys, nodes)
 
     #Perform a forward pass in the network with the given inputs. Since we are working with recurrent networks
     #and arbitrary connections, no separation of the neurons is performed between the neurons and the activation
@@ -147,20 +165,27 @@ class MapNetwork():
         if len(self.input_nodes) != len(inputs):
             raise RuntimeError("Expected {0:n} inputs, got {1:n}".format(len(self.input_nodes), len(inputs)))
 
-        ivalues = self.values[self.active]
-        ovalues = self.values[1 - self.active]
-        self.active = 1 - self.active
-
+        ivalues = {}
         for i, v in zip(self.input_nodes, inputs):
             ivalues[i] = v
-            ovalues[i] = v
 
-        for node, activation, aggregation, bias, is_isolated, links in self.node_evals:
-            node_inputs = [ivalues[i] * w for i, w in links]
-            s = aggregation(node_inputs)
-            ovalues[node] = activation(bias +  s)
+        for node in self.nodes:
+            standard_inputs = []
+            # Collect the weighted inputs in an array
+            for key, weight in node.standard['weights']:
+                if key in ivalues.keys():
+                    val = ivalues[key]
+                else:
+                    val = self.nodes_dict[key].standard['output']
+                standard_inputs.append(val * weight)
+            # add the bias
+            standard_inputs.append(node.standard['bias'])
+            # Calculate the neuron's activity and output based on it's standard functions.
+            node.standard['activity'] = node.standard['integration_function'](standard_inputs)
+            node.standard['output'] = node.standard['activation_function'](node.standard['activity'])
 
-        return [ovalues[i] for i in self.output_nodes]
+        output = [self.nodes_dict[key].standard['output'] for key in self.output_nodes]
+        return output
 
 class MapConnectionGene(BaseGene):
 
@@ -198,7 +223,7 @@ class MapNodeGene(DefaultNodeGene):
             d += 1
         return d * config.compatibility_weight_coefficient
 
-class MapNode():
+class MapNode:
 
     def __init__(self,key, activation_function, aggregation_function, bias,is_isolated, links):
         self.key = key

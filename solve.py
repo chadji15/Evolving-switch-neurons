@@ -4,6 +4,7 @@ from math import tanh
 from t_maze.envs import TMazeEnv
 from utilities import mult, clamp, heaviside
 
+
 def convert_to_action(scalar):
     if scalar > 3.3:
         return (1,0,0)
@@ -175,3 +176,31 @@ def solve_tmaze():
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
     agent = Agent(net, lambda x: x.insert(0,1), lambda x: scalar_to_direction(x[0]))
     return agent
+
+def solve_xor_rec():
+
+    in_keys = [-1,-2]
+    out_keys = [0]
+    hidden_keys = [1]
+
+    nodes = []
+    nodes.append(Neuron(1, {
+        'activation_function': heaviside,
+        'integration_function': sum,
+        'bias' : -1.5,
+        'activity': 0,
+        'output': 0,
+        'weights': [(-1, 1),(-2,1)]
+    }))
+
+    nodes.append(Neuron(0, {
+        'activation_function': heaviside,
+        'integration_function': sum,
+        'bias': -0.5,
+        'activity': 0,
+        'output': 0,
+        'weights': [(-1,1),(-2,1),(1,-10)]
+    }))
+
+    net = SwitchNeuronNetwork(in_keys,out_keys,nodes)
+    return net

@@ -35,11 +35,14 @@ def shuffle_lists(list1, list2):
 def order_of_activation(conns, inputs, outputs):
     ordered_list = []
     visited = set()
-    frontier = list(inputs)
-    magnitude = {k: len(conns[k]) for k in conns.keys()}
+    #The number of incoming connections
+    #If a neuron has a recurrent connection to itself we don't count it
+    magnitude = {k: len([i for i in conns[k] if i != k]) for k in conns.keys()}
+    #Inputs always activate first
     for i in inputs:
         magnitude[i] = 0
 
+    frontier = [i for i in magnitude.keys() if magnitude[i] == min(magnitude.values())]
     def activate_n(node):
         new_nodes = []
         for k in magnitude.keys():
@@ -50,7 +53,10 @@ def order_of_activation(conns, inputs, outputs):
                 new_nodes.append(k)
         return new_nodes
 
-    while len(frontier) > 0:
+    while len(visited) <  len(conns.keys()) + len(inputs):
+        if frontier == []:
+            minmagn = min([magnitude[v] for v in magnitude.keys() if v not in visited])
+            frontier = [i for i in magnitude.keys() if magnitude[i] == minmagn]
         minn = frontier[0]
         for node in frontier:
             if magnitude[node] < magnitude[minn]:

@@ -30,9 +30,7 @@ class Neuron():
         self.key = key
         self.standard= standard_dict
         self.modulatory = modulatory_dict
-        self.has_modulatory = True
-        if modulatory_dict is None:
-            self.has_modulatory = False
+        self.has_modulatory = (self.modulatory is not None)
 
 class SwitchNeuron(Neuron):
 
