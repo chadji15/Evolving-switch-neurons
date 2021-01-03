@@ -11,6 +11,7 @@ from switch_neuron import SwitchNeuron, SwitchNeuronNetwork, Neuron, Agent
 import os
 import neat
 import Reporters
+from utilities import order_of_activation
 
 #The class for the gene representing the neurons in our network.
 class SwitchNodeGene(DefaultNodeGene):
@@ -99,16 +100,18 @@ def create(genome, config):
     #Sometimes the output neurons end up not having any connections during the evolutionary process. While we do not
     #desire such networks, we should still allow them to make predictions to avoid fatal errors.
     for okey in output_keys:
-        if okey not in keys:
-            keys.add(okey)
-            std_weights[okey] = []
+        keys.add(okey)
+
+    for k in keys:
+        if k not in std_weights:
+            std_weights[k] = []
 
     #While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
     #schemes, we certainly want the output neurons to activate last.
-    sorted_keys = list(genome.nodes.keys())[:]
-    for k in output_keys:
-        sorted_keys.remove(k)
-        sorted_keys.append(k)
+    conns = {}
+    for k in keys:
+        conns[k] = [i for i, w in std_weights[k]]
+    sorted_keys = order_of_activation(conns, input_keys, output_keys)
 
     #Create the nodes of the network based on the weights dictionaries created above and the genome.
     for node_key in sorted_keys:
@@ -182,11 +185,11 @@ def run(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
-    p.add_reporter(Reporters.NetRetriever())
+    #p.add_reporter(Reporters.NetRetriever())
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 100)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
