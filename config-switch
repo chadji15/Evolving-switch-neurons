@@ -28,7 +28,7 @@ bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
 bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.7
+bias_mutate_rate        = 0.3
 bias_replace_rate       = 0.1
 
 # genome compatibility options
@@ -65,7 +65,7 @@ weight_init_stdev       = 1.0
 weight_max_value        = 30
 weight_min_value        = -30
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.8
+weight_mutate_rate      = 0.3
 weight_replace_rate     = 0.1
 
 [DefaultSpeciesSet]

@@ -10,8 +10,10 @@ from neat.genome import DefaultGenomeConfig, DefaultGenome
 from neat.graphs import required_for_output
 from switch_neuron import Neuron, SwitchNeuronNetwork, SwitchNeuron, Agent
 from neat.six_util import itervalues
-from switch_neat import make_eval_fun
 from itertools import chain
+
+from utilities import order_of_activation
+
 
 class SwitchMapConnectionGene(BaseGene):
 
@@ -21,7 +23,7 @@ class SwitchMapConnectionGene(BaseGene):
                         FloatAttribute('weight'),#Weigth is used as the mean of the normal distribution for 1-to-all
                         FloatAttribute('sigma'), #The standard deviation for the gaussian
                         BoolAttribute('enabled'),
-                        BoolAttribute('is_mod')] #<- maybe remove this trait
+                        BoolAttribute('is_mod')]
 
     def __init__(self, key):
         assert isinstance(key, tuple), "DefaultConnectionGene key must be a tuple, not {!r}".format(key)
@@ -149,10 +151,17 @@ def create(genome, config, map_size):
 
     # While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
     # schemes, we certainly want the output neurons to activate last.
-    sorted_keys = list(genome.nodes.keys())[:]
-    for k in output_keys:
-        sorted_keys.remove(k)
-        sorted_keys.append(k)
+    input_keys = genome_config.input_keys
+    output_keys = genome_config.output_keys
+    conns = {}
+    for k in genome.nodes.keys():
+        if k not in std_inputs:
+            std_inputs[k] = []
+            if k in children:
+                for c in children[k]:
+                    std_inputs[c] = []
+        conns[k] = [i for i, _ in std_inputs[k]]
+    sorted_keys = order_of_activation(conns, input_keys, output_keys)
 
     for node_key in sorted_keys:
         #if the node we are examining is not in our keys set then skip it. It means that it is not required for output.
@@ -195,18 +204,18 @@ def create(genome, config, map_size):
 
     return SwitchNeuronNetwork(input_keys, output_keys, nodes)
 
+MAP_SIZE = 1
 def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     def eval_genomes (genomes, config):
         for genome_id, genome in genomes:
-            net = create(genome,config,1)
+            net = create(genome,config,MAP_SIZE)
             #Wrap the network around an agent
             agent = Agent(net, in_proc, out_proc)
             #Evaluate its fitness based on the function given above.
             genome.fitness = evaluation_func(agent)
 
     return eval_genomes
-
 #A dry test run for the xor problem to test if the above implementation works
 def run(config_file):
 
@@ -228,18 +237,18 @@ def run(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
-    p.add_reporter(Reporters.NetRetriever())
+    #p.add_reporter(Reporters.NetRetriever())
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 100)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = create(winner, config,1)
+    winner_net = create(winner, config, MAP_SIZE)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
 

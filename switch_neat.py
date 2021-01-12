@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import pickle
-
 from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import DefaultNodeGene, DefaultConnectionGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome

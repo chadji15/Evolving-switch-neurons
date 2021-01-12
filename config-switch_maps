@@ -2,8 +2,8 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 3.95
-pop_size              = 100
+fitness_threshold     = 3.90
+pop_size              = 250
 reset_on_extinction   = False
 
 [SwitchMapGenome]
@@ -19,11 +19,11 @@ aggregation_options     = sum
 
 #Isolated neuron vs map
 is_isolated_default     = False
-is_isolated_mutate_rate = 0.3
+is_isolated_mutate_rate = 0.2
 
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0.2
+is_switch_mutate_rate   = 0.1
 
 # node bias options
 bias_init_mean          = 0.0
@@ -31,7 +31,7 @@ bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
 bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.7
+bias_mutate_rate        = 0.3
 bias_replace_rate       = 0.1
 
 # genome compatibility options
@@ -48,7 +48,7 @@ enabled_mutate_rate     = 0
 
 #One-to-one vs One-to-all
 one2one_default         = True
-one2one_mutate_rate     = 0.3
+one2one_mutate_rate     = 0.2
 
 #Uniform vs Gaussian
 gaussian_default        = True
@@ -85,7 +85,7 @@ weight_init_stdev       = 1.0
 weight_max_value        = 10
 weight_min_value        = -10
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.8
+weight_mutate_rate      = 0.3
 weight_replace_rate     = 0.1
 
 [DefaultSpeciesSet]
