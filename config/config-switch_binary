@@ -1,4 +1,4 @@
-#--- parameters for the XOR-2 experiment ---#
+#--- parameters --#
 
 [NEAT]
 fitness_criterion     = max
@@ -6,24 +6,21 @@ fitness_threshold     = 3.90
 pop_size              = 250
 reset_on_extinction   = False
 
-[SwitchMapGenome]
+[SwitchGenome]
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0
 activation_options      = sigmoid
+#tanh identity heaviside tristep
 
 # node aggregation options
 aggregation_default     = sum
 aggregation_mutate_rate = 0
 aggregation_options     = sum
 
-#Isolated neuron vs map
-is_isolated_default     = False
-is_isolated_mutate_rate = 0.2
-
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0.1
+is_switch_mutate_rate   = 0.3
 
 # node bias options
 bias_init_mean          = 0.0
@@ -40,50 +37,33 @@ compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
 conn_add_prob           = 0.2
-conn_delete_prob        = 0.1
+conn_delete_prob        = 0.2
 
 # connection enable options
 enabled_default         = True
 enabled_mutate_rate     = 0
 
-#One-to-one vs One-to-all
-one2one_default         = True
-one2one_mutate_rate     = 0.2
-
-#Uniform vs Gaussian
-gaussian_default        = True
-gaussian_mutate_rate    = 0.3
-
 #standard vs modulatory connection
 is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
-#Stdev for normal distribution
-sigma_init_mean          = 1
-sigma_init_stdev         = 5
-sigma_max_value          = 0
-sigma_min_value          = 10
-sigma_mutate_power       = 0.4
-sigma_mutate_rate        = 0.1
-sigma_replace_rate       = 0.1
-
-feed_forward            = False
+feed_forward            = True
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.2
+node_add_prob           = 0.1
 node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 0
-num_inputs              = 2
+num_inputs              = 4
 num_outputs             = 1
 
 # connection weight options / used as mean for normal distribution
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 10
-weight_min_value        = -10
+weight_max_value        = 30
+weight_min_value        = -30
 weight_mutate_power     = 0.5
 weight_mutate_rate      = 0.3
 weight_replace_rate     = 0.1
@@ -93,8 +73,8 @@ compatibility_threshold = 3.0
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation       = 15
-species_elitism      = 4
+max_stagnation       = 20
+species_elitism      = 2
 
 [DefaultReproduction]
 elitism            = 2

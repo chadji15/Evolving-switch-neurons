@@ -118,6 +118,6 @@ def eval_net_xor(net):
         trial_in, trial_out = shuffle_lists(xor_inputs, xor_outputs)
         for xi, xo in zip(trial_in, trial_out):
             output = net.activate(xi)
-            fitness -= (output[0] - xo[0])**2
+            fitness -= abs(output[0] - xo[0])
         sum += fitness
     return sum/TRIALS

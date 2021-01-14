@@ -165,12 +165,15 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
 def run(config_file):
 
     #Configuring the agent and the evaluation function
-    from eval import eval_net_xor
-    eval_func = eval_net_xor
+    from eval import eval_one_to_one_3x3
+    eval_func = eval_one_to_one_3x3()
     #Preprocessing for inputs: none
-    in_func = out_func = lambda x: x
-    #Preprocessing for outputs: one-hot max encoding.
+    in_func = lambda x: x
 
+
+    #Preprocessing for outputs: one-hot max encoding.
+    from solve import convert_to_action
+    out_func = convert_to_action
 
     # Load configuration.
     config = neat.Config(SwitchGenome, neat.DefaultReproduction,
@@ -188,7 +191,7 @@ def run(config_file):
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 1000)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -198,9 +201,9 @@ def run(config_file):
     winner_net = create(winner, config)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
-    print()
-    for i, o in (((0,0),0), ((0,1),1), ((1,0),1), ((1,1),0)):
-        print(f"Input: {i}, Expected: {o}, got {winner_agent.activate(i)}")
+
+    #for i, o in (((0,0),0), ((0,1),1), ((1,0),1), ((1,1),0)):
+    #    print(f"Input: {i}, Expected: {o}, got {winner_agent.activate(i)}")
     #Uncomment the following if you want to save the network in a binary file
     fp = open('winner_net.bin','wb')
     pickle.dump(winner_net,fp)

@@ -251,7 +251,8 @@ def run(config_file):
     winner_net = create(winner, config, MAP_SIZE)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
-
+    for i, o in (((0, 0), 0), ((0, 1), 1), ((1, 0), 1), ((1, 1), 0)):
+        print(f"Input: {i}, Expected: {o}, got {winner_agent.activate(i)}")
     #Uncomment the following if you want to save the network in a binary file
     fp = open('winner_net.bin','wb')
     pickle.dump(winner_net,fp)
