@@ -166,7 +166,7 @@ def run(config_file):
 
     #Configuring the agent and the evaluation function
     from eval import eval_one_to_one_3x3
-    eval_func = eval_one_to_one_3x3()
+    eval_func = eval_one_to_one_3x3
     #Preprocessing for inputs: none
     in_func = lambda x: x
 
@@ -217,7 +217,7 @@ def main():
     # here so that the script will run successfully regardless of the
     # current working directory.
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config-switch')
+    config_path = os.path.join(local_dir, 'config/config-switch_binary')
     run(config_path)
 
 if __name__ == '__main__':

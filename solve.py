@@ -6,9 +6,9 @@ from utilities import mult, clamp, heaviside
 
 
 def convert_to_action(scalar):
-    if scalar > 3.3:
+    if scalar[0] > 3.3:
         return (1,0,0)
-    if scalar < -3.3:
+    if scalar[0] < -3.3:
         return (0,0,1)
     return (0,1,0)
 #Returns an agent which solves the 3x3 one-to-one association task
@@ -61,7 +61,7 @@ def solve_one_to_one_3x3():
     nodes.append(Neuron(0, node_0_std))
 
     net = SwitchNeuronNetwork(input_keys, output_keys, nodes)
-    agent = Agent(net,lambda x: x,lambda x: convert_to_action(x[0]))
+    agent = Agent(net,lambda x: x,lambda x: convert_to_action(x))
     return agent
 
 #Returns an agent which solves the 3x3 one-to-one association task
