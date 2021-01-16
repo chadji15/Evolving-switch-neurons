@@ -191,20 +191,20 @@ def create(genome, config, map_size):
                     std_inputs[n] = []
 
         # Create the standard part dictionary for the neuron
-        params = {
-            'activation_function': genome_config.activation_defs.get(node.activation),
-            'integration_function': genome_config.aggregation_function_defs.get(node.aggregation),
-            'bias': node.bias,
-            'activity': 0,
-            'output': 0,
-            'weights': std_inputs[node_key]
-        }
         for n in node_map:
+            params = {
+                'activation_function': genome_config.activation_defs.get(node.activation),
+                'integration_function': genome_config.aggregation_function_defs.get(node.aggregation),
+                'bias': node.bias,
+                'activity': 0,
+                'output': 0,
+                'weights': std_inputs[n]
+            }
             nodes.append(Neuron(n, params))
 
     return SwitchNeuronNetwork(input_keys, output_keys, nodes)
 
-MAP_SIZE = 1
+MAP_SIZE = 10
 def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     def eval_genomes (genomes, config):
@@ -266,7 +266,7 @@ def main():
     # here so that the script will run successfully regardless of the
     # current working directory.
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config-switch_maps')
+    config_path = os.path.join(local_dir, 'config/config-switch_maps')
     run(config_path)
 
 if __name__ == '__main__':

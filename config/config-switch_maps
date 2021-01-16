@@ -59,12 +59,12 @@ is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
 #Stdev for normal distribution
-sigma_init_mean          = 1
-sigma_init_stdev         = 5
-sigma_max_value          = 0
-sigma_min_value          = 10
+sigma_init_mean          = 0.5
+sigma_init_stdev         = 0.5
+sigma_max_value          = 2
+sigma_min_value          = 0
 sigma_mutate_power       = 0.4
-sigma_mutate_rate        = 0.1
+sigma_mutate_rate        = 0.3
 sigma_replace_rate       = 0.1
 
 feed_forward            = True
