@@ -180,6 +180,8 @@ def run(config_file):
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
 
+    from utilities import heaviside
+    config.genome_config.add_activation('heaviside', heaviside)
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
