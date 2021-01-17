@@ -25,10 +25,10 @@ def main():
     parser.add_argument('-g', '--generations', help="The number of generations", type=int)
     parser.add_argument('-p', '--problem', help=f"Available problems: {','.join(problems.keys())}", required=True, type=str,
                         choices=problems.keys())
-    parser.add_argument('--map_size', help="Set the map size for the relevant schemes", type=int, default=1)
+    parser.add_argument('--map_size', help="Set the map size for the relevant schemes", type=int)
     parser.add_argument('--dump', help="Dump the network in a binary file", type=str)
     args=parser.parse_args()
-    print(args)
+
     eval_f = problems[args.problem]
     in_f = identity
     out_f = identity
@@ -49,7 +49,7 @@ def main():
     create_f = None
     if args.map_size is not None:
         def create_func(genome, config):
-            schemes[args.scheme](genome,config, args.map_size)
+            return schemes[args.scheme](genome,config, args.map_size)
 
         create_f = create_func
     else:
