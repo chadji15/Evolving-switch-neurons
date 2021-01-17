@@ -53,6 +53,7 @@ class RecurrentNetwork(object):
         return output
 
     #Takes a genome and the configuration object and returns the network encoded in the genome.
+    @staticmethod
     def create(genome, config):
         genome_config = config.genome_config
         required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
@@ -168,5 +169,5 @@ def run(config_file):
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config-recurrent')
+    config_path = os.path.join(local_dir, 'config/config-recurrent')
     run(config_path)

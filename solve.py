@@ -120,10 +120,10 @@ def solve_one_to_many():
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
     return net
 
-def scalar_to_direction(x):
-    if x < -0.33:
+def convert_to_direction(x):
+    if x[0] < -0.33:
         return  TMazeEnv.Actions.left
-    if x > 0.33:
+    if x[0] > 0.33:
         return TMazeEnv.Actions.right
     return TMazeEnv.Actions.forward
 
@@ -174,7 +174,7 @@ def solve_tmaze():
     nodes.append(Neuron(0,o_params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
-    agent = Agent(net, lambda x: x.insert(0,1), lambda x: scalar_to_direction(x[0]))
+    agent = Agent(net, lambda x: x.insert(0,1), lambda x: convert_to_direction(x))
     return agent
 
 def solve_xor_rec():
