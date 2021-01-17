@@ -165,15 +165,14 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
 def run(config_file):
 
     #Configuring the agent and the evaluation function
-    from eval import eval_one_to_one_3x3
-    eval_func = eval_one_to_one_3x3
+    from eval import eval_net_xor
+    eval_func = eval_net_xor
     #Preprocessing for inputs: none
-    in_func = lambda x: x
+    in_func = out_func = lambda x: x
 
 
     #Preprocessing for outputs: one-hot max encoding.
-    from solve import convert_to_action
-    out_func = convert_to_action
+
 
     # Load configuration.
     config = neat.Config(SwitchGenome, neat.DefaultReproduction,
@@ -191,7 +190,7 @@ def run(config_file):
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 1000)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -217,7 +216,7 @@ def main():
     # here so that the script will run successfully regardless of the
     # current working directory.
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config/config-switch_binary')
+    config_path = os.path.join(local_dir, 'config/config-switch')
     run(config_path)
 
 if __name__ == '__main__':
