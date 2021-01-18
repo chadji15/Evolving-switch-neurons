@@ -70,12 +70,12 @@ response_mutate_rate    = 0.0
 response_replace_rate   = 0.0
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3.0
+compatibility_threshold = 2.0
 
 [DefaultStagnation]
 species_fitness_func = max
 max_stagnation       = 15
-species_elitism      = 4
+species_elitism      = 5
 
 [DefaultReproduction]
 elitism            = 2

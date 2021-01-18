@@ -8,6 +8,7 @@ from recurrent_neat import RecurrentNetwork
 from solve import convert_to_action, convert_to_direction
 import neat
 import Reporters
+from utilities import heaviside
 from switch_neuron import Agent
 
 def identity(x):
@@ -27,6 +28,9 @@ def main():
                         choices=problems.keys())
     parser.add_argument('--map_size', help="Set the map size for the relevant schemes", type=int)
     parser.add_argument('--dump', help="Dump the network in a binary file", type=str)
+    parser.add_argument('--num_episodes', help="Number of episodes for tmaze", type=int)
+    parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward"
+                                                  "for the t-maze task", type=int )
     args=parser.parse_args()
 
     eval_f = problems[args.problem]
@@ -34,6 +38,7 @@ def main():
     out_f = identity
     genome = neat.DefaultGenome
 
+    #Configure genome based on the encoding scheme and neurons used
     if args.scheme == 'switch':
         genome = switch_neat.SwitchGenome
     elif args.scheme == 'maps':
@@ -41,19 +46,33 @@ def main():
     elif args.scheme == 'switch_maps':
         genome = switch_maps.SwitchMapGenome
 
+    #Configure the pre-processing and post-processing functions based on
+    #the environment
     if args.problem == 'binary_association':
         out_f = convert_to_action
     elif args.problem == 't-maze':
         out_f = convert_to_direction
 
+    #If we use the map-based encoding scheme add the map size parameter to the function
+    #responsible for creating the network from the genotype.
     create_f = None
-    if args.map_size is not None:
+    if args.map_size is not None and (args.scheme in ['maps', 'switch_maps']):
         def create_func(genome, config):
             return schemes[args.scheme](genome,config, args.map_size)
 
         create_f = create_func
     else:
         create_f = schemes[args.scheme]
+
+    num_episodes = 100
+    s_inter = 20
+    #If the problem is the t-maze task, use the extra parameters episodes and switch interval
+    if args.problem == 't-maze':
+        if args.num_episodes is not None:
+            num_episodes = args.num_episodes
+        if args.switch_interval is not None:
+            s_inter = args.switch_interval
+        eval_f = lambda agent: eval_tmaze(agent, num_episodes, s_inter)
 
     def make_eval_fun(evaluation_func, in_proc, out_proc):
 
@@ -70,7 +89,7 @@ def main():
     config = neat.Config(genome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          args.config)
-
+    config.genome_config.add_activation('heaviside', heaviside)
 
 
     # Create the population, which is the top-level object for a NEAT run.
