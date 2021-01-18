@@ -69,14 +69,13 @@ def int_to_action(x):
 #figured out when we change the place of the high reward so it doesn't even need that step to learn.
 #The network should accept 4 inputs (is agent at home, is agent at turning point, is agent at maze end, reward) and
 #return 1 scalar output
-def eval_tmaze(agent):
+def eval_tmaze(agent, num_episodes=100, s_inter=20):
     env = gym.make('MiniGrid-TMaze-v0')
-    num_episodes = 100
     s = 0
     pos = 0
     for i_episode in range(num_episodes):
         reward = 0
-        if i_episode % 20 == 0:
+        if i_episode % s_inter == 0:
             pos = (pos + 1) % 2
         observation = env.reset(reward_pos= pos)
         #append 0 for the reward

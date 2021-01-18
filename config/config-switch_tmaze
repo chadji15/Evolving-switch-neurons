@@ -2,14 +2,14 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 95
+fitness_threshold     = 9.5
 pop_size              = 250
 reset_on_extinction   = False
 
 [SwitchGenome]
 # node activation options
 activation_default      = sigmoid
-activation_mutate_rate  = 0
+activation_mutate_rate  = 0.2
 activation_options      = sigmoid tanh identity heaviside
 
 # node aggregation options
@@ -44,7 +44,7 @@ enabled_mutate_rate     = 0
 
 #standard vs modulatory connection
 is_mod_default          = False
-is_mod_mutate_rate      = 0.1
+is_mod_mutate_rate      = 0.2
 
 feed_forward            = True
 initial_connection      = full
