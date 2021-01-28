@@ -1,5 +1,7 @@
 import random
 
+def identity(activity):
+    return activity
 
 def clamp(x,low,high):
     if x < low:

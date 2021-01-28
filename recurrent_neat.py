@@ -97,8 +97,7 @@ class RecurrentNetwork(object):
         for k in keys:
             if k not in std_weights.keys():
                 std_weights[k] = []
-        #While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
-        #schemes, we certainly want the output neurons to activate last.
+        #Deduce the order of activation of the neurons
         conns = {}
         for node in std_weights.keys():
             conns[node] = [inp for inp, weight in std_weights[node]]

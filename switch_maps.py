@@ -204,7 +204,7 @@ def create(genome, config, map_size):
 
     return SwitchNeuronNetwork(input_keys, output_keys, nodes)
 
-MAP_SIZE = 10
+MAP_SIZE = 5
 def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     def eval_genomes (genomes, config):
@@ -241,7 +241,7 @@ def run(config_file):
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 300)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 1000)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
