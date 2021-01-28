@@ -1,10 +1,8 @@
 import math
 import sys
 from math import floor
-from neat.graphs import required_for_output
+from utilities import identity
 
-def identity(activity):
-    return activity
 
 #This is a wrapper class for the neural networks to allow pre-processing of the input and the output which may help the
 #network
