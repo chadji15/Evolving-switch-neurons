@@ -1,5 +1,7 @@
 import pickle
 import argparse
+from functools import partial
+
 from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor
 import switch_neat
 from maps import MapNetwork, MapGenome
@@ -27,9 +29,10 @@ def main():
                         choices=problems.keys())
     parser.add_argument('--map_size', help="Set the map size for the relevant schemes", type=int)
     parser.add_argument('--dump', help="Dump the network in a binary file", type=str)
-    parser.add_argument('--num_episodes', help="Number of episodes for tmaze", type=int)
-    parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward"
-                                                  "for the t-maze task", type=int )
+    parser.add_argument('--num_episodes', help="Number of episodes for tmaze/binary_association", type=int)
+    parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward/"
+                                                  "shuffling the associations", type=int )
+
     args=parser.parse_args()
 
     eval_f = problems[args.problem]
@@ -56,22 +59,21 @@ def main():
     #responsible for creating the network from the genotype.
     create_f = None
     if args.map_size is not None and (args.scheme in ['maps', 'switch_maps']):
-        def create_func(genome, config):
-            return schemes[args.scheme](genome,config, args.map_size)
-
-        create_f = create_func
+        create_f = partial(schemes[args.scheme], map_size=args.map_size)
     else:
         create_f = schemes[args.scheme]
 
     num_episodes = 100
     s_inter = 20
+    if args.num_episodes is not None:
+        num_episodes = args.num_episodes
+    if args.switch_interval is not None:
+        s_inter = args.switch_interval
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
     if args.problem == 't-maze':
-        if args.num_episodes is not None:
-            num_episodes = args.num_episodes
-        if args.switch_interval is not None:
-            s_inter = args.switch_interval
-        eval_f = lambda agent: eval_tmaze(agent, num_episodes, s_inter)
+        eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
+    elif args.problem == 'binary_association':
+        eval_f = partial (eval_one_to_one_3x3,num_episodes, s_inter)
 
     def make_eval_fun(evaluation_func, in_proc, out_proc):
 

@@ -9,17 +9,16 @@ import t_maze
 ##############
 
 #For a network to be considered to be able to solve the one-to-one 3x3 association task in this case it needs to
-#to achieve a score of at least 1980 (2000 - (4*(3*2)) * 0.8  = steps - association_changes*(n*m) *  (1 - low_reward)).
+#to achieve a score of at least 1975 (2000 - (4*(3*2))  = steps - association_changes*(n*m).
 #Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
 #The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
 from utilities import shuffle_lists
 
 
-def eval_one_to_one_3x3(agent):
+def eval_one_to_one_3x3(agent, num_episodes = 2000, rand_iter= 500):
     env = gym.make('OneToOne3x3-v0')
-    num_episodes = 2000
     s = num_episodes
-    observation = env.reset(rand_iter=500)
+    observation = env.reset(rand_iter=rand_iter)
     input = tuple(list(observation) + [0])
     for i_episode in range(num_episodes):
         action = agent.activate(input)
@@ -33,7 +32,7 @@ def eval_one_to_one_3x3(agent):
     return s
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to
-#to achieve a score of at least 1971 (2000 - 4*(3*(4-1))*0.8 = steps - association_changes*(n*(2^m - 1))*(1-low_reward).
+#to achieve a score of at least 1964 (2000 - 4*(3*(4-1)) = steps - association_changes*(n*(2^m - 1)).
 #Note that scores above this threshold do not mean better performance since the score of 1964 is already considered optimal.
 #The network accepts 4 inputs (3 for observation and 1 for reward)  and return a vector with two binary values.
 def eval_one_to_many_3x2(agent):
