@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 9.5
+fitness_threshold     = 95.5
 pop_size              = 250
 reset_on_extinction   = False
 
@@ -19,7 +19,7 @@ aggregation_options     = sum
 
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0
+is_switch_mutate_rate   = 0.2
 
 # node bias options
 bias_init_mean          = 0.0
@@ -35,7 +35,7 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.2
+conn_add_prob           = 0.3
 conn_delete_prob        = 0.1
 
 # connection enable options
@@ -46,11 +46,11 @@ enabled_mutate_rate     = 0
 is_mod_default          = False
 is_mod_mutate_rate      = 0.2
 
-feed_forward            = True
+feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.2
+node_add_prob           = 0.3
 node_delete_prob        = 0.1
 
 # network parameters
@@ -73,9 +73,9 @@ compatibility_threshold = 3.0
 [DefaultStagnation]
 species_fitness_func = max
 max_stagnation       = 20
-species_elitism      = 2
+species_elitism      = 5
 
 [DefaultReproduction]
-elitism            = 2
+elitism            = 3
 survival_threshold = 0.2
 

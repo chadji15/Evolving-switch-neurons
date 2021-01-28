@@ -10,6 +10,7 @@ from recurrent_neat import RecurrentNetwork
 from solve import convert_to_action, convert_to_direction
 import neat
 import Reporters
+from utilities import heaviside
 from switch_neuron import Agent
 
 def identity(x):
@@ -90,7 +91,7 @@ def main():
     config = neat.Config(genome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          args.config)
-
+    config.genome_config.add_activation('heaviside', heaviside)
 
 
     # Create the population, which is the top-level object for a NEAT run.
