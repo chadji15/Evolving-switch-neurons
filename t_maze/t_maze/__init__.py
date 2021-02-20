@@ -1,4 +1,5 @@
 from gym.envs.registration import register
+from t_maze.envs.t_maze import LOW, HIGH, CRASH_REWARD
 
 register(
         id='MiniGrid-TMaze-v0',

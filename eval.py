@@ -1,7 +1,8 @@
+import math
 import gym
 import gym_association_task
 import t_maze
-
+from functools import partial
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
@@ -9,7 +10,7 @@ import t_maze
 ##############
 
 #For a network to be considered to be able to solve the one-to-one 3x3 association task in this case it needs to
-#to achieve a score of at least 1975 (2000 - (4*(3*2))  = steps - association_changes*(n*m).
+#to achieve a score of at least 1976 (2000 - (4*(3*2))  = steps - association_changes*(n*m).
 #Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
 #The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
 from utilities import shuffle_lists
@@ -68,12 +69,16 @@ def int_to_action(x):
 #figured out when we change the place of the high reward so it doesn't even need that step to learn.
 #The network should accept 4 inputs (is agent at home, is agent at turning point, is agent at maze end, reward) and
 #return 1 scalar output
-def eval_tmaze(agent, num_episodes=100, s_inter=20, debug=False):
-    env = gym.make('MiniGrid-TMaze-v0')
-    s = 0
-    pos = 0
+def eval_tmaze(agent, num_episodes=100, s_inter=20, debug=False, descriptor_out=False):
+
+    env = gym.make('MiniGrid-TMaze-v0')  #init environment
+    s = 0       #s = total reward
+    pos = 0     #pos = the initial position of the high reward
+    bd = []     # behavioural descriptor
+
     for i_episode in range(num_episodes):
         reward = 0
+        #swap the position of the high reward every s_inter steps
         if i_episode % s_inter == 0:
             pos = (pos + 1) % 2
         observation = env.reset(reward_pos= pos)
@@ -96,6 +101,19 @@ def eval_tmaze(agent, num_episodes=100, s_inter=20, debug=False):
         if debug:
             print(input)
         s += reward
+        #Add this episode to the behavioural descriptor
+        if descriptor_out:
+            if math.isclose(reward, t_maze.LOW):
+                des = 'l'
+            elif math.isclose(reward, t_maze.HIGH):
+                des = 'h'
+            else:
+                des = 'n'
+            if math.isclose(reward, t_maze.CRASH_REWARD):
+                des += 'y'
+            else:
+                des += 'n'
+            bd.append(des)
         agent.activate(input)
         #DEBUG INFO
         if debug:
@@ -104,6 +122,8 @@ def eval_tmaze(agent, num_episodes=100, s_inter=20, debug=False):
     env.close()
     if debug:
         print(f"Total reward: {s}")
+    if descriptor_out:
+        return s, bd
     return s
 
 #The simplest case for test the network's implementation. Use when in doubt about the rest.
@@ -125,3 +145,74 @@ def eval_net_xor(net):
             fitness -= abs(output[0] - xo[0])
         sum += fitness
     return sum/TRIALS
+
+class NoveltyEvaluator():
+
+    #distance_func: a function that computes the distance of two behavioural descriptors
+    #k: the number used for the nearest neighbour calculation
+    #threshold: the sparseness threshold for a gene to enter the archive
+    #The archive has the key of the genome as the key and another dictionary as values with bd, novelty and fitness
+    def __init__(self, eval_func, threshold = 1, k = 15):
+        self.eval_func = eval_func
+        self.threshold = threshold
+        self.k = k
+        self.archive = {}
+        self.visited_novelty = {}
+
+    def distance_func(self, bd1, bd2):
+        assert False, "NoveltyEvaluator.distance_func needs to be overloaded!"
+
+    def get_best_id(self):
+
+        maxid = list(self.archive.keys())[0]
+        maxfitness = self.archive[maxid]['fitness']
+        for key in self.archive:
+            if self.archive[key]['fitness'] > maxfitness:
+                maxfitness = self.archive[key]['fitness']
+                maxid = key
+
+        return maxid
+
+    #Find the novelty score for an agent.
+    #Takes a behavioural description
+    def eval(self,key, agent):
+        if key in self.visited_novelty:
+            return self.visited_novelty[key]
+        fitness, bd = self.eval_func(agent)
+        cache = []
+        if not self.archive:
+            self.archive[key] = {'bd': bd, 'novelty': 0, 'fitness':fitness}
+            return len(bd)
+        for k in self.archive:
+            dist = self.distance_func(bd, self.archive[k]['bd'])
+            if len(cache) > self.k and dist < min(cache):
+                cache.remove(min(cache))
+            if len(cache) < self.k:
+                cache.append(dist)
+
+        novelty = sum(cache) / len(cache)
+        self.visited_novelty[key] = novelty
+        if novelty > self.threshold:
+            self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness}
+        return novelty
+
+
+
+class TmazeNovelty(NoveltyEvaluator):
+
+    def __init__(self, n_episodes, s_inter):
+        eval_func = partial(eval_tmaze, num_episodes=n_episodes, s_inter=s_inter, debug=False,
+                            descriptor_out=True)
+        super().__init__(eval_func, threshold=50)
+
+    def distance_func(self, bd1, bd2):
+        total = 0;
+        for t1, t2 in zip(bd1, bd2):
+            score = 0
+            if t1[0] != t2[0]:
+                score += 1
+            if t1[1] != t2[1]:
+                score += 1
+            total += score
+
+        return total
