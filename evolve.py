@@ -74,7 +74,7 @@ def main():
     if args.problem == 't-maze':
         eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
     elif args.problem == 'binary_association':
-        eval_f = partial (eval_one_to_one_3x3,num_episodes, s_inter)
+        eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
     def make_eval_fun(evaluation_func, in_proc, out_proc):
 

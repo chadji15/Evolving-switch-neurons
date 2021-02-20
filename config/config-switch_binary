@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 1975
+fitness_threshold     = 940
 pop_size              = 250
 reset_on_extinction   = False
 
@@ -10,7 +10,7 @@ reset_on_extinction   = False
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0.2
-activation_options      = sigmoid tanh identity heaviside tristep
+activation_options      = sigmoid tanh identity heaviside
 
 # node aggregation options
 aggregation_default     = sum
@@ -46,7 +46,7 @@ enabled_mutate_rate     = 0
 is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
-feed_forward            = False
+feed_forward            = True
 initial_connection      = full
 
 # node add/remove rates
