@@ -2,7 +2,7 @@ import pickle
 import argparse
 from functools import partial
 
-from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor
+from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--num_episodes', help="Number of episodes for tmaze/binary_association", type=int)
     parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward/"
                                                   "shuffling the associations", type=int )
+    parser.add_argument('--novelty', help='Use the novelty metric instead of the fitness function', action="store_true")
 
     args=parser.parse_args()
 
@@ -40,7 +41,7 @@ def main():
     in_f = identity
     out_f = identity
     genome = neat.DefaultGenome
-
+    evaluator = None
     #Configure genome based on the encoding scheme and neurons used
     if args.scheme == 'switch':
         genome = switch_neat.SwitchGenome
@@ -72,7 +73,11 @@ def main():
         s_inter = args.switch_interval
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
     if args.problem == 't-maze':
-        eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
+        if args.novelty:
+            evaluator = TmazeNovelty(num_episodes,s_inter)
+            eval_f = evaluator.eval
+        else:
+            eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
@@ -84,7 +89,10 @@ def main():
                 #Wrap the network around an agent
                 agent = Agent(net, in_proc, out_proc)
                 #Evaluate its fitness based on the function given above.
-                genome.fitness = evaluation_func(agent)
+                if args.novelty:
+                    genome.fitness = evaluation_func(genome_id, agent)
+                else:
+                    genome.fitness = evaluation_func(agent)
 
         return eval_genomes
 
@@ -103,10 +111,19 @@ def main():
 
     # Run for up to ... generations.
     winner = p.run(make_eval_fun(eval_f, in_f, out_f), args.generations)
+
+    #If we are using the novelty metric get the winner from the archive
+    if args.novelty:
+        winnerid = evaluator.get_best_id()
+        winner = p.population[winnerid]
+
     print('\nBest genome:\n{!s}'.format(winner))
     winner_net = create_f(winner, config)
     winner_agent = Agent(winner_net,in_f, out_f)
-    print("Score in task: {}".format(eval_f(winner_agent)))
+    if args.novelty:
+        print("Score in task: {}".format(evaluator.archive[winnerid]['fitness']))
+    else:
+        print("Score in task: {}".format(eval_f(winner_agent)))
 
     if args.dump is not None:
         fp = open(args.dump,'wb')
