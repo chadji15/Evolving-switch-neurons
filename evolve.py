@@ -2,7 +2,7 @@ import pickle
 import argparse
 from functools import partial
 
-from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty
+from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -19,7 +19,8 @@ def identity(x):
 def main():
     schemes = {'switch':switch_neat.create , 'maps' : MapNetwork.create, 'recurrent': RecurrentNetwork.create,
                'switch_maps' : switch_maps.create}
-    problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 't-maze':eval_tmaze}
+    problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze':eval_tmaze, 'double_tmaze':
+                eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
 
     parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
     parser.add_argument('-s', '--scheme', help=f"Choose between the available schemes: {','.join(schemes.keys())}",
@@ -54,7 +55,7 @@ def main():
     #the environment
     if args.problem == 'binary_association':
         out_f = convert_to_action
-    elif args.problem == 't-maze':
+    elif args.problem in ['tmaze', 'double_tmaze', 'homing_tmaze'] :
         out_f = convert_to_direction
 
     #If we use the map-based encoding scheme add the map size parameter to the function
@@ -72,12 +73,16 @@ def main():
     if args.switch_interval is not None:
         s_inter = args.switch_interval
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
-    if args.problem == 't-maze':
+    if args.problem == 'tmaze':
         if args.novelty:
             evaluator = TmazeNovelty(num_episodes,s_inter)
             eval_f = evaluator.eval
         else:
             eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
+    elif args.problem == 'double_tmaze':
+        eval_f = partial (eval_double_tmaze, num_episodes=num_episodes,s_inter=s_inter)
+    elif args.problem == 'homing_tmaze':
+        eval_f = partial (eval_tmaze_homing, num_episodes=num_episodes, s_inter=s_inter)
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
@@ -115,15 +120,17 @@ def main():
     #If we are using the novelty metric get the winner from the archive
     if args.novelty:
         winnerid = evaluator.get_best_id()
-        winner = p.population[winnerid]
+        winner_agent = evaluator.archive[winnerid]['agent']
+    else:
+        print('\nBest genome:\n{!s}'.format(winner))
+        winner_net = create_f(winner, config)
+        winner_agent = Agent(winner_net,in_f, out_f)
 
-    print('\nBest genome:\n{!s}'.format(winner))
-    winner_net = create_f(winner, config)
-    winner_agent = Agent(winner_net,in_f, out_f)
     if args.novelty:
-        print("Score in task: {}".format(evaluator.archive[winnerid]['fitness']))
+        print("Score in task: {}".format(eval_f(winnerid,winner_agent)))
     else:
         print("Score in task: {}".format(eval_f(winner_agent)))
+
 
     if args.dump is not None:
         fp = open(args.dump,'wb')
