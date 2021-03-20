@@ -335,19 +335,37 @@ class NoveltyEvaluator():
 
 class TmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, s_inter):
+    def __init__(self, n_episodes, s_inter, threshold = 50):
         eval_func = partial(eval_tmaze, num_episodes=n_episodes, s_inter=s_inter, debug=False,
                             descriptor_out=True)
-        super().__init__(eval_func, threshold=50)
+        super().__init__(eval_func, threshold=threshold)
 
     def distance_func(self, bd1, bd2):
         total = 0;
         for t1, t2 in zip(bd1, bd2):
-            score = 0
-            if t1[0] != t2[0]:
-                score += 1
-            if t1[1] != t2[1]:
-                score += 1
-            total += score
+            for i in range(len(t1)):
+                if t1[i] != t2[i]:
+                    total += 1
 
         return total
+
+class DoubleTmazeNovelty(NoveltyEvaluator):
+
+    def __init__(self, n_episodes, s_inter, threshold=50):
+        eval_func = partial(eval_double_tmaze, num_episodes=n_episodes, s_inter=s_inter, debug=False,
+                            descriptor_out=True)
+        super().__init__(eval_func, threshold=threshold)
+
+    def distance_func(self, bd1, bd2):
+        score = 0
+        for i, j in zip(bd1, bd2):
+            if i != j:
+                score += 1
+        return score
+
+class HomingTmazeNovelty(NoveltyEvaluator):
+
+    def __init__(self, n_episodes, s_inter, threshold=150):
+        eval_func = partial(eval_tmaze_homing, num_episodes=n_episodes, s_inter=s_inter, debug=False,
+                            descriptor_out=True)
+        super().__init__(eval_func, threshold=threshold)
