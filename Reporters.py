@@ -70,3 +70,4 @@ class NetRetriever(BaseReporter):
             #Remove the previous genome to avoid cluttering
             os.remove(f"net_gen_{self.g-1}.bin")
         self.g += 1
+

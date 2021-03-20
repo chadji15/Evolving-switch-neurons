@@ -2,7 +2,8 @@ import pickle
 import argparse
 from functools import partial
 
-from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing
+from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing, \
+    DoubleTmazeNovelty, HomingTmazeNovelty
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -35,6 +36,7 @@ def main():
     parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward/"
                                                   "shuffling the associations", type=int )
     parser.add_argument('--novelty', help='Use the novelty metric instead of the fitness function', action="store_true")
+    parser.add_argument('--threshold', help='Threshold for a new genome to enter the archive', type=float, default=100)
 
     args=parser.parse_args()
 
@@ -75,14 +77,22 @@ def main():
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
     if args.problem == 'tmaze':
         if args.novelty:
-            evaluator = TmazeNovelty(num_episodes,s_inter)
+            evaluator = TmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
     elif args.problem == 'double_tmaze':
-        eval_f = partial (eval_double_tmaze, num_episodes=num_episodes,s_inter=s_inter)
+        if args.novelty:
+            evaluator = DoubleTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            eval_f = evaluator.eval
+        else:
+            eval_f = partial (eval_double_tmaze, num_episodes=num_episodes,s_inter=s_inter)
     elif args.problem == 'homing_tmaze':
-        eval_f = partial (eval_tmaze_homing, num_episodes=num_episodes, s_inter=s_inter)
+        if args.novelty:
+            evaluator = HomingTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            eval_f = evaluator.eval
+        else:
+            eval_f = partial (eval_tmaze_homing, num_episodes=num_episodes, s_inter=s_inter)
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 

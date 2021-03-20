@@ -316,7 +316,7 @@ class NoveltyEvaluator():
         fitness, bd = self.eval_func(agent)
         cache = []
         if not self.archive:
-            self.archive[key] = {'bd': bd, 'novelty': 0, 'fitness':fitness}
+            self.archive[key] = {'bd': bd, 'novelty': 0, 'fitness':fitness, 'agent' : agent}
             return len(bd)
         for k in self.archive:
             dist = self.distance_func(bd, self.archive[k]['bd'])
