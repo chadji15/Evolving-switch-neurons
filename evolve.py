@@ -2,8 +2,8 @@ import pickle
 import argparse
 from functools import partial, partialmethod
 import gym_association_task
-from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing, \
-    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator
+from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_tmaze_homing, \
+    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -22,7 +22,7 @@ def main():
                'switch_maps' : switch_maps.create}
     problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
                 'double_tmaze':
-                eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
+                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
 
     domain_constant = {'tmaze': 2, 'double_tmaze': 4}
 
@@ -90,7 +90,8 @@ def main():
             evaluator = DoubleTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
-            eval_f = partial (eval_double_tmaze, num_episodes=num_episodes,s_inter=s_inter)
+            evaluator = DoubleTmazeEvaluator(num_episodes, samples=4)
+            eval_f = evaluator.eval_double_tmaze
     elif args.problem == 'homing_tmaze':
         if args.novelty:
             evaluator = HomingTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
@@ -127,7 +128,7 @@ def main():
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
-    if args.problem == 'tmaze':
+    if args.problem in  ['double_tmaze', 'tmaze']:
         mutator = Reporters.EvaluatorMutator(evaluator)
         p.add_reporter(mutator)
 
