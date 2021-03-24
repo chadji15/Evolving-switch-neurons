@@ -2,6 +2,7 @@ from neat.statistics import StatisticsReporter
 from neat.reporting import BaseReporter
 from neat.six_util import iteritems
 from switch_neat import *
+import random
 
 #Return the low quartile of the values in the *values array
 def low_quartile(values):
@@ -71,3 +72,10 @@ class NetRetriever(BaseReporter):
             os.remove(f"net_gen_{self.g-1}.bin")
         self.g += 1
 
+class EvaluatorMutator(BaseReporter):
+
+    def __init__(self, evaluator):
+        self.evaluator = evaluator
+
+    def end_generation(self, config, population, species_set):
+        self.evaluator.params = random.sample(self.evaluator.param_list, self.evaluator.samples)
