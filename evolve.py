@@ -1,9 +1,9 @@
 import pickle
 import argparse
-from functools import partial
+from functools import partial, partialmethod
 import gym_association_task
-from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing, \
-    DoubleTmazeNovelty, HomingTmazeNovelty
+from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing, \
+    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -20,8 +20,11 @@ def identity(x):
 def main():
     schemes = {'switch':switch_neat.create , 'maps' : MapNetwork.create, 'recurrent': RecurrentNetwork.create,
                'switch_maps' : switch_maps.create}
-    problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze':eval_tmaze, 'double_tmaze':
+    problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
+                'double_tmaze':
                 eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
+
+    domain_constant = {'tmaze': 2, 'double_tmaze': 4}
 
     parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
     parser.add_argument('-s', '--scheme', help=f"Choose between the available schemes: {','.join(schemes.keys())}",
@@ -80,7 +83,8 @@ def main():
             evaluator = TmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
-            eval_f = partial(eval_tmaze, num_episodes=num_episodes, s_inter = s_inter)
+            evaluator = TmazeEvaluator(num_episodes, samples=4)
+            eval_f = evaluator.eval_tmaze
     elif args.problem == 'double_tmaze':
         if args.novelty:
             evaluator = DoubleTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
@@ -123,6 +127,9 @@ def main():
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
+    if args.problem == 'tmaze':
+        mutator = Reporters.EvaluatorMutator(evaluator)
+        p.add_reporter(mutator)
 
     # Run for up to ... generations.
     winner = p.run(make_eval_fun(eval_f, in_f, out_f), args.generations)
