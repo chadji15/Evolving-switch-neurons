@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 
@@ -206,7 +207,6 @@ class TmazeEvaluator():
 #         return s, bd
 #     return s
 
-
 #For a network to be considered to be able to solve the double t-maze non-homing task in this case it needs to
 #to achieve a score of at least 88 (for the default settings). This is because every time we change the place of the high reward, the optimal
 #network needs only three steps to figure it out and we change the the place of the high reward 5 times through the
@@ -214,64 +214,140 @@ class TmazeEvaluator():
 #figured out when we change the place of the high reward so it doesn't even need that step to learn.
 #The network should accept 4 inputs (is agent at home, is agent at turning point, is agent at maze end, reward) and
 #return 1 scalar output
-def eval_double_tmaze(agent, num_episodes=100, s_inter=20, debug=False, descriptor_out=False):
+# def eval_double_tmaze(agent, num_episodes=100, s_inter=20, debug=False, descriptor_out=False):
+#
+#     env = gym.make('MiniGrid-DoubleTMaze-v0')  #init environment
+#     env = env.unwrapped
+#     s = 0       #s = total reward
+#     pos = 0     #pos = the initial position of the high reward
+#     bd = []     # behavioural descriptor
+#
+#     for i_episode in range(num_episodes):
+#         reward = 0
+#         #swap the position of the high reward every s_inter steps
+#         if i_episode % s_inter == 0:
+#             #Mod 4 because we have 4 maze ends
+#             pos = (pos + 1) % 4
+#         observation = env.reset(reward_pos= pos)
+#         #append 0 for the reward
+#         input = list(observation)
+#         input.append(0)
+#         done = False
+#         #DEBUG INFO
+#         if debug:
+#             print("Episode: {}".format(i_episode))
+#             print("High pos: {}".format(pos))
+#         while not done:
+#             action = agent.activate(input)
+#             observation, reward, done, info = env.step(action)
+#             input = list(observation)
+#             input.append(reward)
+#             #DEBUG INFO
+#             if debug:
+#                 print("     {}".format(int_to_action(action)))
+#         if debug:
+#             print(input)
+#         s += reward
+#         #Add this episode to the behavioural descriptor
+#         if descriptor_out:
+#             if env.agent_pos == env.END1:
+#                 des = 1
+#             elif env.agent_pos == env.END2:
+#                 des = 2
+#             elif env.agent_pos == env.END3:
+#                 des = 3
+#             elif env.agent_pos == env.END4:
+#                 des = 4
+#             else:
+#                 des = 0
+#             bd.append(des)
+#         agent.activate(input)
+#         #DEBUG INFO
+#         if debug:
+#             print("Reward: {}".format(reward))
+#             print("--------------")
+#     env.close()
+#     if debug:
+#         print(f"Total reward: {s}")
+#     if descriptor_out:
+#         return s, bd
+#     return s
 
-    env = gym.make('MiniGrid-DoubleTMaze-v0')  #init environment
-    env = env.unwrapped
-    s = 0       #s = total reward
-    pos = 0     #pos = the initial position of the high reward
-    bd = []     # behavioural descriptor
+class DoubleTmazeEvaluator():
 
-    for i_episode in range(num_episodes):
-        reward = 0
-        #swap the position of the high reward every s_inter steps
-        if i_episode % s_inter == 0:
-            #Mod 4 because we have 4 maze ends
-            pos = (pos + 1) % 4
-        observation = env.reset(reward_pos= pos)
-        #append 0 for the reward
-        input = list(observation)
-        input.append(0)
-        done = False
-        #DEBUG INFO
-        if debug:
-            print("Episode: {}".format(i_episode))
-            print("High pos: {}".format(pos))
-        while not done:
-            action = agent.activate(input)
-            observation, reward, done, info = env.step(action)
-            input = list(observation)
-            input.append(reward)
-            #DEBUG INFO
-            if debug:
-                print("     {}".format(int_to_action(action)))
-        if debug:
-            print(input)
-        s += reward
-        #Add this episode to the behavioural descriptor
-        if descriptor_out:
-            if env.agent_pos == env.END1:
-                des = 1
-            elif env.agent_pos == env.END2:
-                des = 2
-            elif env.agent_pos == env.END3:
-                des = 3
-            elif env.agent_pos == env.END4:
-                des = 4
-            else:
-                des = 0
-            bd.append(des)
-        agent.activate(input)
-        #DEBUG INFO
-        if debug:
-            print("Reward: {}".format(reward))
-            print("--------------")
-    env.close()
-    if debug:
-        print(f"Total reward: {s}")
-    if descriptor_out:
-        return s, bd
-    return s
+    DOMAIN_CONSTANT = 4
+    def __init__(self, num_episodes=12, samples=4, debug=False, descriptor_out=False):
+
+        self.maxparam = num_episodes - 2 * self.DOMAIN_CONSTANT
+        self.param_list = [i for i in range(0,self.maxparam+1)]
+        self.samples = samples
+        self.params = random.sample(self.param_list, self.samples)
+        self.num_episodes = num_episodes
+        self.debug = debug
+        self.descriptor_out = descriptor_out
+
+    def eval_double_tmaze(self, agent):
+
+        env = gym.make('MiniGrid-DoubleTMaze-v0')  #init environment
+        env = env.unwrapped
+        s = 0       #s = total reward
+        pos = 0     #pos = the initial position of the high reward
+        bd = []     # behavioural descriptor
+        maze_ends = [0,1,2,3]
+
+        for param in self.params:
+            for i_episode in range(self.num_episodes):
+                reward = 0
+                #swap the position of the high reward every s_inter steps
+                if i_episode == self.DOMAIN_CONSTANT + param:
+                    choices = copy.deepcopy(maze_ends)
+                    choices.remove(pos)
+                    pos = random.choice(choices)
+
+                observation = env.reset(reward_pos= pos)
+                #append 0 for the reward
+                input = list(observation)
+                input.append(0)
+                done = False
+                #DEBUG INFO
+                if self.debug:
+                    print("Episode: {}".format(i_episode))
+                    print("High pos: {}".format(pos))
+                while not done:
+                    action = agent.activate(input)
+                    observation, reward, done, info = env.step(action)
+                    input = list(observation)
+                    input.append(reward)
+                    #DEBUG INFO
+                    if self.debug:
+                        print("     {}".format(int_to_action(action)))
+                if self.debug:
+                    print(input)
+                s += reward
+                #Add this episode to the behavioural descriptor
+                if self.descriptor_out:
+                    if env.agent_pos == env.END1:
+                        des = 1
+                    elif env.agent_pos == env.END2:
+                        des = 2
+                    elif env.agent_pos == env.END3:
+                        des = 3
+                    elif env.agent_pos == env.END4:
+                        des = 4
+                    else:
+                        des = 0
+                    bd.append(des)
+                agent.activate(input)
+                #DEBUG INFO
+                if self.debug:
+                    print("Reward: {}".format(reward))
+                    print("--------------")
+        env.close()
+        if self.debug:
+            print(f"Total reward: {s}")
+        if self.descriptor_out:
+            return s, bd
+        return s
 
 #For a network to be considered to be able to solve the single t-maze non-homing task in this case it needs to
 #to achieve a score of at least 96 (for the default settings). This is because every time we change the place of the high reward, the optimal
