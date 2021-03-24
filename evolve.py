@@ -1,7 +1,7 @@
 import pickle
 import argparse
 from functools import partial
-
+import gym_association_task
 from eval import eval_one_to_one_3x3, eval_tmaze, eval_net_xor, TmazeNovelty, eval_double_tmaze, eval_tmaze_homing, \
     DoubleTmazeNovelty, HomingTmazeNovelty
 import switch_neat
@@ -136,10 +136,12 @@ def main():
         winner_net = create_f(winner, config)
         winner_agent = Agent(winner_net,in_f, out_f)
 
+
     if args.novelty:
-        print("Score in task: {}".format(eval_f(winnerid,winner_agent)))
+        score = eval_f(winner_agent)[0]
     else:
-        print("Score in task: {}".format(eval_f(winner_agent)))
+        score = eval_f(winner_agent)
+    print("Score in task: {}".format(score))
 
 
     if args.dump is not None:
