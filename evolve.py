@@ -3,7 +3,7 @@ import argparse
 from functools import partial, partialmethod
 import gym_association_task
 from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_tmaze_homing, \
-    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator
+    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -24,7 +24,7 @@ def main():
                 'double_tmaze':
                 DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
 
-    domain_constant = {'tmaze': 2, 'double_tmaze': 4}
+    domain_constant = {'tmaze': 2, 'double_tmaze': 4, 'homing_tmaze':2}
 
     parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
     parser.add_argument('-s', '--scheme', help=f"Choose between the available schemes: {','.join(schemes.keys())}",
@@ -97,7 +97,8 @@ def main():
             evaluator = HomingTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
-            eval_f = partial (eval_tmaze_homing, num_episodes=num_episodes, s_inter=s_inter)
+            evaluator = HomingTmazeEvaluator(num_episodes, samples=4)
+            eval_f = evaluator.eval_tmaze_homing
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
@@ -128,7 +129,7 @@ def main():
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
-    if args.problem in  ['double_tmaze', 'tmaze']:
+    if args.problem in  ['double_tmaze', 'tmaze', 'homing_tmaze']:
         mutator = Reporters.EvaluatorMutator(evaluator)
         p.add_reporter(mutator)
 
