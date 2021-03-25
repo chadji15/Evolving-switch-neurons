@@ -349,6 +349,8 @@ class DoubleTmazeEvaluator():
             return s, bd
         return s
 
+
+#Old version
 #For a network to be considered to be able to solve the single t-maze non-homing task in this case it needs to
 #to achieve a score of at least 96 (for the default settings). This is because every time we change the place of the high reward, the optimal
 #network needs only one step to figure it out and we change the the place of the high reward 5 times through the
@@ -356,67 +358,143 @@ class DoubleTmazeEvaluator():
 #figured out when we change the place of the high reward so it doesn't even need that step to learn.
 #The network should accept 4 inputs (is agent at home, is agent at turning point, is agent at maze end, reward) and
 #return 1 scalar output
-def eval_tmaze_homing(agent, num_episodes=100, s_inter=20, debug=False, descriptor_out=False):
+# def eval_tmaze_homing(agent, num_episodes=100, s_inter=20, debug=False, descriptor_out=False):
+#
+#     env = gym.make('MiniGrid-TMazeHoming-v0')  #init environment
+#     s = 0       #s = total reward
+#     pos = 0     #pos = the initial position of the high reward
+#     bd = []     # behavioural descriptor
+#
+#     for i_episode in range(num_episodes):
+#         reward = 0
+#         #swap the position of the high reward every s_inter steps
+#         if i_episode % s_inter == 0:
+#             pos = (pos + 1) % 2
+#         observation = env.reset(reward_pos= pos)
+#         #append 0 for the reward
+#         input = list(observation)
+#         input.append(0)
+#         done = False
+#         #DEBUG INFO
+#         if debug:
+#             print("Episode: {}".format(i_episode))
+#             print("High pos: {}".format(pos))
+#         while not done:
+#             action = agent.activate(input)
+#             observation, reward, done, info = env.step(action)
+#             input = list(observation)
+#             input.append(reward)
+#             #DEBUG INFO
+#             if debug:
+#                 print("     {}".format(int_to_action(action)))
+#         if debug:
+#             print(input)
+#         s += reward
+#         #Add this episode to the behavioural descriptor
+#         if descriptor_out:
+#             if math.isclose(reward, t_maze.LOW):
+#                 des = 'l'
+#             elif math.isclose(reward, t_maze.HIGH):
+#                 des = 'h'
+#             else:
+#                 des = 'n'
+#             if math.isclose(reward, t_maze.CRASH_REWARD):
+#                 des += 'y'
+#             else:
+#                 des += 'n'
+#             if math.isclose(reward, t_maze.FAIL_HOME):
+#                 des += 'n'
+#             else:
+#                 des += 'y'
+#             bd.append(des)
+#
+#         agent.activate(input)
+#         #DEBUG INFO
+#         if debug:
+#             print("Reward: {}".format(reward))
+#             print("--------------")
+#     env.close()
+#     if debug:
+#         print(f"Total reward: {s}")
+#     if descriptor_out:
+#         return s, bd
+#     return s
 
-    env = gym.make('MiniGrid-TMazeHoming-v0')  #init environment
-    s = 0       #s = total reward
-    pos = 0     #pos = the initial position of the high reward
-    bd = []     # behavioural descriptor
+class HomingTmazeEvaluator():
 
-    for i_episode in range(num_episodes):
-        reward = 0
-        #swap the position of the high reward every s_inter steps
-        if i_episode % s_inter == 0:
-            pos = (pos + 1) % 2
-        observation = env.reset(reward_pos= pos)
-        #append 0 for the reward
-        input = list(observation)
-        input.append(0)
-        done = False
-        #DEBUG INFO
-        if debug:
-            print("Episode: {}".format(i_episode))
-            print("High pos: {}".format(pos))
-        while not done:
-            action = agent.activate(input)
-            observation, reward, done, info = env.step(action)
-            input = list(observation)
-            input.append(reward)
-            #DEBUG INFO
-            if debug:
-                print("     {}".format(int_to_action(action)))
-        if debug:
-            print(input)
-        s += reward
-        #Add this episode to the behavioural descriptor
-        if descriptor_out:
-            if math.isclose(reward, t_maze.LOW):
-                des = 'l'
-            elif math.isclose(reward, t_maze.HIGH):
-                des = 'h'
-            else:
-                des = 'n'
-            if math.isclose(reward, t_maze.CRASH_REWARD):
-                des += 'y'
-            else:
-                des += 'n'
-            if math.isclose(reward, t_maze.FAIL_HOME):
-                des += 'n'
-            else:
-                des += 'y'
-            bd.append(des)
+    DOMAIN_CONSTANT = 2
+    def __init__(self, num_episodes=8, samples=4, debug=False, descriptor_out=False):
 
-        agent.activate(input)
-        #DEBUG INFO
-        if debug:
-            print("Reward: {}".format(reward))
-            print("--------------")
-    env.close()
-    if debug:
-        print(f"Total reward: {s}")
-    if descriptor_out:
-        return s, bd
-    return s
+        self.maxparam = num_episodes - 2 * self.DOMAIN_CONSTANT
+        self.param_list = [i for i in range(0,self.maxparam+1)]
+        self.samples = samples
+        self.params = random.sample(self.param_list, self.samples)
+        self.num_episodes = num_episodes
+        self.debug = debug
+        self.descriptor_out = descriptor_out
+
+    def eval_tmaze_homing(self, agent):
+
+        env = gym.make('MiniGrid-TMazeHoming-v0')  #init environment
+        s = 0       #s = total reward
+        pos = 0     #pos = the initial position of the high reward
+        bd = []     # behavioural descriptor
+
+        for param in self.params:
+            for i_episode in range(self.num_episodes):
+                reward = 0
+                #swap the position of the high reward every s_inter steps
+                if i_episode == self.DOMAIN_CONSTANT + param:
+                    pos = (pos + 1) % 2
+                observation = env.reset(reward_pos= pos)
+                #append 0 for the reward
+                input = list(observation)
+                input.append(0)
+                done = False
+                #DEBUG INFO
+                if self.debug:
+                    print("Episode: {}".format(i_episode))
+                    print("High pos: {}".format(pos))
+                while not done:
+                    action = agent.activate(input)
+                    observation, reward, done, info = env.step(action)
+                    input = list(observation)
+                    input.append(reward)
+                    #DEBUG INFO
+                    if self.debug:
+                        print("     {}".format(int_to_action(action)))
+                if self.debug:
+                    print(input)
+                s += reward
+                #Add this episode to the behavioural descriptor
+                if self.descriptor_out:
+                    if math.isclose(reward, t_maze.LOW):
+                        des = 'l'
+                    elif math.isclose(reward, t_maze.HIGH):
+                        des = 'h'
+                    else:
+                        des = 'n'
+                    if math.isclose(reward, t_maze.CRASH_REWARD):
+                        des += 'y'
+                    else:
+                        des += 'n'
+                    if math.isclose(reward, t_maze.FAIL_HOME):
+                        des += 'n'
+                    else:
+                        des += 'y'
+                    bd.append(des)
+
+                agent.activate(input)
+                #DEBUG INFO
+                if self.debug:
+                    print("Reward: {}".format(reward))
+                    print("--------------")
+            env.close()
+            if self.debug:
+                print(f"Total reward: {s}")
+            if self.descriptor_out:
+                return s, bd
+            return s
 
 #The simplest case for test the network's implementation. Use when in doubt about the rest.
 #Optimal network should have a score of 4 or very close to 4.
