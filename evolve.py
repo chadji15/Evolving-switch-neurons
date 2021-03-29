@@ -2,7 +2,7 @@ import pickle
 import argparse
 from functools import partial, partialmethod
 import gym_association_task
-from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_tmaze_homing, \
+from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, \
     DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator
 import switch_neat
 from maps import MapNetwork, MapGenome
@@ -22,7 +22,7 @@ def main():
                'switch_maps' : switch_maps.create}
     problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
                 'double_tmaze':
-                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
+                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': HomingTmazeEvaluator().eval_tmaze_homing}
 
     domain_constant = {'tmaze': 2, 'double_tmaze': 4, 'homing_tmaze':2}
 
@@ -80,21 +80,21 @@ def main():
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
     if args.problem == 'tmaze':
         if args.novelty:
-            evaluator = TmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = TmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = TmazeEvaluator(num_episodes, samples=4)
             eval_f = evaluator.eval_tmaze
     elif args.problem == 'double_tmaze':
         if args.novelty:
-            evaluator = DoubleTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = DoubleTmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = DoubleTmazeEvaluator(num_episodes, samples=4)
             eval_f = evaluator.eval_double_tmaze
     elif args.problem == 'homing_tmaze':
         if args.novelty:
-            evaluator = HomingTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = HomingTmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = HomingTmazeEvaluator(num_episodes, samples=4)
@@ -130,7 +130,10 @@ def main():
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
     if args.problem in  ['double_tmaze', 'tmaze', 'homing_tmaze']:
-        mutator = Reporters.EvaluatorMutator(evaluator)
+        if args.novelty:
+            mutator = Reporters.EvaluatorMutator(evaluator.evaluator)
+        else:
+            mutator = Reporters.EvaluatorMutator(evaluator)
         p.add_reporter(mutator)
 
     # Run for up to ... generations.
@@ -146,7 +149,7 @@ def main():
         winner_agent = Agent(winner_net,in_f, out_f)
 
     if args.novelty:
-        score = eval_f(winner_agent)[0]
+        score = evaluator.evaluator.eval_func(winner_agent)[0]
     else:
         score = eval_f(winner_agent)
     print("Score in task: {}".format(score))
