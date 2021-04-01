@@ -548,12 +548,13 @@ class NoveltyEvaluator():
 
     #Find the novelty score for an agent.
     def eval(self,key, agent):
-        if key in self.visited_novelty:
-            return self.visited_novelty[key]
+        #if key in self.visited_novelty:
+        #    return self.visited_novelty[key]
         fitness, bd = self.eval_func(agent)
+
         cache = []
         if not self.archive:
-            self.archive[key] = {'bd': bd, 'novelty': 0, 'fitness':fitness, 'agent' : agent}
+            self.archive[key] = {'bd': bd, 'novelty': len(bd), 'fitness':fitness, 'agent' : agent}
             return len(bd)
         for k in self.archive:
             dist = self.distance_func(bd, self.archive[k]['bd'])
@@ -568,11 +569,19 @@ class NoveltyEvaluator():
             self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent}
         return novelty
 
-
+    def reevaluate_archive(self):
+        if not self.archive:
+            return
+        for key in self.archive:
+            agent = self.archive[key]['agent']
+            fitness, bd = self.eval_func(agent)
+            self.archive[key]['bd'] = bd
+            self.archive[key]['fitness'] = fitness
+            print(bd)
 
 class TmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, samples, threshold = 50):
+    def __init__(self, n_episodes, samples, threshold = 8):
         self.evaluator = TmazeEvaluator(num_episodes=n_episodes,samples=samples, debug =  False, descriptor_out = True)
         eval_func = self.evaluator.eval_tmaze
         super().__init__(eval_func, threshold=threshold)
@@ -588,7 +597,7 @@ class TmazeNovelty(NoveltyEvaluator):
 
 class DoubleTmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, samples, threshold=50):
+    def __init__(self, n_episodes, samples, threshold=10):
         self.evaluator = DoubleTmazeEvaluator(num_episodes=n_episodes,samples=samples,debug=False,descriptor_out=True)
         eval_func = self.evaluator.eval_double_tmaze
         super().__init__(eval_func, threshold=threshold)
@@ -602,7 +611,7 @@ class DoubleTmazeNovelty(NoveltyEvaluator):
 
 class HomingTmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, samples, threshold=150):
+    def __init__(self, n_episodes, samples, threshold=1):
         self.evaluator = HomingTmazeEvaluator(num_episodes=n_episodes, samples=samples,debug=False, descriptor_out=True)
         eval_func = self.evaluator.eval_tmaze_homing
         super().__init__(eval_func, threshold=threshold)

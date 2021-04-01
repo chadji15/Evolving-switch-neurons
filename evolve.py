@@ -102,7 +102,7 @@ def main():
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
-    def make_eval_fun(evaluation_func, in_proc, out_proc):
+    def make_eval_fun(evaluation_func, in_proc, out_proc, evaluator=None):
 
         def eval_genomes (genomes, config):
             for genome_id, genome in genomes:
@@ -110,12 +110,21 @@ def main():
                 #Wrap the network around an agent
                 agent = Agent(net, in_proc, out_proc)
                 #Evaluate its fitness based on the function given above.
-                if args.novelty:
-                    genome.fitness = evaluation_func(genome_id, agent)
-                else:
-                    genome.fitness = evaluation_func(agent)
+                genome.fitness = evaluation_func(agent)
 
-        return eval_genomes
+        def eval_genomes_novelty(genomes, config):
+            evaluator.reevaluate_archive()
+            for genome_id, genome in genomes:
+                net = create_f(genome,config)
+                #Wrap the network around an agent
+                agent = Agent(net, in_proc, out_proc)
+                #Evaluate its fitness based on the function given above.
+                genome.fitness = evaluation_func(genome_id, agent)
+
+        if args.novelty:
+            return eval_genomes_novelty
+        else:
+            return eval_genomes
 
     config = neat.Config(genome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -137,7 +146,11 @@ def main():
         p.add_reporter(mutator)
 
     # Run for up to ... generations.
-    winner = p.run(make_eval_fun(eval_f, in_f, out_f), args.generations)
+    if args.novelty:
+        f = make_eval_fun(eval_f, in_f, out_f, evaluator)
+    else:
+        make_eval_fun(eval_f, in_f, out_f)
+    winner = p.run(f, args.generations)
 
     #If we are using the novelty metric get the winner from the archive
     if args.novelty:
