@@ -2,7 +2,7 @@ import pickle
 import argparse
 from functools import partial, partialmethod
 import gym_association_task
-from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, eval_tmaze_homing, \
+from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, \
     DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator
 import switch_neat
 from maps import MapNetwork, MapGenome
@@ -22,7 +22,7 @@ def main():
                'switch_maps' : switch_maps.create}
     problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
                 'double_tmaze':
-                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': eval_tmaze_homing}
+                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': HomingTmazeEvaluator.eval_tmaze_homing}
 
     domain_constant = {'tmaze': 2, 'double_tmaze': 4, 'homing_tmaze':2}
 
