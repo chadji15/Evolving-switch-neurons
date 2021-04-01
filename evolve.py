@@ -3,7 +3,8 @@ import argparse
 from functools import partial, partialmethod
 import gym_association_task
 from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, \
-    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator
+    DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator, \
+    AssociationNovelty
 import switch_neat
 from maps import MapNetwork, MapGenome
 import switch_maps
@@ -36,11 +37,11 @@ def main():
     parser.add_argument('--map_size', help="Set the map size for the relevant schemes", type=int)
     parser.add_argument('--dump', help="Dump the network in a binary file", type=str)
     parser.add_argument('--num_episodes', help="Number of episodes for tmaze/binary_association", type=int)
-    parser.add_argument('--switch_interval', help="Interval of episodes for switching the position of the high reward/"
+    parser.add_argument('--switch_interval', help="Interval of episodes for "
                                                   "shuffling the associations", type=int )
     parser.add_argument('--novelty', help='Use the novelty metric instead of the fitness function', action="store_true")
-    parser.add_argument('--threshold', help='Threshold for a new genome to enter the archive', type=float, default=100)
-
+    parser.add_argument('--threshold', help='Threshold for a new genome to enter the archive', type=float, default=1)
+    parser.add_argument("--snap_inter", help="Snapshot interval for association problem novelty search", type = int)
     args=parser.parse_args()
 
     eval_f = problems[args.problem]
@@ -100,7 +101,12 @@ def main():
             evaluator = HomingTmazeEvaluator(num_episodes, samples=4)
             eval_f = evaluator.eval_tmaze_homing
     elif args.problem == 'binary_association':
-        eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
+        if args.novelty:
+            evaluator = AssociationNovelty(num_episodes,rand_iter=args.switch_interval,snapshot_inter=args.snap_inter,
+                                           threshold=args.threshold)
+            eval_f = evaluator.eval
+        else:
+            eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
     def make_eval_fun(evaluation_func, in_proc, out_proc, evaluator=None):
 
@@ -149,7 +155,7 @@ def main():
     if args.novelty:
         f = make_eval_fun(eval_f, in_f, out_f, evaluator)
     else:
-        make_eval_fun(eval_f, in_f, out_f)
+        f = make_eval_fun(eval_f, in_f, out_f)
     winner = p.run(f, args.generations)
 
     #If we are using the novelty metric get the winner from the archive
@@ -162,7 +168,10 @@ def main():
         winner_agent = Agent(winner_net,in_f, out_f)
 
     if args.novelty:
-        score = evaluator.evaluator.eval_func(winner_agent)[0]
+        if args.problem == 'binary_association':
+            score = evaluator.eval_func(winner_agent)[0]
+        else:
+            score = evaluator.evaluator.eval_func(winner_agent)[0]
     else:
         score = eval_f(winner_agent)
     print("Score in task: {}".format(score))
