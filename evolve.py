@@ -22,7 +22,7 @@ def main():
                'switch_maps' : switch_maps.create}
     problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
                 'double_tmaze':
-                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': HomingTmazeEvaluator.eval_tmaze_homing}
+                DoubleTmazeEvaluator.eval_double_tmaze, 'homing_tmaze': HomingTmazeEvaluator().eval_tmaze_homing}
 
     domain_constant = {'tmaze': 2, 'double_tmaze': 4, 'homing_tmaze':2}
 
@@ -80,21 +80,21 @@ def main():
     #If the problem is the t-maze task, use the extra parameters episodes and switch interval
     if args.problem == 'tmaze':
         if args.novelty:
-            evaluator = TmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = TmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = TmazeEvaluator(num_episodes, samples=4)
             eval_f = evaluator.eval_tmaze
     elif args.problem == 'double_tmaze':
         if args.novelty:
-            evaluator = DoubleTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = DoubleTmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = DoubleTmazeEvaluator(num_episodes, samples=4)
             eval_f = evaluator.eval_double_tmaze
     elif args.problem == 'homing_tmaze':
         if args.novelty:
-            evaluator = HomingTmazeNovelty(num_episodes,s_inter, threshold=args.threshold)
+            evaluator = HomingTmazeNovelty(num_episodes,samples=4, threshold=args.threshold)
             eval_f = evaluator.eval
         else:
             evaluator = HomingTmazeEvaluator(num_episodes, samples=4)
@@ -102,7 +102,7 @@ def main():
     elif args.problem == 'binary_association':
         eval_f = partial (eval_one_to_one_3x3,num_episodes=num_episodes, rand_iter=s_inter)
 
-    def make_eval_fun(evaluation_func, in_proc, out_proc):
+    def make_eval_fun(evaluation_func, in_proc, out_proc, evaluator=None):
 
         def eval_genomes (genomes, config):
             for genome_id, genome in genomes:
@@ -110,12 +110,21 @@ def main():
                 #Wrap the network around an agent
                 agent = Agent(net, in_proc, out_proc)
                 #Evaluate its fitness based on the function given above.
-                if args.novelty:
-                    genome.fitness = evaluation_func(genome_id, agent)
-                else:
-                    genome.fitness = evaluation_func(agent)
+                genome.fitness = evaluation_func(agent)
 
-        return eval_genomes
+        def eval_genomes_novelty(genomes, config):
+            evaluator.reevaluate_archive()
+            for genome_id, genome in genomes:
+                net = create_f(genome,config)
+                #Wrap the network around an agent
+                agent = Agent(net, in_proc, out_proc)
+                #Evaluate its fitness based on the function given above.
+                genome.fitness = evaluation_func(genome_id, agent)
+
+        if args.novelty:
+            return eval_genomes_novelty
+        else:
+            return eval_genomes
 
     config = neat.Config(genome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -130,11 +139,18 @@ def main():
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
     if args.problem in  ['double_tmaze', 'tmaze', 'homing_tmaze']:
-        mutator = Reporters.EvaluatorMutator(evaluator)
+        if args.novelty:
+            mutator = Reporters.EvaluatorMutator(evaluator.evaluator)
+        else:
+            mutator = Reporters.EvaluatorMutator(evaluator)
         p.add_reporter(mutator)
 
     # Run for up to ... generations.
-    winner = p.run(make_eval_fun(eval_f, in_f, out_f), args.generations)
+    if args.novelty:
+        f = make_eval_fun(eval_f, in_f, out_f, evaluator)
+    else:
+        make_eval_fun(eval_f, in_f, out_f)
+    winner = p.run(f, args.generations)
 
     #If we are using the novelty metric get the winner from the archive
     if args.novelty:
@@ -147,7 +163,7 @@ def main():
 
 
     if args.novelty:
-        score = eval_f(winner_agent)[0]
+        score = evaluator.evaluator.eval_func(winner_agent)[0]
     else:
         score = eval_f(winner_agent)
     print("Score in task: {}".format(score))

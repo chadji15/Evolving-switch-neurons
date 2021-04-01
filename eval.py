@@ -81,6 +81,7 @@ class TmazeEvaluator():
         self.num_episodes = num_episodes
         self.debug = debug
         self.descriptor_out = descriptor_out
+        self.eval_func = self.eval_tmaze
 
     def eval_tmaze(self, agent):
 
@@ -285,6 +286,7 @@ class DoubleTmazeEvaluator():
         self.num_episodes = num_episodes
         self.debug = debug
         self.descriptor_out = descriptor_out
+        self.eval_func = self.eval_double_tmaze
 
     def eval_double_tmaze(self, agent):
 
@@ -432,6 +434,7 @@ class HomingTmazeEvaluator():
         self.num_episodes = num_episodes
         self.debug = debug
         self.descriptor_out = descriptor_out
+        self.eval_func = self.eval_tmaze_homing
 
     def eval_tmaze_homing(self, agent):
 
@@ -545,12 +548,13 @@ class NoveltyEvaluator():
 
     #Find the novelty score for an agent.
     def eval(self,key, agent):
-        if key in self.visited_novelty:
-            return self.visited_novelty[key]
+        #if key in self.visited_novelty:
+        #    return self.visited_novelty[key]
         fitness, bd = self.eval_func(agent)
+
         cache = []
         if not self.archive:
-            self.archive[key] = {'bd': bd, 'novelty': 0, 'fitness':fitness, 'agent' : agent}
+            self.archive[key] = {'bd': bd, 'novelty': len(bd), 'fitness':fitness, 'agent' : agent}
             return len(bd)
         for k in self.archive:
             dist = self.distance_func(bd, self.archive[k]['bd'])
@@ -565,17 +569,25 @@ class NoveltyEvaluator():
             self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent}
         return novelty
 
-
+    def reevaluate_archive(self):
+        if not self.archive:
+            return
+        for key in self.archive:
+            agent = self.archive[key]['agent']
+            fitness, bd = self.eval_func(agent)
+            self.archive[key]['bd'] = bd
+            self.archive[key]['fitness'] = fitness
+            print(bd)
 
 class TmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, s_inter, threshold = 50):
-        eval_func = partial(eval_tmaze, num_episodes=n_episodes, s_inter=s_inter, debug=False,
-                            descriptor_out=True)
+    def __init__(self, n_episodes, samples, threshold = 8):
+        self.evaluator = TmazeEvaluator(num_episodes=n_episodes,samples=samples, debug =  False, descriptor_out = True)
+        eval_func = self.evaluator.eval_tmaze
         super().__init__(eval_func, threshold=threshold)
 
     def distance_func(self, bd1, bd2):
-        total = 0;
+        total = 0
         for t1, t2 in zip(bd1, bd2):
             for i in range(len(t1)):
                 if t1[i] != t2[i]:
@@ -585,9 +597,9 @@ class TmazeNovelty(NoveltyEvaluator):
 
 class DoubleTmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, s_inter, threshold=50):
-        eval_func = partial(eval_double_tmaze, num_episodes=n_episodes, s_inter=s_inter, debug=False,
-                            descriptor_out=True)
+    def __init__(self, n_episodes, samples, threshold=10):
+        self.evaluator = DoubleTmazeEvaluator(num_episodes=n_episodes,samples=samples,debug=False,descriptor_out=True)
+        eval_func = self.evaluator.eval_double_tmaze
         super().__init__(eval_func, threshold=threshold)
 
     def distance_func(self, bd1, bd2):
@@ -599,7 +611,16 @@ class DoubleTmazeNovelty(NoveltyEvaluator):
 
 class HomingTmazeNovelty(NoveltyEvaluator):
 
-    def __init__(self, n_episodes, s_inter, threshold=150):
-        eval_func = partial(eval_tmaze_homing, num_episodes=n_episodes, s_inter=s_inter, debug=False,
-                            descriptor_out=True)
+    def __init__(self, n_episodes, samples, threshold=1):
+        self.evaluator = HomingTmazeEvaluator(num_episodes=n_episodes, samples=samples,debug=False, descriptor_out=True)
+        eval_func = self.evaluator.eval_tmaze_homing
         super().__init__(eval_func, threshold=threshold)
+
+    def distance_func(self, bd1, bd2):
+        total = 0
+        for t1, t2 in zip(bd1, bd2):
+            for i in range(len(t1)):
+                if t1[i] != t2[i]:
+                    total += 1
+
+        return total
