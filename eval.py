@@ -22,13 +22,39 @@ from functools import partial
 from utilities import shuffle_lists
 
 
-def eval_one_to_one_3x3(agent, num_episodes = 2000, rand_iter= 500, descriptor_out=False):
+def eq_tuples(tup1, tup2):
+    for x,y in zip(tup1, tup2):
+        if x != y:
+            return False
+        return True
+
+def eq_snapshots(s1,s2):
+    for key in s1:
+        if not eq_tuples(s1[key], s2[key]):
+            return False
+    return True
+
+def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inter=50, descriptor_out=False):
     env = gym.make('OneToOne3x3-v0')
     s = num_episodes
     observation = env.reset(rand_iter=rand_iter)
     input = tuple(list(observation) + [0])
+    responses = {}
+    prevsnapshot = {}
+    bd = []
     for i_episode in range(num_episodes):
         action = agent.activate(input)
+        if descriptor_out:
+            t_in = input[:-1]
+            if t_in not in prevsnapshot:
+                prevsnapshot[t_in] = action
+            responses[t_in] = action
+            if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
+                if eq_snapshots(responses, prevsnapshot):
+                    bd.append(0)
+                else:
+                    bd.append(1)
+                prevsnapshot = responses
         observation, reward, done, info = env.step(action)
         input = list(input)
         input[-1] = reward
@@ -36,7 +62,11 @@ def eval_one_to_one_3x3(agent, num_episodes = 2000, rand_iter= 500, descriptor_o
         input = tuple(list(observation) + [0])
         s += reward
     env.close()
-    return s
+    if descriptor_out:
+        return s, bd
+        print(bd)
+    else:
+        return s
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to
 #to achieve a score of at least 1964 (2000 - 4*(3*(4-1)) = steps - association_changes*(n*(2^m - 1)).
@@ -624,3 +654,17 @@ class HomingTmazeNovelty(NoveltyEvaluator):
                     total += 1
 
         return total
+
+class AssociationNovelty(NoveltyEvaluator):
+
+    def __init__(self, num_episodes, rand_iter,snapshot_inter,threshold=2):
+        eval_f = partial(eval_one_to_one_3x3,num_episodes = num_episodes, rand_iter= rand_iter,
+                                     snapshot_inter=snapshot_inter, descriptor_out=True)
+        super().__init__(eval_f, threshold=threshold)
+
+    def distance_func(self, bd1, bd2):
+        sum = 0
+        for x,y in zip(bd1,bd2):
+            if x!=y:
+                sum += 1
+        return sum
