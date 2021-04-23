@@ -109,7 +109,7 @@ def create(genome, config, map_size):
             # Map to map connectivity
             if cg.one2one:
                 # 1-to-1 mapping
-                weight = 5 * cg.weight
+                weight = cg.weight
                 for i in range(map_size):
                     node_inputs[out_map[i]].append((in_map[i], weight))
 
@@ -129,7 +129,7 @@ def create(genome, config, map_size):
                     # Uniform
                     for o_n in out_map:
                         for i_n in in_map:
-                            node_inputs[o_n].append((i_n, 5 * cg.weight))
+                            node_inputs[o_n].append((i_n, cg.weight))
 
         else:
             # Map-to-isolated or isolated-to-isolated
@@ -147,7 +147,7 @@ def create(genome, config, map_size):
                 # Uniform
                 for o_n in out_map:
                     for i_n in in_map:
-                        node_inputs[o_n].append((i_n, 5 * cg.weight))
+                        node_inputs[o_n].append((i_n, cg.weight))
 
     nodes = []
 

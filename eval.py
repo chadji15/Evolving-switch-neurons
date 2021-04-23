@@ -64,7 +64,7 @@ def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inte
     env.close()
     if descriptor_out:
         return s, bd
-        print(bd)
+        #print(bd)
     else:
         return s
 
@@ -554,7 +554,7 @@ class NoveltyEvaluator():
     #distance_func: a function that computes the distance of two behavioural descriptors
     #k: the number used for the nearest neighbour calculation
     #threshold: the sparseness threshold for a gene to enter the archive
-    #The archive has the key of the genome as the key and another dictionary as values with bd, novelty and fitness
+    #The archive has the key of the genome as the key and another dictionary as values with bd, novelty and fitness, genome
     def __init__(self, eval_func, threshold = 1, k = 15):
         self.eval_func = eval_func
         self.threshold = threshold
@@ -577,14 +577,14 @@ class NoveltyEvaluator():
         return maxid
 
     #Find the novelty score for an agent.
-    def eval(self,key, agent):
+    def eval(self,key,genome ,agent):
         #if key in self.visited_novelty:
         #    return self.visited_novelty[key]
         fitness, bd = self.eval_func(agent)
 
         cache = []
         if not self.archive:
-            self.archive[key] = {'bd': bd, 'novelty': len(bd), 'fitness':fitness, 'agent' : agent}
+            self.archive[key] = {'bd': bd, 'novelty': len(bd), 'fitness':fitness, 'agent' : agent, 'genome': genome}
             return len(bd)
         for k in self.archive:
             dist = self.distance_func(bd, self.archive[k]['bd'])
@@ -607,7 +607,7 @@ class NoveltyEvaluator():
             fitness, bd = self.eval_func(agent)
             self.archive[key]['bd'] = bd
             self.archive[key]['fitness'] = fitness
-            print(bd)
+            #print(bd)
 
 class TmazeNovelty(NoveltyEvaluator):
 
