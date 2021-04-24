@@ -19,9 +19,8 @@ class SwitchMapConnectionGene(BaseGene):
 
     #Various parameters for defining a connection.
     _gene_attributes = [BoolAttribute('one2one'), #if true then the connection scheme is one to one, else one to all
-                        BoolAttribute('gaussian'),  #Gaussian or uniform distribution
+                        BoolAttribute('uniform'),  #step or uniform
                         FloatAttribute('weight'),#Weigth is used as the mean of the normal distribution for 1-to-all
-                        FloatAttribute('sigma'), #The standard deviation for the gaussian
                         BoolAttribute('enabled'),
                         BoolAttribute('is_mod')]
 
@@ -31,8 +30,8 @@ class SwitchMapConnectionGene(BaseGene):
 
     #Define the distance between two genes
     def distance(self, other, config):
-        d = abs(self.sigma - other.sigma) + abs(self.weight - other.weight) + int(self.one2one == other.one2one) \
-            + int(self.gaussian == other.gaussian) + int(self.enabled == other.enabled) + int(self.is_mod == other.is_mod)
+        d = abs(self.weight - other.weight) + int(self.one2one == other.one2one) \
+            + int(self.uniform == other.uniform) + int(self.enabled == other.enabled) + int(self.is_mod == other.is_mod)
         return d * config.compatibility_weight_coefficient
 
 class SwitchMapNodeGene(DefaultNodeGene):
@@ -110,35 +109,45 @@ def create(genome, config, map_size):
             # Map to map connectivity
             if cg.one2one:
                 # 1-to-1 mapping
-                weight = 5 * cg.weight
+                weight = cg.weight
                 for i in range(map_size):
                     node_inputs[out_map[i]].append((in_map[i], weight))
 
             else:
                 # 1-to-all
-                if cg.gaussian:
-                    # Gaussian
+                if not cg.uniform:
+                    # Step
+                    start = -cg.weight
+                    end = cg.weight
+                    step = (end - start) / map_size
                     for o_n in out_map:
+                        s = start
                         for i_n in in_map:
-                            node_inputs[o_n].append((i_n, np.random.normal(cg.weight, cg.sigma)))
+                            node_inputs[o_n].append((i_n, s))
+                            s += step
                 else:
                     # Uniform
                     for o_n in out_map:
                         for i_n in in_map:
-                            node_inputs[o_n].append((i_n, 5 * cg.weight))
+                            node_inputs[o_n].append((i_n, cg.weight))
 
         else:
             # Map-to-isolated or isolated-to-isolated
-            if cg.gaussian:
-                # Gaussian
+            if not cg.uniform:
+                # Step
+                start = -cg.weight
+                end = cg.weight
+                step = (end - start) / map_size
                 for o_n in out_map:
+                    s = start
                     for i_n in in_map:
-                        node_inputs[o_n].append((i_n, np.random.normal(cg.weight, cg.sigma)))
+                        node_inputs[o_n].append((i_n, s))
+                        s += step
             else:
                 # Uniform
                 for o_n in out_map:
                     for i_n in in_map:
-                        node_inputs[o_n].append((i_n, 5 * cg.weight))
+                        node_inputs[o_n].append((i_n, cg.weight))
 
     nodes = []
 

@@ -14,6 +14,7 @@ import neat
 import Reporters
 from utilities import heaviside
 from switch_neuron import Agent
+import render_network
 
 def identity(x):
     return x
@@ -42,6 +43,7 @@ def main():
     parser.add_argument('--novelty', help='Use the novelty metric instead of the fitness function', action="store_true")
     parser.add_argument('--threshold', help='Threshold for a new genome to enter the archive', type=float, default=1)
     parser.add_argument("--snap_inter", help="Snapshot interval for association problem novelty search", type = int)
+    parser.add_argument("--draw", help='Render the network to a picture. Provide the name of the picture.', type=str, default=None)
     args=parser.parse_args()
 
     eval_f = problems[args.problem]
@@ -125,7 +127,7 @@ def main():
                 #Wrap the network around an agent
                 agent = Agent(net, in_proc, out_proc)
                 #Evaluate its fitness based on the function given above.
-                genome.fitness = evaluation_func(genome_id, agent)
+                genome.fitness = evaluation_func(genome_id, genome, agent)
 
         if args.novelty:
             return eval_genomes_novelty
@@ -161,6 +163,7 @@ def main():
     #If we are using the novelty metric get the winner from the archive
     if args.novelty:
         winnerid = evaluator.get_best_id()
+        winner = evaluator.archive[winnerid]['genome']
         winner_agent = evaluator.archive[winnerid]['agent']
     else:
         print('\nBest genome:\n{!s}'.format(winner))
@@ -176,11 +179,16 @@ def main():
     else:
         score = eval_f(winner_agent)
     print("Score in task: {}".format(score))
-
+    if args.draw is not None:
+        if args.scheme in ['maps', 'switch_maps']:
+            map_size = args.map_size
+        else:
+            map_size = -1
+        render_network.draw_net(config, winner,filename = args.draw, map_size=map_size)
 
     if args.dump is not None:
         fp = open(args.dump,'wb')
-        pickle.dump(winner_net,fp)
+        pickle.dump(winner,fp)
         fp.close()
         print(f'Agent pre-processing function: {in_f.__name__}')
         print(f'Agent post-processing function: {out_f.__name__}')

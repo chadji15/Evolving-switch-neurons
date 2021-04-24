@@ -50,22 +50,13 @@ enabled_mutate_rate     = 0
 one2one_default         = True
 one2one_mutate_rate     = 0.2
 
-#Uniform vs Gaussian
-gaussian_default        = True
-gaussian_mutate_rate    = 0.3
+#Uniform vs Step
+uniform_default        = True
+uniform_mutate_rate    = 0.2
 
 #standard vs modulatory connection
 is_mod_default          = False
 is_mod_mutate_rate      = 0.2
-
-#Stdev for normal distribution
-sigma_init_mean          = 0
-sigma_init_stdev         = 0.2
-sigma_max_value          = -1
-sigma_min_value          = 1
-sigma_mutate_power       = 0.4
-sigma_mutate_rate        = 0.3
-sigma_replace_rate       = 0.1
 
 feed_forward            = True
 initial_connection      = full
