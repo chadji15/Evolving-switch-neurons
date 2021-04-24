@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import pickle
+
+import visualize
 from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import DefaultNodeGene, DefaultConnectionGene
 from neat.genome import DefaultGenomeConfig, DefaultGenome
@@ -210,7 +212,7 @@ def run(config_file):
     pickle.dump(winner_net,fp)
     fp.close()
     #visualize.draw_net(config, winner, True)
-    #visualize.plot_stats(stats, ylog=False, view=True)
+    visualize.plot_stats(stats, ylog=False, view=True)
     #visualize.plot_species(stats, view=True)
 
 def main():
