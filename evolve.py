@@ -15,6 +15,7 @@ import Reporters
 from utilities import heaviside
 from switch_neuron import Agent
 import render_network
+from neat.statistics import StatisticsReporter
 
 def identity(x):
     return x
@@ -44,6 +45,7 @@ def main():
     parser.add_argument('--threshold', help='Threshold for a new genome to enter the archive', type=float, default=1)
     parser.add_argument("--snap_inter", help="Snapshot interval for association problem novelty search", type = int)
     parser.add_argument("--draw", help='Render the network to a picture. Provide the name of the picture.', type=str, default=None)
+    parser.add_argument("--log", help="Log the max fitness per generation to text file. (Append)", type=str, default=None)
     args=parser.parse_args()
 
     eval_f = problems[args.problem]
@@ -144,7 +146,7 @@ def main():
     p = neat.Population(config)
     #Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
-    stats = Reporters.StatReporterv2()
+    stats = StatisticsReporter()
     p.add_reporter(stats)
     if args.problem in  ['double_tmaze', 'tmaze', 'homing_tmaze']:
         if args.novelty:
@@ -184,6 +186,14 @@ def main():
         else:
             map_size = -1
         render_network.draw_net(config, winner,filename = args.draw, map_size=map_size)
+
+    if args.log is not None:
+        fp = open(args.log, 'a')
+        fp.write("\n")
+        best_fitness = [c.fitness for c in stats.most_fit_genomes]
+        mfs = ' '.join(best_fitness)
+        fp.write(mfs)
+        fp.close()
 
     if args.dump is not None:
         fp = open(args.dump,'wb')
