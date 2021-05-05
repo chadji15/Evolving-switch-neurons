@@ -190,10 +190,10 @@ def main():
 
     if args.log is not None:
         fp = open(args.log, 'a')
-        fp.write("\n")
-        best_fitness = [c.fitness for c in stats.most_fit_genomes]
+        best_fitness = [str(c.fitness) for c in stats.most_fit_genomes]
         mfs = ' '.join(best_fitness)
         fp.write(mfs)
+        fp.write("\n")
         fp.close()
 
     if args.dump is not None:

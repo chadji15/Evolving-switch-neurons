@@ -47,6 +47,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
         name = node_names.get(k, str(k))
         node_attrs = {'style': 'filled'}
         node_attrs['fillcolor'] = node_colors.get(k, 'lightblue')
+        node_attrs['shape'] = 'doublecircle' if genome.nodes[k].is_switch else 'circle'
 
         dot.node(name, _attributes=node_attrs)
 
