@@ -318,6 +318,9 @@ class DoubleTmazeEvaluator():
         self.descriptor_out = descriptor_out
         self.eval_func = self.eval_double_tmaze
 
+    #num episodes = 12
+    #samples 4
+    #max fitness = 36
     def eval_double_tmaze(self, agent):
 
         env = gym.make('MiniGrid-DoubleTMaze-v0')  #init environment

@@ -26,12 +26,12 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
     node_attrs = {
         'shape': 'circle',
         'fontsize': '9',
-        'height': '0.2',
-        'width': '0.2'}
+        'height': '0.1',
+        'width': '0.1'}
 
 
     dot = graphviz.Digraph(format=fmt, node_attr=node_attrs, engine='neato')
-
+    maps = {}
     inputs = set()
     for k in config.genome_config.input_keys:
         inputs.add(k)
@@ -40,6 +40,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
                        'shape': 'box'}
         input_attrs['fillcolor'] = node_colors.get(k, 'lightgray')
         dot.node(name, _attributes=input_attrs)
+        maps[str(k)] = [str(k)]
 
     outputs = set()
     for k in config.genome_config.output_keys:
@@ -50,6 +51,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
         node_attrs['shape'] = 'doublecircle' if genome.nodes[k].is_switch else 'circle'
 
         dot.node(name, _attributes=node_attrs)
+        maps[str(k)] = [str(k)]
 
     if prune_unused:
         connections = set()
@@ -70,7 +72,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
         used_nodes = set(genome.nodes.keys())
 
 
-    maps = {}
+
 
     for n in used_nodes:
         if n in inputs or n in outputs:
