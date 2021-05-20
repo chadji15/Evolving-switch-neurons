@@ -12,13 +12,7 @@ from functools import partial
 #of the agent. The actions are described in each environment
 ##############
 
-#For a network to be considered to be able to solve the one-to-one 3x3 association task in this case it needs to
-#to achieve a score of at least 1976 (2000 - (4*(3*2))  = steps - association_changes*(n*(m-1)).
-#Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
-#The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
-#For num_episodes = 100 | 1000
-#    rand_iter = 25     | 100
-#    max fitness = 76   | 940
+
 from utilities import shuffle_lists
 
 
@@ -34,6 +28,13 @@ def eq_snapshots(s1,s2):
             return False
     return True
 
+#For a network to be considered to be able to solve the one-to-one 3x3 association task in this case it needs to
+#to achieve a score of at least 1976 (2000 - (5*(3*2))  = steps - (association_changes+1)*(n*(m-1)).
+#Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
+#The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
+#For num_episodes = 100 | 1000
+#    rand_iter = 25     | 100
+#    max fitness = 70   | 934
 def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inter=50, descriptor_out=False):
     env = gym.make('OneToOne3x3-v0')
     s = num_episodes
