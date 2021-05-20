@@ -2,8 +2,8 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 940
-pop_size              = 250
+fitness_threshold     = 934
+pop_size              = 200
 reset_on_extinction   = False
 
 [SwitchGenome]
@@ -26,8 +26,8 @@ bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
-bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.3
+bias_mutate_power       = 0.6
+bias_mutate_rate        = 0.4
 bias_replace_rate       = 0.1
 
 # genome compatibility options
@@ -35,7 +35,7 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.3
+conn_add_prob           = 0.2
 conn_delete_prob        = 0.1
 
 # connection enable options
@@ -46,11 +46,11 @@ enabled_mutate_rate     = 0
 is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
-feed_forward            = True
+feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.3
+node_add_prob           = 0.1
 node_delete_prob        = 0.1
 
 # network parameters
