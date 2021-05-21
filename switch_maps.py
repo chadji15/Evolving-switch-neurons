@@ -119,7 +119,7 @@ def create(genome, config, map_size):
                     # Step
                     start = -cg.weight
                     end = cg.weight
-                    step = (end - start) / map_size
+                    step = (end - start) / (map_size - 1)
                     for o_n in out_map:
                         s = start
                         for i_n in in_map:
@@ -137,7 +137,7 @@ def create(genome, config, map_size):
                 # Step
                 start = -cg.weight
                 end = cg.weight
-                step = (end - start) / map_size
+                step = (end - start) / (map_size - 1)
                 for o_n in out_map:
                     s = start
                     for i_n in in_map:
