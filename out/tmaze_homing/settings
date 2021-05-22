@@ -1,0 +1,4 @@
+num episodes = 8
+generations = 1000
+max fitness = 28
+switch

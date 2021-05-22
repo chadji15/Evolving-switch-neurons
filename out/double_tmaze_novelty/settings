@@ -1,0 +1,5 @@
+samples = 4
+num_episodes = 8
+max_fitness = 36
+scheme = switch
+

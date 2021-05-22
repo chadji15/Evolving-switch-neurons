@@ -1,0 +1,2 @@
+nohup python3 evolve.py -s switch_maps -c config/config-switch_maps_binary --map_size 8 -g 1000 -p binary_association --num_episodes 1000 --switch_interval 100 --draw out/3x3_maps/6 --log out/3x3_maps/stats>> out/3x3_maps/6.txt &
+

@@ -1,0 +1,2 @@
+nohup python3 evolve.py -s switch -c config/config-switch_homing_tmaze_novelty -g 2000 -p homing_tmaze --num_episodes 8 --novelty --threshold 11 --draw out/homing_tmaze_novelty/5 --log out/homing_tmaze_novelty/stats>> out/homing_tmaze_novelty/5.txt &
+

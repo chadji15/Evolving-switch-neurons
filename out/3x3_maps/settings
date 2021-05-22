@@ -1,0 +1,4 @@
+generations = 1000
+num episodes = 1000
+switch interval = 1000
+max fitness = 934
