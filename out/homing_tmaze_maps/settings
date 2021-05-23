@@ -1,0 +1,5 @@
+num episodes = 8
+generations = 1000
+samples = 4
+max fitness = 28
+switch

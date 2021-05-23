@@ -1,0 +1,4 @@
+samples = 4
+num episodes = 12
+max fitness = 36
+switch maps

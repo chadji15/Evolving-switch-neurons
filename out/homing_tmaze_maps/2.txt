@@ -1,0 +1,2 @@
+nohup python3 evolve.py -s switch_maps -c config/config-switch_maps_homing_tmaze --map_size 3 -g 1000 -p homing_tmaze --num_episodes 8 --draw out/homing_tmaze_maps/2 --log out/homing_tmaze_maps/stats>> out/homing_tmaze_maps/2.txt &
+

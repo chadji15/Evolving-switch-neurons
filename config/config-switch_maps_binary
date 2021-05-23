@@ -1,12 +1,12 @@
-#--- parameters --#
+
 
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 934
-pop_size              = 200
+pop_size              = 250
 reset_on_extinction   = False
 
-[SwitchGenome]
+[SwitchMapGenome]
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0.2
@@ -17,6 +17,10 @@ aggregation_default     = sum
 aggregation_mutate_rate = 0
 aggregation_options     = sum
 
+#Isolated neuron vs map
+is_isolated_default     = False
+is_isolated_mutate_rate = 0.2
+
 #Switch Neuron
 is_switch_default       = False
 is_switch_mutate_rate   = 0.2
@@ -26,8 +30,8 @@ bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
-bias_mutate_power       = 0.6
-bias_mutate_rate        = 0.4
+bias_mutate_power       = 0.5
+bias_mutate_rate        = 0.3
 bias_replace_rate       = 0.1
 
 # genome compatibility options
@@ -42,15 +46,23 @@ conn_delete_prob        = 0.1
 enabled_default         = True
 enabled_mutate_rate     = 0
 
+#One-to-one vs One-to-all
+one2one_default         = True
+one2one_mutate_rate     = 0.2
+
+#Uniform vs Step
+uniform_default        = True
+uniform_mutate_rate    = 0.2
+
 #standard vs modulatory connection
 is_mod_default          = False
-is_mod_mutate_rate      = 0.1
+is_mod_mutate_rate      = 0.2
 
 feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.1
+node_add_prob           = 0.2
 node_delete_prob        = 0.1
 
 # network parameters
@@ -61,8 +73,8 @@ num_outputs             = 1
 # connection weight options / used as mean for normal distribution
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 30
-weight_min_value        = -30
+weight_max_value        = 10
+weight_min_value        = -10
 weight_mutate_power     = 0.5
 weight_mutate_rate      = 0.3
 weight_replace_rate     = 0.1

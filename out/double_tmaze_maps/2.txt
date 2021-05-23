@@ -1,0 +1,2 @@
+nohup python3 evolve.py -s switch_maps -c config/config-switch_maps_double_tmaze --map_size 3 -g 1000 -p double_tmaze --num_episodes 12 --draw out/double_tmaze_maps/2 --log out/double_tmaze_maps/stats>> out/double_tmaze_maps/2.txt &
+
