@@ -1,9 +1,9 @@
 digraph {
 	node [fontsize=9 height=0.1 shape=circle width=0.1]
-	-1 [fillcolor=lightgray shape=box style=filled]
-	-2 [fillcolor=lightgray shape=box style=filled]
-	-3 [fillcolor=lightgray shape=box style=filled]
-	-4 [fillcolor=lightgray shape=box style=filled]
+	-1 [fillcolor=lightgray shape=box style=filled label=H]
+	-2 [fillcolor=lightgray shape=box style=filled label=T]
+	-3 [fillcolor=lightgray shape=box style=filled label=ME]
+	-4 [fillcolor=lightgray shape=box style=filled label=R]
 	0 [fillcolor=lightblue shape=doublecircle style=filled]
 	69377 [label=sigmoid fillcolor=white shape=doublecircle style=filled]
 	80256 [label=identity fillcolor=white shape=circle style=filled]

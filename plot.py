@@ -11,20 +11,24 @@ column_names = [i for i in range(0, max(col_count))]
 df = pd.read_csv(sys.argv[1], header=None, delimiter=" ", names=column_names)
 df = df.transpose()
 df = df.fillna(method='ffill')
+
 # df = df.transpose()
 
 medians = df.median(axis=1)
 lowq = df.quantile(q=0.25, axis=1)
 hiq = df.quantile(q=0.75, axis=1)
+threshold = pd.Series([36 for _ in range(len(medians))])
 
 plt.figure(figsize=(12,5))
-plt.xlabel('Median, 1st and 3rd quantile of maximum fitness per generation')
+plt.xlabel('Median, 1st and 3rd quantile of maximum fitness per generation\n'
+           'Double non-homing T-Maze')
 
 ax1 = medians.plot(color='blue', grid=True)
 ax2 = lowq.plot(color='red', grid=True, secondary_y=False)
 ax3 = hiq.plot(color='red', grid=True, secondary_y=False)
+ax4 = threshold.plot(color='green', grid=True, secondary_y=False, linestyle="dashed")
 
-plt.savefig(f"{sys.argv[1]}.png", bbox_inches='tight')
+plt.savefig(f"{sys.argv[1]}_v2.png", bbox_inches='tight')
 
 pass
 
