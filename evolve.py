@@ -123,6 +123,7 @@ def main():
                 genome.fitness = evaluation_func(agent)
 
         def eval_genomes_novelty(genomes, config):
+            #Re-evaluate the archive
             evaluator.reevaluate_archive()
             for genome_id, genome in genomes:
                 net = create_f(genome,config)

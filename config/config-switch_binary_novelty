@@ -3,7 +3,7 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 9999
-pop_size              = 250
+pop_size              = 200
 reset_on_extinction   = False
 
 [SwitchGenome]

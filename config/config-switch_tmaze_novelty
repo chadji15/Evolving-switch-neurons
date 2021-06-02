@@ -36,8 +36,8 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.4
-conn_delete_prob        = 0.2
+conn_add_prob           = 0.3
+conn_delete_prob        = 0.1
 
 # connection enable options
 enabled_default         = True
@@ -51,8 +51,8 @@ feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.4
-node_delete_prob        = 0.2
+node_add_prob           = 0.3
+node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 0

@@ -600,7 +600,7 @@ class NoveltyEvaluator():
         novelty = sum(cache) / len(cache)
         self.visited_novelty[key] = novelty
         if novelty > self.threshold:
-            self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent}
+            self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent, 'genome': genome}
         return novelty
 
     def reevaluate_archive(self):
