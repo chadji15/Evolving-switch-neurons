@@ -362,13 +362,13 @@ class DoubleTmazeEvaluator():
                 s += reward
                 #Add this episode to the behavioural descriptor
                 if self.descriptor_out:
-                    if env.agent_pos == env.END1:
+                    if eq_tuples(env.agent_pos, env.END1):
                         des = 1
-                    elif env.agent_pos == env.END2:
+                    elif eq_tuples(env.agent_pos, env.END2):
                         des = 2
-                    elif env.agent_pos == env.END3:
+                    elif eq_tuples(env.agent_pos, env.END3):
                         des = 3
-                    elif env.agent_pos == env.END4:
+                    elif eq_tuples(env.agent_pos, env.END4):
                         des = 4
                     else:
                         des = 0
@@ -600,7 +600,7 @@ class NoveltyEvaluator():
         novelty = sum(cache) / len(cache)
         self.visited_novelty[key] = novelty
         if novelty > self.threshold:
-            self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent}
+            self.archive[key] = {'bd': bd, 'novelty': novelty, 'fitness':fitness, 'agent': agent, 'genome': genome}
         return novelty
 
     def reevaluate_archive(self):
