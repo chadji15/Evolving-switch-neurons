@@ -1,8 +1,6 @@
 #Temporary file, will be removed on clean-up.
 
 import re
-import subprocess
-import xor_maps
 from utilities import clamp
 
 if __name__ == "__main__":

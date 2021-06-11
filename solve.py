@@ -174,8 +174,13 @@ def solve_tmaze():
     nodes.append(Neuron(0,o_params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
-    agent = Agent(net, lambda x: x.insert(0,1), lambda x: convert_to_direction(x))
+    #For input, append the bias to -1 input
+    agent = Agent(net, append_bias, convert_to_direction)
     return agent
+
+def append_bias(x):
+    x.insert(0,1)
+    return x
 
 def solve_xor_rec():
 

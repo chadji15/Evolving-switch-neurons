@@ -120,20 +120,20 @@ def create(genome, config):
             continue
         node = genome.nodes[node_key]
         if node.is_switch:
-            #If the switch neuron has both modulatory and standard weights then we can add it normally to the nodes
-            #of the network.
-            if node_key in std_weights.keys() and node_key in mod_weights.keys():
-                nodes.append(SwitchNeuron(node_key, std_weights[node_key], mod_weights[node_key]))
+            #If the node doesn't have any connections then it is not needed
+            if node_key not in std_weights.keys() and node_key not in mod_weights.keys():
                 continue
             #if the switch neuron only has modulatory weights then we copy those weights for the standard part as well.
             #this is not the desired behaviour but it is done to avoid errors during forward pass.
-            elif node_key not in std_weights.keys() and node_key in mod_weights:
+            if node_key not in std_weights.keys() and node_key in mod_weights:
                 std_weights[node_key] = mod_weights[node_key]
-            else:
-                std_weights[node_key] = []
-        else:
-            if node_key not in std_weights:
-                std_weights[node_key] = []
+            if node_key not in mod_weights.keys():
+                mod_weights[node_key] = []
+            nodes.append(SwitchNeuron(node_key, std_weights[node_key], mod_weights[node_key]))
+            continue
+
+        if node_key not in std_weights:
+            std_weights[node_key] = []
 
         #Create the standard part dictionary for the neuron
         params = {

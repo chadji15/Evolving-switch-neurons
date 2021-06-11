@@ -1,7 +1,6 @@
 import pickle
 import argparse
-from functools import partial, partialmethod
-import gym_association_task
+from functools import partial
 from eval import eval_one_to_one_3x3, eval_net_xor, TmazeNovelty, \
     DoubleTmazeNovelty, HomingTmazeNovelty, TmazeEvaluator, DoubleTmazeEvaluator, HomingTmazeEvaluator, \
     AssociationNovelty
@@ -21,7 +20,7 @@ def identity(x):
     return x
 
 def main():
-    schemes = {'switch':switch_neat.create , 'maps' : MapNetwork.create, 'recurrent': RecurrentNetwork.create,
+    schemes = {'switch':switch_neat.create , 'recurrent': RecurrentNetwork.create,
                'switch_maps' : switch_maps.create}
     problems = {'xor' : eval_net_xor, 'binary_association':eval_one_to_one_3x3, 'tmaze': TmazeEvaluator().eval_tmaze,
                 'double_tmaze':
@@ -56,8 +55,6 @@ def main():
     #Configure genome based on the encoding scheme and neurons used
     if args.scheme == 'switch':
         genome = switch_neat.SwitchGenome
-    elif args.scheme == 'maps':
-        genome = MapGenome
     elif args.scheme == 'switch_maps':
         genome = switch_maps.SwitchMapGenome
 
@@ -187,7 +184,7 @@ def main():
             map_size = args.map_size
         else:
             map_size = -1
-        render_network.draw_net(config, winner,filename = args.draw, map_size=map_size)
+        render_network.draw_genotype(config, winner,filename = args.draw, map_size=map_size)
 
     if args.log is not None:
         fp = open(args.log, 'a')

@@ -3,6 +3,7 @@ from neat.reporting import BaseReporter
 from neat.six_util import iteritems
 from switch_neat import *
 import random
+import datetime
 
 #Return the low quartile of the values in the *values array
 def low_quartile(values):
@@ -79,3 +80,18 @@ class EvaluatorMutator(BaseReporter):
 
     def end_generation(self, config, population, species_set):
         self.evaluator.params = random.sample(self.evaluator.param_list, self.evaluator.samples)
+
+class ProgressTracker(BaseReporter):
+
+    def __init__(self, log_file):
+        self.g=0
+        self.log_file = log_file
+        with open(self.log_file,'r') as fp:
+            fp.write(f"0 {datetime.datetime.now()}\n")
+        super().__init__()
+
+    def end_generation(self, config, population, species_set):
+        self.g+=1
+        if self.g % 100 == 0:
+            with open(self.log_file,'a') as fp:
+                fp.write(f"{self.g} {datetime.datetime.now()}\n")
