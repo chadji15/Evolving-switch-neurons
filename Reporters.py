@@ -86,7 +86,8 @@ class ProgressTracker(BaseReporter):
     def __init__(self, log_file):
         self.g=0
         self.log_file = log_file
-        with open(self.log_file,'r') as fp:
+
+        with open(self.log_file,'w') as fp:
             fp.write(f"0 {datetime.datetime.now()}\n")
         super().__init__()
 

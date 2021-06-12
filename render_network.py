@@ -207,7 +207,7 @@ def draw_net(network, view=False, filename=None, node_names=None, node_colors=No
         dot.node(name, _attributes=node_attrs)
         maps[str(k)] = [str(k)]
 
-    used_nodes = network.nodes
+    used_nodes = [n.key for n in network.nodes]
 
 
 

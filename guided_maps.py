@@ -3,12 +3,11 @@
 #in order to see if it can help the process. If so, then we have a good case for trying with a more
 #generalized toolkit.
 #######################################
-
-
+import copy
 import os
 import pickle
 import sys
-
+import numpy as np
 import Reporters
 import neat
 import render_network
@@ -69,17 +68,16 @@ def calculate_weights(is_uniform, weight, map_size):
         return [weight for _ in range(map_size)]
     start = -weight
     end = weight
-    step = (end - start) / (map_size - 1)
-    weights = list(range(start, end+1, step))
+    weights = list(np.linspace(start, end, map_size, endpoint=True))
     return weights
 
 def create(genome, config, map_size):
     """ Receives a genome and returns its phenotype (a SwitchNeuronNetwork). """
     genome_config = config.genome_config
-    required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
+    #required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
 
-    input_keys = genome_config.input_keys
-    output_keys = genome_config.output_keys
+    input_keys = copy.deepcopy(genome_config.input_keys)
+    output_keys = copy.deepcopy(genome_config.output_keys)
     # Gather inputs and expressed connections.
     std_inputs = {}
     mod_inputs = {}
@@ -90,7 +88,10 @@ def create(genome, config, map_size):
 
     # Here we populate the children dictionary for each unique not isolated node.
     for n in genome.nodes.keys():
+
         children[n] = []
+        if n in output_keys:
+            continue
         #For this implementation everything besides the reward and the output is a map
         #if not genome.nodes[n].is_isolated:
         for _ in range(1, map_size):
@@ -104,7 +105,7 @@ def create(genome, config, map_size):
     for _ in range(1, map_size):
         new_idx = min(input_keys) - 1
         children[n].append(new_idx)
-        input_keys.add(new_idx)
+        input_keys.append(new_idx)
     n = input_keys[1]
     children[n] = []
 
@@ -120,8 +121,8 @@ def create(genome, config, map_size):
 
         i, o = cg.key
         #If neither node is required for output then skip the connection
-        if o not in required and i not in required:
-            continue
+        # if o not in required and i not in required:
+        #     continue
 
         #Find the map corresponding to each node of the connection
         in_map = [i] + children[i]
@@ -143,6 +144,7 @@ def create(genome, config, map_size):
                     #extended one-to-
                     #create a new intermediatery map
                     idx = max(node_keys.union(aux_keys)) + 1
+                    children[idx] = []
                     aux_keys.add(idx)
                     for _ in range(1, map_size):
                         new_idx = max(node_keys.union(aux_keys)) + 1
@@ -211,12 +213,13 @@ def create(genome, config, map_size):
 
     # While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
     # schemes, we certainly want the output neurons to activate last.
-    input_keys = genome_config.input_keys
-    output_keys = genome_config.output_keys
     conns = {}
-
+    for k in node_keys.union(aux_keys):
+        conns[k] = []
     parents = children.keys()
     for k in parents:
+        if k in input_keys:
+            continue
         if k not in conns.keys():
             conns[k] = []
         if k in std_inputs.keys():
@@ -225,22 +228,30 @@ def create(genome, config, map_size):
             conns[k].extend([i for i, _ in mod_inputs[k]])
     sorted_keys = order_of_activation(conns, input_keys, output_keys)
 
-    #For the guided maps, all modulatory weights to switch neurons now weight 1/m
+    #Edge case: when a genome has no connections, sorted keys ends up empty and crashes the program
+    #If this happens, just activate the output nodes with the default activation: 0
+    if not sorted_keys:
+        sorted_keys = output_keys
 
     for node_key in sorted_keys:
+        #all the children are handled with the parent
+        if node_key not in parents:
+            continue
         #if the node we are examining is not in our keys set then skip it. It means that it is not required for output.
         # if node_key not in node_keys:
         #     continue
 
         #if the node one of the originals present in the genotype, i.e. it's not one of the nodes we added for the
         #extended one to one scheme
-        if node_key in genome.nodes[node_key]:
+        if node_key in genome.nodes:
             node = genome.nodes[node_key]
             node_map = [node_key] + children[node_key]
             if node.is_switch:
-                # If the switch neuron does not have any connections then it is not needed.
+                # If the switch neuron does not have any incoming cnnections
                 if node_key not in std_inputs.keys() and node_key not in mod_inputs.keys():
-                    continue
+                    for n in node_map:
+                        std_inputs[n] = []
+                        mod_inputs[n] = []
                 # if the switch neuron only has modulatory weights then we copy those weights for the standard part as well.
                 # this is not the desired behaviour but it is done to avoid errors during forward pass.
                 if node_key not in std_inputs.keys() and node_key in mod_inputs.keys():
@@ -250,10 +261,11 @@ def create(genome, config, map_size):
                     for n in node_map:
                         mod_inputs[n] = []
                 #For the guided maps, all modulatory weights to switch neurons now weight 1/m
-                for n in node_map:
-                    new_w = 1 / len(std_inputs[n])
-                    new_mod_w = [(inp, new_w) for inp, w in mod_inputs[n]]
-                    mod_inputs[n] = new_mod_w
+                if mod_inputs[node_key]:
+                    for n in node_map:
+                        new_w = 1 / len(std_inputs[n])
+                        new_mod_w = [(inp, new_w) for inp, w in mod_inputs[n]]
+                        mod_inputs[n] = new_mod_w
                 for n in node_map:
                     nodes.append(SwitchNeuron(n,std_inputs[n],mod_inputs[n]))
                 continue
@@ -278,7 +290,7 @@ def create(genome, config, map_size):
             else:
                 params = {
                     'activation_function': identity,
-                    'integration_function': math.prod,
+                    'integration_function': prod,
                     'bias': node.bias,
                     'activity': 0,
                     'output': 0,
@@ -308,6 +320,12 @@ def create(genome, config, map_size):
                 nodes.append(Neuron(n, params))
 
     return SwitchNeuronNetwork(input_keys, output_keys, nodes)
+
+def prod(l):
+    i = 1
+    for item in l:
+        i *= item
+    return i
 
 MAP_SIZE = 3
 def make_eval_fun(evaluation_func, in_proc, out_proc):
@@ -349,7 +367,7 @@ def run(config_file):
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 1000)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 10)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -372,7 +390,7 @@ def main():
     # here so that the script will run successfully regardless of the
     # current working directory.
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config/config-switch_maps')
+    config_path = os.path.join(local_dir, 'config/binary-guided-maps')
     run(config_path)
 
 if __name__ == '__main__':
