@@ -340,7 +340,7 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     return eval_genomes
 #A dry test run for the binary association problem to test if the above implementation works
-def run(config_file):
+def run(config_file, generations, binary_file, drawfile, progressfile):
 
     #Configuring the agent and the evaluation function
     from eval import eval_one_to_one_3x3
@@ -362,12 +362,12 @@ def run(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = Reporters.StatReporterv2()
     p.add_reporter(stats)
-    p.add_reporter(Reporters.ProgressTracker(sys.argv[1]))
+    p.add_reporter(Reporters.ProgressTracker(progressfile))
     #p.add_reporter(Reporters.NetRetriever())
     #p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(make_eval_fun(eval_func, in_func, out_func), 10)
+    winner = p.run(make_eval_fun(eval_func, in_func, out_func), generations)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
@@ -378,20 +378,23 @@ def run(config_file):
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
     #Uncomment the following if you want to save the network in a binary file
-    fp = open('winner_net.bin','wb')
+    fp = open(binary_file,'wb')
     pickle.dump(winner_net,fp)
     fp.close()
     print("Input function: None")
     print("Output function: convert_to_action")
-    render_network.draw_net(winner_net)
+    render_network.draw_net(winner_net, filename=drawfile)
 
 def main():
     # Determine path to configuration file. This path manipulation is
     # here so that the script will run successfully regardless of the
     # current working directory.
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config/binary-guided-maps')
-    run(config_path)
+    config = sys.argv[1]
+    generations = int(sys.argv[2])
+    binary_file = sys.argv[3]
+    drawfile = sys.argv[4]
+    progressfile = sys.argv[5]
+    run(config, generations, binary_file, drawfile, progressfile)
 
 if __name__ == '__main__':
     main()
