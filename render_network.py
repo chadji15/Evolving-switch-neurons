@@ -218,7 +218,8 @@ def draw_net(network, view=False, filename=None, node_names=None, node_colors=No
 
         attrs = {'style': 'filled', 'fillcolor': node_colors.get(n, 'white'),
                  'shape': 'doublecircle' if type(network.nodes_dict[n]) is SwitchNeuron else 'circle'}
-        dot.node(str(n), label=str(network.nodes_dict[n].standard['activation_function'].__name__),_attributes=attrs)
+        #dot.node(str(n), label=str(network.nodes_dict[n].standard['activation_function'].__name__),_attributes=attrs)
+        dot.node(str(n), label=str(n),_attributes=attrs)
 
     Conn = namedtuple('Conn',['key', 'weight','is_mod'])
 

@@ -4,6 +4,7 @@ def identity(activity):
     return activity
 
 def clamp(x,low,high):
+
     if x < low:
         return low
     if x > high:
