@@ -381,7 +381,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile):
     fp = open(binary_file,'wb')
     pickle.dump(winner_net,fp)
     fp.close()
-    print("Input function: None")
+    print("Input function: Reorder_inputs")
     print("Output function: convert_to_action")
     render_network.draw_net(winner_net, filename=drawfile)
 
