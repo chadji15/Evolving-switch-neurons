@@ -19,7 +19,7 @@ from switch_neuron import Neuron, SwitchNeuronNetwork, SwitchNeuron, Agent
 from neat.six_util import itervalues
 import math
 from utilities import order_of_activation, identity, clamp
-
+from functools import partial
 
 class GuidedMapConnectionGene(BaseGene):
 
@@ -289,7 +289,7 @@ def create(genome, config, map_size):
                 #Everything else is a gating neuron
                 else:
                     params = {
-                        'activation_function': lambda x: clamp(x, -10, 10),
+                        'activation_function': partial(clamp,low=-10, high=10),
                         'integration_function': prod,
                         'bias': node.bias,
                         'activity': 0,
@@ -382,10 +382,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
     winner_net = create(winner, config, MAP_SIZE)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
-    #Uncomment the following if you want to save the network in a binary file
-    fp = open(binary_file,'wb')
-    pickle.dump(winner_net,fp)
-    fp.close()
+
     print("Input function: Reorder_inputs")
     print("Output function: convert_to_action")
     render_network.draw_net(winner_net, filename=drawfile)
@@ -393,6 +390,12 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
     #Log the maximum fitness over generations
     from visualize import plot_stats
     plot_stats(stats,False,view=False,filename=statsfile)
+
+    #Uncomment the following if you want to save the network in a binary file
+    fp = open(binary_file,'wb')
+    pickle.dump(winner_net,fp)
+    fp.close()
+
 
 def main():
     # Determine path to configuration file. This path manipulation is
