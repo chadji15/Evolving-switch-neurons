@@ -96,3 +96,4 @@ class ProgressTracker(BaseReporter):
         if self.g % 100 == 0:
             with open(self.log_file,'a') as fp:
                 fp.write(f"{self.g} {datetime.datetime.now()}\n")
+                fp.flush()

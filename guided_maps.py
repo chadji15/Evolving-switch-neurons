@@ -345,7 +345,7 @@ def reorder_inputs(l):
     return new_l
 
 #A dry test run for the binary association problem to test if the above implementation works
-def run(config_file, generations, binary_file, drawfile, progressfile):
+def run(config_file, generations, binary_file, drawfile, progressfile, statsfile):
 
     #Configuring the agent and the evaluation function
     from eval import eval_one_to_one_3x3
@@ -390,6 +390,10 @@ def run(config_file, generations, binary_file, drawfile, progressfile):
     print("Output function: convert_to_action")
     render_network.draw_net(winner_net, filename=drawfile)
 
+    #Log the maximum fitness over generations
+    from visualize import plot_stats
+    plot_stats(stats,False,view=False,filename=statsfile)
+
 def main():
     # Determine path to configuration file. This path manipulation is
     # here so that the script will run successfully regardless of the
@@ -399,7 +403,8 @@ def main():
     binary_file = sys.argv[3]
     drawfile = sys.argv[4]
     progressfile = sys.argv[5]
-    run(config, generations, binary_file, drawfile, progressfile)
+    statsfile = sys.argv[6]
+    run(config, generations, binary_file, drawfile, progressfile, statsfile)
 
 if __name__ == '__main__':
     main()
