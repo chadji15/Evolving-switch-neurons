@@ -14,6 +14,7 @@ class Agent():
         self.prepare_outputs = prepare_outputs
 
     def activate(self,inputs):
+
         proc_inputs = self.setup_inputs(inputs)
         output = self.network.activate(proc_inputs)
         return self.prepare_outputs(output)

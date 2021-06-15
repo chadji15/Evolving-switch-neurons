@@ -18,7 +18,7 @@ from neat.graphs import required_for_output
 from switch_neuron import Neuron, SwitchNeuronNetwork, SwitchNeuron, Agent
 from neat.six_util import itervalues
 import math
-from utilities import order_of_activation, identity
+from utilities import order_of_activation, identity, clamp
 
 
 class GuidedMapConnectionGene(BaseGene):
@@ -143,24 +143,25 @@ def create(genome, config, map_size):
                 if cg.extended:
                     #extended one-to-
                     #create a new intermediatery map
-                    idx = max(node_keys.union(aux_keys)) + 1
-                    children[idx] = []
-                    aux_keys.add(idx)
-                    for _ in range(1, map_size):
-                        new_idx = max(node_keys.union(aux_keys)) + 1
-                        children[idx].append(new_idx)
-                        aux_keys.add(new_idx)
-                    aux_map = [idx] + children[idx]
-                    for node in aux_map:
-                        node_inputs[node] = []
-                    #add one to one connections between in_map and aux map with weight 1
-                    for i in range(map_size):
-                        node_inputs[aux_map[i]].append((in_map[i], 1))
+                    for j in range(0, map_size):
+                        idx = max(node_keys.union(aux_keys)) + 1
+                        children[idx] = []
+                        aux_keys.add(idx)
+                        for _ in range(1, map_size):
+                            new_idx = max(node_keys.union(aux_keys)) + 1
+                            children[idx].append(new_idx)
+                            aux_keys.add(new_idx)
+                        aux_map = [idx] + children[idx]
+                        for node in aux_map:
+                            node_inputs[node] = []
+                        #add one to one connections between in_map and aux map with weight 1
+                        for i in range(map_size):
+                            node_inputs[aux_map[i]].append((in_map[j], 1))
 
-                    #add one to one connections between aux map and out map with stepped weights
-                    weights = calculate_weights(False,cg.weight,map_size)
-                    for i in range(map_size):
-                        node_inputs[out_map[i]].append((aux_map[i], weights[i]))
+                        #add one to one connections between aux map and out map with stepped weights
+                        weights = calculate_weights(False,cg.weight,map_size)
+                        for i in range(map_size):
+                            node_inputs[out_map[j]].append((aux_map[i], weights[i]))
                 else:
                     weight = cg.weight
                     for i in range(map_size):
@@ -217,7 +218,7 @@ def create(genome, config, map_size):
     for k in node_keys.union(aux_keys):
         conns[k] = []
     parents = children.keys()
-    for k in parents:
+    for k in conns.keys():
         if k in input_keys:
             continue
         if k not in conns.keys():
@@ -273,31 +274,28 @@ def create(genome, config, map_size):
             for n in node_map:
                 if n not in std_inputs:
                     std_inputs[n] = []
-
-            #For these guided maps, every hidden neuron that is not a switch neuron is a gating neuron
-            if node_key in output_keys:
-                # Create the standard part dictionary for the neuron
-                #We also pre-determine the output neuron to help NEAT even more
-                params = {
-                    'activation_function': identity,
-                    'integration_function': sum,
-                    'bias': node.bias,
-                    'activity': 0,
-                    'output': 0,
-                    'weights': std_inputs[n]
-                }
-
-            else:
-                params = {
-                    'activation_function': identity,
-                    'integration_function': prod,
-                    'bias': node.bias,
-                    'activity': 0,
-                    'output': 0,
-                    'weights': std_inputs[n]
-                }
-
-            for n in node_map:
+                #For these guided maps, every hidden neuron that is not a switch neuron is a gating neuron
+                if node_key in output_keys:
+                    # Create the standard part dictionary for the neuron
+                    #We also pre-determine the output neuron to help NEAT even more
+                    params = {
+                        'activation_function': identity,
+                        'integration_function': sum,
+                        'bias': node.bias,
+                        'activity': 0,
+                        'output': 0,
+                        'weights': std_inputs[n]
+                    }
+                #Everything else is a gating neuron
+                else:
+                    params = {
+                        'activation_function': lambda x: clamp(x, -10, 10),
+                        'integration_function': prod,
+                        'bias': node.bias,
+                        'activity': 0,
+                        'output': 0,
+                        'weights': std_inputs[n]
+                    }
                 nodes.append(Neuron(n, params))
 
         #if the node is one of those we added with the extended one to one scheme
@@ -339,14 +337,21 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
             genome.fitness = evaluation_func(agent)
 
     return eval_genomes
+
+#For the guided maps encoding
+#input order is: input1, reward, input2, input3
+def reorder_inputs(l):
+    new_l = [l[0], l[3],l[1],l[2]]
+    return new_l
+
 #A dry test run for the binary association problem to test if the above implementation works
-def run(config_file, generations, binary_file, drawfile, progressfile):
+def run(config_file, generations, binary_file, drawfile, progressfile, statsfile):
 
     #Configuring the agent and the evaluation function
     from eval import eval_one_to_one_3x3
     eval_func = eval_one_to_one_3x3
     #Preprocessing for inputs: none
-    in_func = identity
+    in_func = reorder_inputs
     from solve import convert_to_action
     out_func = convert_to_action
     #Preprocessing for output - convert float to boolean
@@ -385,6 +390,10 @@ def run(config_file, generations, binary_file, drawfile, progressfile):
     print("Output function: convert_to_action")
     render_network.draw_net(winner_net, filename=drawfile)
 
+    #Log the maximum fitness over generations
+    from visualize import plot_stats
+    plot_stats(stats,False,view=False,filename=statsfile)
+
 def main():
     # Determine path to configuration file. This path manipulation is
     # here so that the script will run successfully regardless of the
@@ -394,7 +403,8 @@ def main():
     binary_file = sys.argv[3]
     drawfile = sys.argv[4]
     progressfile = sys.argv[5]
-    run(config, generations, binary_file, drawfile, progressfile)
+    statsfile = sys.argv[6]
+    run(config, generations, binary_file, drawfile, progressfile, statsfile)
 
 if __name__ == '__main__':
     main()

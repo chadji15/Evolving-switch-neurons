@@ -57,6 +57,7 @@ def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inte
                     bd.append(1)
                 prevsnapshot = responses
         observation, reward, done, info = env.step(action)
+        #print(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
         input = list(input)
         input[-1] = reward
         agent.activate(input)

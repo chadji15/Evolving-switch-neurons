@@ -1,4 +1,6 @@
 import copy
+from collections import namedtuple
+
 from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork, Agent
 from math import tanh
 from t_maze.envs import TMazeEnv
@@ -209,3 +211,58 @@ def solve_xor_rec():
 
     net = SwitchNeuronNetwork(in_keys,out_keys,nodes)
     return net
+
+def binary_3x3_optimal_genome():
+    Config = namedtuple("Config",["genome_config"])
+    Genome_config = namedtuple("Genome_config", ["input_keys", "output_keys"])
+    genome_config = Genome_config(input_keys=[-1,-2], output_keys= [0])
+    config = Config(genome_config=genome_config)
+    Genome = namedtuple("Genome", ["nodes", "connections"])
+    Node = namedtuple("Node", ['bias', 'activaton', 'aggregation', 'is_isolated', 'is_switch'])
+    Connection = namedtuple("Connection", ["key", "one2one", "extended", "uniform", "weight", "enabled", "is_mod"])
+
+    gatinglayer = Node(bias=1, activaton='identity', aggregation='product', is_isolated=False, is_switch=False)
+    switchlayer = Node(bias=0, activaton='identity', aggregation='sum', is_isolated=False, is_switch=True)
+    outputlayer = Node(bias=0, activaton='identity', aggregation="sum", is_isolated=True, is_switch=False)
+
+    nodes = {0: outputlayer,
+             1: gatinglayer,
+             2: switchlayer}
+
+    inpgatconn = Connection(key = (-1,1), one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    inpswiconn = Connection(key = (-1,2),one2one=True, extended=True, uniform=False, weight=10, enabled=True, is_mod=False)
+    gatswiconn = Connection(key = (1,2),one2one=True, extended=False, uniform=True, weight=0.33, enabled=True, is_mod=True)
+    rewgatconn = Connection(key = (-2,1),one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    swioutconn = Connection(key = (2,0),one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+
+    connections = {
+        (-1,1) : inpgatconn,
+        (-1,2) : inpswiconn,
+        (-2,1) : rewgatconn,
+        (1,2) : gatswiconn,
+        (2,0) : swioutconn
+    }
+
+    genome = Genome(nodes, connections)
+    import guided_maps
+    network = guided_maps.create(genome, config, 3)
+    import render_network
+    render_network.draw_net(network,False, "optimal3x3")
+    from eval import eval_one_to_one_3x3
+    from switch_neuron import Agent
+    agent  = Agent(network,reorder_inputs, convert_to_action)
+    score = eval_one_to_one_3x3(agent, 1000, 100)
+    print(score)
+
+    # agent = solve_one_to_one_3x3()
+    # score = eval_one_to_one_3x3(agent, 1000, 100)
+    # print(score)
+
+#For the guided maps encoding
+#input order is: input1, reward, input2, input3
+def reorder_inputs(l):
+    new_l = [l[0], l[3],l[1],l[2]]
+    return new_l
+
+if __name__ == "__main__":
+    binary_3x3_optimal_genome()
