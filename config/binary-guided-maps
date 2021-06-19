@@ -38,7 +38,7 @@ is_isolated_default     = False
 is_isolated_mutate_rate = 0.1
 
 # node bias options
-bias_init_mean          = 0.0
+bias_init_mean          = 1
 bias_init_stdev         = 3.0
 bias_max_value          = 20.0
 bias_min_value          = -20.0
@@ -51,8 +51,8 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.1
-conn_delete_prob        = 0.1
+conn_add_prob           = 0.2
+conn_delete_prob        = 0.05
 
 # connection enable options
 enabled_default         = True
@@ -66,8 +66,8 @@ feed_forward            = True
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.1
-node_delete_prob        = 0.1
+node_add_prob           = 0.2
+node_delete_prob        = 0.05
 
 # network parameters
 num_hidden              = 0
@@ -75,7 +75,7 @@ num_inputs              = 2
 num_outputs             = 1
 
 # connection weight options / used as mean for normal distribution
-weight_init_mean        = 0.0
+weight_init_mean        = 1
 weight_init_stdev       = 3.0
 weight_max_value        = 20
 weight_min_value        = -20
@@ -84,14 +84,14 @@ weight_mutate_rate      = 0.1
 weight_replace_rate     = 0.05
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3
+compatibility_threshold = 4
 
 [DefaultStagnation]
 species_fitness_func = max
 max_stagnation       = 15
-species_elitism      = 2
+species_elitism      = 0
 
 [DefaultReproduction]
-elitism            = 5
+elitism            = 3
 survival_threshold = 0.2
 

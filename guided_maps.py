@@ -289,7 +289,7 @@ def create(genome, config, map_size):
                 #Everything else is a gating neuron
                 else:
                     params = {
-                        'activation_function': partial(clamp,low=-10, high=10),
+                        'activation_function': identity,
                         'integration_function': prod,
                         'bias': node.bias,
                         'activity': 0,
