@@ -1,0 +1,2 @@
+nohup python3 guided_maps.py config/binary-guided-maps 500 out/guided_maps/winner_net1.bin out/guided_maps/1 out/guided_maps/progress1.txt out/guided_maps/fitness1.svg>> out/guided_maps/1.txt &
+
