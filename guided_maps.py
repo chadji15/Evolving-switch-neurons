@@ -382,6 +382,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
     winner_net = create(winner, config, MAP_SIZE)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
+
     print("Input function: Reorder_inputs")
     print("Output function: convert_to_action")
     render_network.draw_net(winner_net, filename=drawfile)
