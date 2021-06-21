@@ -21,7 +21,7 @@ import math
 from utilities import order_of_activation, identity, clamp
 from functools import partial
 
-class GuidedMapConnectionGene(BaseGene):
+class ExtendedMapConnectionGene(BaseGene):
 
     #Various parameters for defining a connection.
     _gene_attributes = [BoolAttribute('one2one'), #if true then the connection scheme is one to one, else one to all
@@ -42,7 +42,7 @@ class GuidedMapConnectionGene(BaseGene):
             + int(self.extended == other.extended)
         return d * config.compatibility_weight_coefficient
 
-class GuidedMapNodeGene(DefaultNodeGene):
+class ExtendedMapNodeGene(DefaultNodeGene):
 
     _gene_attributes = [FloatAttribute('bias'), #The bias of the neuron
                         StringAttribute('activation', options='sigmoid'), # The activation function, tunable from the config
@@ -59,8 +59,8 @@ class GuidedMapNodeGene(DefaultNodeGene):
 class GuidedMapGenome(DefaultGenome):
     @classmethod
     def parse_config(cls, param_dict):
-        param_dict['node_gene_type'] = GuidedMapNodeGene
-        param_dict['connection_gene_type'] =GuidedMapConnectionGene
+        param_dict['node_gene_type'] = ExtendedMapNodeGene
+        param_dict['connection_gene_type'] =ExtendedMapConnectionGene
         return DefaultGenomeConfig(param_dict)
 
 def calculate_weights(is_uniform, weight, map_size):
@@ -92,12 +92,12 @@ def create(genome, config, map_size):
         children[n] = []
         if n in output_keys:
             continue
-        #For this implementation everything besides the reward and the output is a map
-        #if not genome.nodes[n].is_isolated:
-        for _ in range(1, map_size):
-            new_idx = max(node_keys) + 1
-            children[n].append(new_idx)
-            node_keys.add(new_idx)
+
+        if not genome.nodes[n].is_isolated:
+            for _ in range(1, map_size):
+                new_idx = max(node_keys) + 1
+                children[n].append(new_idx)
+                node_keys.add(new_idx)
 
     #assume 2 input nodes: the first one will be scaled to a map and the second one will represent the reward
     n = input_keys[0]
@@ -275,27 +275,15 @@ def create(genome, config, map_size):
                 if n not in std_inputs:
                     std_inputs[n] = []
                 #For these guided maps, every hidden neuron that is not a switch neuron is a gating neuron
-                if node_key in output_keys:
-                    # Create the standard part dictionary for the neuron
-                    #We also pre-determine the output neuron to help NEAT even more
-                    params = {
-                        'activation_function': identity,
-                        'integration_function': sum,
-                        'bias': node.bias,
-                        'activity': 0,
-                        'output': 0,
-                        'weights': std_inputs[n]
-                    }
-                #Everything else is a gating neuron
-                else:
-                    params = {
-                        'activation_function': identity,
-                        'integration_function': prod,
-                        'bias': node.bias,
-                        'activity': 0,
-                        'output': 0,
-                        'weights': std_inputs[n]
-                    }
+
+                params = {
+                    'activation_function': genome_config.activation_defs.get(node.activation),
+                    'integration_function': genome_config.aggregation_function_defs.get(node.aggregation),
+                    'bias': node.bias,
+                    'activity': 0,
+                    'output': 0,
+                    'weights': std_inputs[n]
+                }
                 nodes.append(Neuron(n, params))
 
         #if the node is one of those we added with the extended one to one scheme
