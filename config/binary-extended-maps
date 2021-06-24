@@ -9,7 +9,7 @@ reset_on_extinction   = False
 [GuidedMapGenome]
 # node activation options
 activation_default      = identity
-activation_mutate_rate  = 0.2
+activation_mutate_rate  = 0.1
 activation_options      = sigmoid identity
 
 # node aggregation options
@@ -39,7 +39,7 @@ is_isolated_mutate_rate = 0.1
 
 # node bias options
 bias_init_mean          = 1
-bias_init_stdev         = 3.0
+bias_init_stdev         = 2
 bias_max_value          = 20.0
 bias_min_value          = -20.0
 bias_mutate_power       = 0.3
@@ -84,14 +84,14 @@ weight_mutate_rate      = 0.1
 weight_replace_rate     = 0.05
 
 [DefaultSpeciesSet]
-compatibility_threshold = 4
+compatibility_threshold = 5
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation       = 10
+max_stagnation       = 15
 species_elitism      = 0
 
 [DefaultReproduction]
 elitism            = 3
-survival_threshold = 0.10
+survival_threshold = 0.2
 

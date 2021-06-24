@@ -93,11 +93,12 @@ def create(genome, config, map_size):
         if n in output_keys:
             continue
 
-        if not genome.nodes[n].is_isolated:
-            for _ in range(1, map_size):
-                new_idx = max(node_keys) + 1
-                children[n].append(new_idx)
-                node_keys.add(new_idx)
+        #Everything besides the reward signal and the output neuron is a map (1)
+        #if not genome.nodes[n].is_isolated:
+        for _ in range(1, map_size):
+            new_idx = max(node_keys) + 1
+            children[n].append(new_idx)
+            node_keys.add(new_idx)
 
     #assume 2 input nodes: the first one will be scaled to a map and the second one will represent the reward
     n = input_keys[0]
@@ -141,7 +142,7 @@ def create(genome, config, map_size):
             # Map to map connectivity
             if cg.one2one:
                 if cg.extended:
-                    #extended one-to-
+                    #extended one-to-one (2)
                     #create a new intermediatery map
                     for j in range(0, map_size):
                         idx = max(node_keys.union(aux_keys)) + 1
@@ -261,7 +262,7 @@ def create(genome, config, map_size):
                 if node_key not in mod_inputs.keys():
                     for n in node_map:
                         mod_inputs[n] = []
-                #For the guided maps, all modulatory weights to switch neurons now weight 1/m
+                #For the guided maps, all modulatory weights to switch neurons now weight 1/ (3)
                 if mod_inputs[node_key]:
                     for n in node_map:
                         new_w = 1 / len(std_inputs[n])
@@ -274,16 +275,26 @@ def create(genome, config, map_size):
             for n in node_map:
                 if n not in std_inputs:
                     std_inputs[n] = []
-                #For these guided maps, every hidden neuron that is not a switch neuron is a gating neuron
-
-                params = {
-                    'activation_function': genome_config.activation_defs.get(node.activation),
-                    'integration_function': genome_config.aggregation_function_defs.get(node.aggregation),
-                    'bias': node.bias,
-                    'activity': 0,
-                    'output': 0,
-                    'weights': std_inputs[n]
-                }
+                #Output neuron's properties are free (5)
+                if node_key in output_keys:
+                    params = {
+                        'activation_function': genome_config.activation_defs.get(node.activation),
+                        'integration_function': genome_config.aggregation_function_defs.get(node.aggregation),
+                        'bias': node.bias,
+                        'activity': 0,
+                        'output': 0,
+                        'weights': std_inputs[n]
+                    }
+                #For these guided maps, every hidden neuron that is not a switch neuron is a gating neuron (4)
+                else:
+                    params = {
+                        'activation_function': identity,
+                        'integration_function': prod,
+                        'bias': node.bias,
+                        'activity': 0,
+                        'output': 0,
+                        'weights': std_inputs[n]
+                    }
                 nodes.append(Neuron(n, params))
 
         #if the node is one of those we added with the extended one to one scheme
