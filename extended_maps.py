@@ -93,11 +93,11 @@ def create(genome, config, map_size):
         if n in output_keys:
             continue
 
-        if not genome.nodes[n].is_isolated:
-            for _ in range(1, map_size):
-                new_idx = max(node_keys) + 1
-                children[n].append(new_idx)
-                node_keys.add(new_idx)
+        #if not genome.nodes[n].is_isolated:
+        for _ in range(1, map_size):
+            new_idx = max(node_keys) + 1
+            children[n].append(new_idx)
+            node_keys.add(new_idx)
 
     #assume 2 input nodes: the first one will be scaled to a map and the second one will represent the reward
     n = input_keys[0]
