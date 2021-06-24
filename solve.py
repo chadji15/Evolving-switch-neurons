@@ -214,16 +214,27 @@ def solve_xor_rec():
 
 def binary_3x3_optimal_genome():
     Config = namedtuple("Config",["genome_config"])
-    Genome_config = namedtuple("Genome_config", ["input_keys", "output_keys"])
-    genome_config = Genome_config(input_keys=[-1,-2], output_keys= [0])
+    Genome_config = namedtuple("Genome_config", ["input_keys", "output_keys", "activation_defs", "aggregation_function_defs"])
+    from utilities import identity
+    from neat.activations import sigmoid_activation
+    from neat.aggregations import sum_aggregation, product_aggregation
+    activations = {
+        "sigmoid": sigmoid_activation,
+        "identity": identity
+    }
+    aggregations = {
+        "sum": sum_aggregation,
+        "product": product_aggregation
+    }
+    genome_config = Genome_config(input_keys=[-1,-2], output_keys= [0], activation_defs=activations, aggregation_function_defs=aggregations)
     config = Config(genome_config=genome_config)
     Genome = namedtuple("Genome", ["nodes", "connections"])
-    Node = namedtuple("Node", ['bias', 'activaton', 'aggregation', 'is_isolated', 'is_switch'])
+    Node = namedtuple("Node", ['bias', 'activation', 'aggregation', 'is_isolated', 'is_switch'])
     Connection = namedtuple("Connection", ["key", "one2one", "extended", "uniform", "weight", "enabled", "is_mod"])
 
-    gatinglayer = Node(bias=1, activaton='identity', aggregation='product', is_isolated=False, is_switch=False)
-    switchlayer = Node(bias=0, activaton='identity', aggregation='sum', is_isolated=False, is_switch=True)
-    outputlayer = Node(bias=0, activaton='identity', aggregation="sum", is_isolated=True, is_switch=False)
+    gatinglayer = Node(bias=1, activation='identity', aggregation='product', is_isolated=False, is_switch=False)
+    switchlayer = Node(bias=0, activation='identity', aggregation='sum', is_isolated=False, is_switch=True)
+    outputlayer = Node(bias=0, activation='identity', aggregation="sum", is_isolated=True, is_switch=False)
 
     nodes = {0: outputlayer,
              1: gatinglayer,
@@ -244,8 +255,8 @@ def binary_3x3_optimal_genome():
     }
 
     genome = Genome(nodes, connections)
-    import guided_maps
-    network = guided_maps.create(genome, config, 3)
+    import extended_maps
+    network = extended_maps.create(genome, config, 3)
     import render_network
     render_network.draw_net(network,False, "optimal3x3")
     from eval import eval_one_to_one_3x3
