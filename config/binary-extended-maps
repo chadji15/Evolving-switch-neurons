@@ -34,12 +34,12 @@ uniform_default        = True
 uniform_mutate_rate    = 0.1
 
 #Isolated neuron vs map
-is_isolated_default     = False
-is_isolated_mutate_rate = 0.1
+is_isolated_default     = True
+is_isolated_mutate_rate = 0
 
 # node bias options
 bias_init_mean          = 1
-bias_init_stdev         = 2
+bias_init_stdev         = 2.0
 bias_max_value          = 20.0
 bias_min_value          = -20.0
 bias_mutate_power       = 0.3
