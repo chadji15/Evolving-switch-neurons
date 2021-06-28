@@ -1,0 +1,81 @@
+#--- parameters --#
+
+[NEAT]
+fitness_criterion     = max
+fitness_threshold     = 170
+pop_size              = 200
+reset_on_extinction   = False
+
+[DeapSwitchGenome]
+# node activation options
+activation_default      = sigmoid
+activation_mutate_rate  = 0.1
+activation_options      = sigmoid identity tanh
+
+# node aggregation options
+aggregation_default     = sum
+aggregation_mutate_rate = 0
+aggregation_options     = sum
+
+#Switch Neuron
+is_switch_default       = False
+is_switch_mutate_rate   = 0.1
+
+# node bias options
+bias_init_mean          = 1
+bias_init_stdev         = 1.0
+bias_max_value          = 20
+bias_min_value          = -20
+bias_mutate_power       = 0.6
+bias_mutate_rate        = 0.4
+bias_replace_rate       = 0.1
+
+# genome compatibility options
+compatibility_disjoint_coefficient = 1.0
+compatibility_weight_coefficient   = 0.5
+
+# connection add/remove rates
+conn_add_prob           = 0.2
+conn_delete_prob        = 0.05
+
+# connection enable options
+enabled_default         = True
+enabled_mutate_rate     = 0
+
+#standard vs modulatory connection
+is_mod_default          = False
+is_mod_mutate_rate      = 0.1
+
+feed_forward            = True
+initial_connection      = full_nodirect
+
+# node add/remove rates
+node_add_prob           = 0.15
+node_delete_prob        = 0.05
+
+# network parameters
+num_hidden              = 2
+num_inputs              = 4
+num_outputs             = 1
+
+# connection weight options / used as mean for normal distribution
+weight_init_mean        = 0.0
+weight_init_stdev       = 1.0
+weight_max_value        = 20
+weight_min_value        = -20
+weight_mutate_power     = 0.4
+weight_mutate_rate      = 0.2
+weight_replace_rate     = 0.1
+
+[DefaultSpeciesSet]
+compatibility_threshold = 3.0
+
+[DefaultStagnation]
+species_fitness_func = max
+max_stagnation       = 15
+species_elitism      = 5
+
+[DefaultReproduction]
+elitism            = 3
+survival_threshold = 0.2
+

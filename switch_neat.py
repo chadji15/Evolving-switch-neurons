@@ -48,6 +48,7 @@ class SwitchConnectionGene(DefaultConnectionGene):
 
 #Create a switch genome class to replace the default genome class in our experiments.
 class SwitchGenome(DefaultGenome):
+
     @classmethod
     def parse_config(cls, param_dict):
         param_dict['node_gene_type'] = SwitchNodeGene

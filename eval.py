@@ -6,6 +6,7 @@ import gym
 import gym_association_task
 import t_maze
 from functools import partial
+
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
@@ -20,7 +21,7 @@ def eq_tuples(tup1, tup2):
     for x,y in zip(tup1, tup2):
         if x != y:
             return False
-        return True
+    return True
 
 def eq_snapshots(s1,s2):
     for key in s1:
@@ -32,10 +33,10 @@ def eq_snapshots(s1,s2):
 #to achieve a score of at least 1976 (2000 - (5*(3*2))  = steps - (association_changes+1)*(n*(m-1)).
 #Note that scores above this threshold do not mean better performance since the score of 1976 is already considered optimal.
 #The network here needs to accept 4 inputs (3 for observation and 1 for reward) and return a vector with 3 binary values.
-#For num_episodes = 100 | 1000
-#    rand_iter = 25     | 100
-#    max fitness = 70   | 934
-def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inter=50, descriptor_out=False):
+#For num_episodes = 100 | 1000  |   200
+#    rand_iter = 25     | 100   |   20
+#    max fitness = 70   | 940   |   140
+def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=10, descriptor_out=False):
     env = gym.make('OneToOne3x3-v0')
     s = num_episodes
     observation = env.reset(rand_iter=rand_iter)
@@ -50,12 +51,13 @@ def eval_one_to_one_3x3(agent, num_episodes = 1000, rand_iter= 100,snapshot_inte
             if t_in not in prevsnapshot:
                 prevsnapshot[t_in] = action
             responses[t_in] = action
-            if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
+            #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
+            if i_episode%snapshot_inter == 0 and i_episode > 0:
                 if eq_snapshots(responses, prevsnapshot):
                     bd.append(0)
                 else:
                     bd.append(1)
-                prevsnapshot = responses
+                prevsnapshot = copy.deepcopy(responses)
         observation, reward, done, info = env.step(action)
         #print(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
         input = list(input)
