@@ -177,6 +177,57 @@ class TmazeEvaluator():
             return s, bd
         return s
 
+    def eval_float_bd(self, agent):
+
+        env = gym.make('MiniGrid-TMaze-v0')  #init environment
+        s = 0       #s = total reward
+        pos = 0     #pos = the initial position of the high reward
+        bd = []     # behavioural descriptor
+
+        for param in self.params:
+            #pos = 0
+            for i_episode in range(self.num_episodes):
+                reward = 0
+                #swap the position of the high reward every s_inter steps
+                if i_episode == self.DOMAIN_CONSTANT + param:
+                    pos = (pos + 1) % 2
+                observation = env.reset(reward_pos= pos)
+                #print(f"y = {param}, pos = {pos}")
+                #append 0 for the reward
+                input = list(observation)
+                input.append(0)
+                done = False
+                #DEBUG INFO
+                if self.debug:
+                    print("Episode: {}".format(i_episode))
+                    print("High pos: {}".format(pos))
+                while not done:
+                    action = agent.activate(input)
+                    observation, reward, done, info = env.step(action)
+                    input = list(observation)
+                    input.append(reward)
+                    #DEBUG INFO
+                    if self.debug:
+                        print("     {}".format(int_to_action(action)))
+                if self.debug:
+                    print(input)
+                s += reward
+                #Add this episode to the behavioural descriptor
+                if self.descriptor_out:
+                    bd.append(reward)
+                agent.activate(input)
+                #DEBUG INFO
+                if self.debug:
+                    print("Reward: {}".format(reward))
+                    print("--------------")
+        env.close()
+        if self.debug:
+            print(f"Total reward: {s}")
+        if self.descriptor_out:
+            return s, bd
+        return s
+
+
 #Older version
 #For a network to be considered to be able to solve the single t-maze non-homing task in this case it needs to
 #to achieve a score of at least 96 (for the default settings). This is because every time we change the place of the high reward, the optimal

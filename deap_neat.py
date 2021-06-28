@@ -1,14 +1,17 @@
+import argparse
 import os
+import pickle
 import random
 from deap import base, creator, tools
 from qdpy.algorithms.deap import DEAPQDAlgorithm
 from qdpy.base import ParallelismManager
 from qdpy.containers import Grid
+
 from qdpy.plots import plotGridSubplots
 from switch_neat import SwitchNodeGene, SwitchConnectionGene, SwitchGenome, create, Agent
 from neat import DefaultReproduction, DefaultSpeciesSet, DefaultStagnation, Config
-from solve import convert_to_action
-from eval import eval_one_to_one_3x3
+from solve import convert_to_action, convert_to_direction
+from eval import eval_one_to_one_3x3, TmazeEvaluator
 from functools import partial
 from itertools import count
 import numpy as np
@@ -17,8 +20,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm
 
-#200 episodes, interval = 40 => max fitness = 170
-eval_f = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
+
 genome_indexer = count(1)
 
 class DeapSwitchGenome(SwitchGenome):
@@ -32,17 +34,30 @@ class DeapSwitchGenome(SwitchGenome):
         self.nodes = {}
 
 def expr(config):
-
     ind = creator.Individual(next(genome_indexer))
     ind.configure_new(config)
     return ind
 
 def evaluate_skinner(ind, config):
+    #200 episodes, interval = 40 => max fitness = 170
+    eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
-    fitness, bd = eval_f(agent)
+    fitness, bd = eval_3x3(agent)
+    return [fitness,], bd
+
+def eval_tmaze(ind, config):
+    #initializing the evaluator inside the function means different switch intervals for each agent
+    #if the opposite is desired then the evaluator needs to be initialized outside
+
+    evaluator = TmazeEvaluator(num_episodes=8, samples=4,debug=False, descriptor_out=True)
+    in_proc = lambda x: x
+    out_proc = convert_to_direction
+    net = create(ind, config)
+    agent = Agent(net, in_proc, out_proc)
+    fitness, bd = evaluator.eval_tmaze(agent)
     return [fitness,], bd
 
 def mutate_genome(ind, config):
@@ -56,8 +71,28 @@ def mate_genome(ind1, ind2, genfunc, config):
     child2.configure_crossover(ind1, ind2, config)
     return child1, child2
 
+def neat_toolbox(conf):
+    genome_conf = conf.genome_config
+    toolbox = base.Toolbox()
+    toolbox.register("expr", expr, config=genome_conf)
+    toolbox.register("individual", toolbox.expr)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("select", tools.selRandom) #Map-Elites = random selection on a grid container
+    toolbox.register("mutate", mutate_genome, config=genome_conf)
+    toolbox.register("mate", mate_genome, genfunc=toolbox.individual, config=genome_conf)
+    return toolbox
+
+problems = {
+    "tmaze" : eval_tmaze,
+    "association" : evaluate_skinner
+}
 
 def main():
+
+    parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
+    parser.add_argument('-p', '--problem', help=f"Available problems: {','.join(problems.keys())}", required=True, type=str,
+                        choices=problems.keys())
+    args=parser.parse_args()
 
     seed = np.random.randint(100000000)
     np.random.seed(seed)
@@ -80,6 +115,7 @@ def main():
     fitness_domain = [(0., 200.)] #Range of fitness
     init_batch_size = 12000
     batch_size = 3000
+
     nb_iterations = 50 #Generations
     mutation_pb = 1. #1 because the actual mutation probabilities are controlled through the config
     max_items_per_bin = 1 #How many solutions in each bin
@@ -88,15 +124,8 @@ def main():
     log_base_path = "."
 
 
-    toolbox = base.Toolbox()
-    toolbox.register("expr", expr, config=genome_conf)
-    toolbox.register("individual", toolbox.expr)
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("evaluate", evaluate_skinner, config = conf)
-    toolbox.register("select", tools.selRandom) #Map-Elites = random selection on a grid container
-    toolbox.register("mutate", mutate_genome, config=genome_conf)
-    toolbox.register("mate", mate_genome, genfunc=toolbox.individual, config=genome_conf)
-
+    toolbox = neat_toolbox(conf)
+    toolbox.register("evaluate", problems[args.problem], config = conf)
     # Create a dict storing all relevant infos
     results_infos = {'features_domain': features_domain, 'fitness_domain': fitness_domain, 'nb_bins': nb_bins,
                      'init_batch_size': init_batch_size, 'nb_iterations': nb_iterations, 'batch_size': batch_size,
@@ -119,6 +148,9 @@ def main():
     print(grid.summary())
     print("Best ever fitness: ", grid.best_fitness)
     print("Best ever ind: ", grid.best)
+
+    best_ind = grid.best
+    pickle.dump(best_ind, open("winner_ind.bin", "wb"))
 
     #plot_path =  os.path.join(log_base_path, "performancesGrid.pdf")
     #ValueError: plotGridSubplots only supports up to 4 dimensions.

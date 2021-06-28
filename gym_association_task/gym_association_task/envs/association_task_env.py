@@ -1,3 +1,4 @@
+import copy
 import random
 
 import gym
@@ -47,6 +48,13 @@ class AssociationTaskEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
     step_count = 0
+
+    @staticmethod
+    def eq_associations(a1, a2):
+        for key in a1:
+            if a1[key] != a2[key]:
+                return False
+        return True
 
     def __init__(self, input_num, output_num, mode='one-to-one', rand_inter = 0):
 
@@ -115,17 +123,21 @@ class AssociationTaskEnv(gym.Env):
         print(self.action_space._to_list())
 
     def randomize_associations(self):
-        self.associations = {}
-        input = [i for i in self.observation_space._to_list()]
-        output = [o for o in self.action_space._to_list()]
-        np.random.shuffle(input)
-        for pattern in input[:]:
-            idx = np.random.choice(range(len(output)))
-            self.associations[pattern] = output[idx]
-            input.remove(pattern)
-            output.pop(idx)
-            if len(output) == 0:
-                output = [o for o in self.action_space._to_list()]
+        old_associations = copy.deepcopy(self.associations)
+        while(True):
+            input = [i for i in self.observation_space._to_list()]
+            output = [o for o in self.action_space._to_list()]
+            self.associations = {}
+            np.random.shuffle(input)
+            for pattern in input[:]:
+                idx = np.random.choice(range(len(output)))
+                self.associations[pattern] = output[idx]
+                input.remove(pattern)
+                output.pop(idx)
+                if len(output) == 0:
+                    output = [o for o in self.action_space._to_list()]
+            if old_associations == {} or not self.eq_associations(old_associations, self.associations):
+                break
 
         return self.associations
 
