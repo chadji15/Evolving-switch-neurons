@@ -51,7 +51,9 @@ class ExtendedMapNodeGene(DefaultNodeGene):
                         BoolAttribute('is_switch')]
 
     def distance(self, other, config):
-        d = abs(self.bias - other.bias) + int(self.activation == other.activation) + int(self.aggregation == other.aggregation) \
+        #Heavier weights for activation and aggregation functions - force neat to put identical networks with different]
+        #functions on the output neuron to different species
+        d = abs(self.bias - other.bias) + 5 * int(self.activation == other.activation) + 5 * int(self.aggregation == other.aggregation) \
             + int(self.is_isolated == other.is_isolated) + int(self.is_switch - other.is_switch)
         return d * config.compatibility_weight_coefficient
 
