@@ -78,11 +78,11 @@ def main():
     nb_bins = (bins_per_dim,) * nb_features #Number of bins
     features_domain = [(0., 1.)] * nb_features #The range of the feature for each dimension
     fitness_domain = [(0., 200.)] #Range of fitness
-    init_batch_size = 5000
-    batch_size = 1000
-    nb_iterations = 20 #Generations
+    init_batch_size = 12000
+    batch_size = 3000
+    nb_iterations = 50 #Generations
     mutation_pb = 1. #1 because the actual mutation probabilities are controlled through the config
-    max_items_per_bin = 4 #How many solutions in each bin
+    max_items_per_bin = 1 #How many solutions in each bin
     verbose = True
     show_warnings = True
     log_base_path = "."
