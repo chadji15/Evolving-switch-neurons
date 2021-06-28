@@ -82,7 +82,7 @@ def main():
     batch_size = 1000
     nb_iterations = 20 #Generations
     mutation_pb = 1. #1 because the actual mutation probabilities are controlled through the config
-    max_items_per_bin = 2 #How many solutions in each bin
+    max_items_per_bin = 4 #How many solutions in each bin
     verbose = True
     show_warnings = True
     log_base_path = "."
