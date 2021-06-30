@@ -40,7 +40,8 @@ def expr(config):
 
 def evaluate_skinner(ind, config):
     #200 episodes, interval = 40 => max fitness = 170
-    eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
+    #500 | 50 | 470
+    eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=500, rand_iter=100, snapshot_inter=50, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
@@ -113,8 +114,8 @@ def main():
     nb_bins = (bins_per_dim,) * nb_features #Number of bins
     features_domain = [(0., 1.)] * nb_features #The range of the feature for each dimension
     fitness_domain = [(0., 200.)] #Range of fitness
-    init_batch_size = 12000
-    batch_size = 3000
+    init_batch_size = 10000
+    batch_size = 2000
 
     nb_iterations = 50 #Generations
     mutation_pb = 1. #1 because the actual mutation probabilities are controlled through the config
@@ -150,7 +151,8 @@ def main():
     print("Best ever ind: ", grid.best)
 
     best_ind = grid.best
-    pickle.dump(best_ind, open("winner_ind.bin", "wb"))
+    net = create(best_ind, config=conf)
+    pickle.dump(net, open("winner_net.bin", "wb"))
 
     #plot_path =  os.path.join(log_base_path, "performancesGrid.pdf")
     #ValueError: plotGridSubplots only supports up to 4 dimensions.

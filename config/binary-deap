@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 170
+fitness_threshold     = 470
 pop_size              = 200
 reset_on_extinction   = False
 
@@ -23,7 +23,7 @@ is_switch_mutate_rate   = 0.1
 
 # node bias options
 bias_init_mean          = 1
-bias_init_stdev         = 1.0
+bias_init_stdev         = 3
 bias_max_value          = 20
 bias_min_value          = -20
 bias_mutate_power       = 0.6
@@ -59,8 +59,8 @@ num_inputs              = 4
 num_outputs             = 1
 
 # connection weight options / used as mean for normal distribution
-weight_init_mean        = 0.0
-weight_init_stdev       = 1.0
+weight_init_mean        = 1
+weight_init_stdev       = 3
 weight_max_value        = 20
 weight_min_value        = -20
 weight_mutate_power     = 0.4
