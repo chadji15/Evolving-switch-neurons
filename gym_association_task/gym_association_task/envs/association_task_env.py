@@ -1,5 +1,6 @@
 import copy
 import random
+from itertools import permutations
 
 import gym
 import numpy as np
@@ -78,6 +79,7 @@ class AssociationTaskEnv(gym.Env):
         else:
             raise ValueError('Unknown mode used: {}'.format(mode))
         self.associations = {}
+        self.perms = []
         self.reset()
 
     def step(self, action):
@@ -122,24 +124,36 @@ class AssociationTaskEnv(gym.Env):
         print("Actions:")
         print(self.action_space._to_list())
 
-    def randomize_associations(self):
-        old_associations = copy.deepcopy(self.associations)
-        while(True):
-            input = [i for i in self.observation_space._to_list()]
-            output = [o for o in self.action_space._to_list()]
-            self.associations = {}
-            np.random.shuffle(input)
-            for pattern in input[:]:
-                idx = np.random.choice(range(len(output)))
-                self.associations[pattern] = output[idx]
-                input.remove(pattern)
-                output.pop(idx)
-                if len(output) == 0:
-                    output = [o for o in self.action_space._to_list()]
-            if old_associations == {} or not self.eq_associations(old_associations, self.associations):
-                break
+    # def randomize_associations(self):
+    #     old_associations = copy.deepcopy(self.associations)
+    #     while(True):
+    #         input = [i for i in self.observation_space._to_list()]
+    #         output = [o for o in self.action_space._to_list()]
+    #         self.associations = {}
+    #         np.random.shuffle(input)
+    #         for pattern in input[:]:
+    #             idx = np.random.choice(range(len(output)))
+    #             self.associations[pattern] = output[idx]
+    #             input.remove(pattern)
+    #             output.pop(idx)
+    #             if len(output) == 0:
+    #                 output = [o for o in self.action_space._to_list()]
+    #         if old_associations == {} or not self.eq_associations(old_associations, self.associations):
+    #             break
+    #     return self.associations
 
+    def randomize_associations(self):
+
+        input = [i for i in self.observation_space._to_list()]
+        if not self.perms:
+            self.init_perm()
+        output = self.perms.pop()
+        self.associations = {}
+        for i in range(len(input)):
+            o = i % len(output)
+            self.associations[input[i]] = output[o]
         return self.associations
+
 
     def next_obs(self):
         while(True):
@@ -147,6 +161,11 @@ class AssociationTaskEnv(gym.Env):
             random.shuffle(obs)
             while(len(obs) > 0):
                 yield obs.pop()
+
+    def init_perm(self):
+        output = [o for o in self.action_space._to_list()]
+        self.perms = [p for p in permutations(output)]
+        random.shuffle(self.perms)
 
 class OneToOne2x2(AssociationTaskEnv):
     def __init__(self):

@@ -17,8 +17,7 @@ from itertools import count
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.cm
+
 
 
 genome_indexer = count(1)
@@ -88,6 +87,22 @@ problems = {
     "association" : evaluate_skinner
 }
 
+skinner_params = {
+    'nb_features' : 9, #Length of the descriptor
+    'bins_per_dim' : 2,  #Bins per dimension of the descriptor
+    'fitness_domain' : [(0., 200.)], #Range of fitness
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50 ,#Generations
+    'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
+    'max_items_per_bin' : 1, #How many solutions in each bin
+}
+skinner_params['features_domain'] = [(0.,1.)] * skinner_params['nb_features']
+
+parameters ={
+    'association' : skinner_params
+}
+
 def main():
 
     parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
@@ -104,22 +119,24 @@ def main():
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
-    genome_conf = conf.genome_config
 
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", DeapSwitchGenome, fitness=creator.FitnessMax, features = list)
 
-    nb_features = 9 #Length of the descriptor
-    bins_per_dim = 2  #Bins per dimension of the descriptor
-    nb_bins = (bins_per_dim,) * nb_features #Number of bins
-    features_domain = [(0., 1.)] * nb_features #The range of the feature for each dimension
-    fitness_domain = [(0., 200.)] #Range of fitness
-    init_batch_size = 10000
-    batch_size = 2000
+    params = parameters[args.problem]
 
-    nb_iterations = 50 #Generations
-    mutation_pb = 1. #1 because the actual mutation probabilities are controlled through the config
-    max_items_per_bin = 1 #How many solutions in each bin
+    nb_features = params['nb_features'] #Length of the descriptor
+    bins_per_dim = params['bins_per_dim']  #Bins per dimension of the descriptor
+    nb_bins = (bins_per_dim,) * nb_features #Number of bins
+
+    features_domain =  params['features_domain']#The range of the feature for each dimension
+    fitness_domain = params['fitness_domain'] #Range of fitness
+    init_batch_size = params['init_batch_size']
+    batch_size = params['batch_size']
+    nb_iterations = params['nb_iterations'] #Generations
+    mutation_pb = params['mutation_pb'] #1 because the actual mutation probabilities are controlled through the config
+    max_items_per_bin = params['max_items_per_bin'] #How many solutions in each bin
+
     verbose = True
     show_warnings = True
     log_base_path = "."
