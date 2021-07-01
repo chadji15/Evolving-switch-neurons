@@ -6,7 +6,9 @@ import gym
 import gym_association_task
 import t_maze
 from functools import partial
+import logging
 
+logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
@@ -59,7 +61,7 @@ def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=
                     bd.append(1)
                 prevsnapshot = copy.deepcopy(responses)
         observation, reward, done, info = env.step(action)
-        #print(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+        logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
         input = list(input)
         input[-1] = reward
         agent.activate(input)

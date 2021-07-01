@@ -17,7 +17,9 @@ from itertools import count
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
+import logging
 
+logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 
 
 genome_indexer = count(1)
@@ -37,14 +39,19 @@ def expr(config):
     ind.configure_new(config)
     return ind
 
+evalc = count(0)
 def evaluate_skinner(ind, config):
     #200 episodes, interval = 40 => max fitness = 170
+    logging.debug("=================") #debug
+    logging.debug(f"Evaluation {next(evalc)}") #debug
+    logging.debug("=================") #debug
     eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
     fitness, bd = eval_3x3(agent)
+    logging.debug(f"Fitness: {fitness}\t BD: {bd}\n")
     return [fitness,], bd
 
 def eval_tmaze(ind, config):
@@ -90,9 +97,9 @@ skinner_params = {
     'nb_features' : 9, #Length of the descriptor
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
     'fitness_domain' : [(0., 200.)], #Range of fitness
-    'init_batch_size' : 10000,
-    'batch_size' : 2000,
-    'nb_iterations' : 50 ,#Generations
+    'init_batch_size' : 1000,
+    'batch_size' : 100,
+    'nb_iterations' : 10 ,#Generations
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
@@ -149,7 +156,7 @@ def main():
     fitness_weight = 1.
     grid = Grid(shape=nb_bins, max_items_per_bin=max_items_per_bin, fitness_domain=fitness_domain, fitness_weight=fitness_weight, features_domain=features_domain, storage_type=list)
 
-    with ParallelismManager("multithreading", toolbox=toolbox) as pMgr:
+    with ParallelismManager("none", toolbox=toolbox) as pMgr:
         # Create a QD algorithm
         algo = DEAPQDAlgorithm(pMgr.toolbox, grid, init_batch_size = init_batch_size,
                                batch_size = batch_size, niter = nb_iterations,
