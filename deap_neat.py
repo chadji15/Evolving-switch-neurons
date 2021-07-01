@@ -167,10 +167,6 @@ def main():
     print("Best ever fitness: ", grid.best_fitness)
     print("Best ever ind: ", grid.best)
 
-    best_ind = grid.best
-    net = create(best_ind, config=conf)
-    pickle.dump(net, open("winner_net.bin", "wb"))
-
     #plot_path =  os.path.join(log_base_path, "performancesGrid.pdf")
     #ValueError: plotGridSubplots only supports up to 4 dimensions.
     # plotGridSubplots(grid.quality_array[..., 0], plot_path, plt.get_cmap("nipy_spectral_r"), features_domain, fitness_domain[0], nbTicks=None)
