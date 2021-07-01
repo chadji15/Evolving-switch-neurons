@@ -1,4 +1,6 @@
 import copy
+import logging
+import pprint
 import random
 from itertools import permutations
 
@@ -98,7 +100,7 @@ class AssociationTaskEnv(gym.Env):
             self.reward = 0
 
         self.step_count += 1
-        if self.rand_inter > 0 and self.step_count % self.rand_inter == 0:
+        if self.rand_inter > 0 and self.step_count % self.rand_inter == 0 and self.step_count > 0:
             self.randomize_associations()
 
         #self.observation = list(self.associations.keys())[self.step_count % len(self.associations)]
@@ -152,6 +154,7 @@ class AssociationTaskEnv(gym.Env):
         for i in range(len(input)):
             o = i % len(output)
             self.associations[input[i]] = output[o]
+        logging.debug(f"Associations: {pprint.pformat(self.associations,indent=4)}")
         return self.associations
 
 
