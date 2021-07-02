@@ -38,7 +38,7 @@ def eq_snapshots(s1,s2):
 #For num_episodes = 100 | 1000  |   200
 #    rand_iter = 25     | 100   |   20
 #    max fitness = 70   | 940   |   140
-def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=10, descriptor_out=False):
+def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=10, descriptor_out=False, debug=False):
     env = gym.make('OneToOne3x3-v0')
     s = num_episodes
     observation = env.reset(rand_iter=rand_iter)
@@ -61,7 +61,8 @@ def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=
                     bd.append(1)
                 prevsnapshot = copy.deepcopy(responses)
         observation, reward, done, info = env.step(action)
-        logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+        if debug:
+            logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
         input = list(input)
         input[-1] = reward
         agent.activate(input)

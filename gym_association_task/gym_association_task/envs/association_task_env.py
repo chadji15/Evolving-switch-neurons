@@ -1,5 +1,6 @@
 import copy
 import logging
+logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 import pprint
 import random
 from itertools import permutations
@@ -154,7 +155,7 @@ class AssociationTaskEnv(gym.Env):
         for i in range(len(input)):
             o = i % len(output)
             self.associations[input[i]] = output[o]
-        logging.debug(f"Associations: {pprint.pformat(self.associations,indent=4)}")
+        #logging.debug(f"Associations: {pprint.pformat(self.associations,indent=4)}")
         return self.associations
 
 
