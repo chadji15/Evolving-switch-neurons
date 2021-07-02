@@ -42,16 +42,16 @@ def expr(config):
 evalc = count(0)
 def evaluate_skinner(ind, config):
     #200 episodes, interval = 40 => max fitness = 170
-    logging.debug(f"Evaluation {next(evalc)}") #debug
-    logging.debug("=================") #debug
     eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
     fitness, bd = eval_3x3(agent)
-    logging.debug(f"Fitness: {fitness}\t BD: {bd}\n")
     if fitness > 169:
+        logging.debug(f"Evaluation {next(evalc)}") #debug
+        logging.debug("=================") #debug
+        logging.debug(f"Fitness: {fitness}\t BD: {bd}")
         fitness2, bd2 = eval_one_to_one_3x3(agent, 200,40, 20, True, True)
         logging.debug(f"Fitness2: {fitness2}\t BD: {bd2}\n")
     return [fitness,], bd
