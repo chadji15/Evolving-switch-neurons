@@ -42,16 +42,16 @@ def expr(config):
 evalc = count(0)
 def evaluate_skinner(ind, config):
     #200 episodes, interval = 40 => max fitness = 170
-    logging.debug(f"Evaluation {next(evalc)}") #debug
-    logging.debug("=================") #debug
     eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
     fitness, bd = eval_3x3(agent)
-    logging.debug(f"Fitness: {fitness}\t BD: {bd}\n")
     if fitness > 169:
+        logging.debug(f"Evaluation {next(evalc)}") #debug
+        logging.debug("=================") #debug
+        logging.debug(f"Fitness: {fitness}\t BD: {bd}")
         fitness2, bd2 = eval_one_to_one_3x3(agent, 200,40, 20, True, True)
         logging.debug(f"Fitness2: {fitness2}\t BD: {bd2}\n")
     return [fitness,], bd
@@ -99,9 +99,9 @@ skinner_params = {
     'nb_features' : 9, #Length of the descriptor
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
     'fitness_domain' : [(0., 200.)], #Range of fitness
-    'init_batch_size' : 1000,
-    'batch_size' : 100,
-    'nb_iterations' : 10 ,#Generations
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50 ,#Generations
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
