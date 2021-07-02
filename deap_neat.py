@@ -97,9 +97,9 @@ skinner_params = {
     'nb_features' : 9, #Length of the descriptor
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
     'fitness_domain' : [(0., 200.)], #Range of fitness
-    'init_batch_size' : 1000,
-    'batch_size' : 100,
-    'nb_iterations' : 10 ,#Generations
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50 ,#Generations
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
