@@ -147,6 +147,7 @@ class AssociationTaskEnv(gym.Env):
 
     def randomize_associations(self):
 
+        old_associations = copy.deepcopy(self.associations)
         input = [i for i in self.observation_space._to_list()]
         if not self.perms:
             self.init_perm()
@@ -156,7 +157,11 @@ class AssociationTaskEnv(gym.Env):
             o = i % len(output)
             self.associations[input[i]] = output[o]
         #logging.debug(f"Associations: {pprint.pformat(self.associations,indent=4)}")
-        return self.associations
+        #Make sure two consequent associations are not the same
+        if self.eq_associations(old_associations, self.associations):
+            return self.randomize_associations()
+        else:
+            return self.associations
 
 
     def next_obs(self):

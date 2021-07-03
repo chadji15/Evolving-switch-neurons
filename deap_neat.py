@@ -1,4 +1,5 @@
 import argparse
+import copy
 import os
 import pickle
 import random
@@ -43,17 +44,26 @@ evalc = count(0)
 def evaluate_skinner(ind, config):
     #200 episodes, interval = 40 => max fitness = 170
     eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
+    sat_fit = 169
     in_proc = lambda x: x
     out_proc = convert_to_action
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
     fitness, bd = eval_3x3(agent)
-    if fitness > 169:
-        logging.debug(f"Evaluation {next(evalc)}") #debug
-        logging.debug("=================") #debug
-        logging.debug(f"Fitness: {fitness}\t BD: {bd}")
-        fitness2, bd2 = eval_one_to_one_3x3(agent, 200,40, 20, True, True)
-        logging.debug(f"Fitness2: {fitness2}\t BD: {bd2}\n")
+    #If the agent seems satisfactory, test it a few more times to make sure it is
+    #By evaluating it a few more times and taking the minimum fitness we try to punish luck
+    if fitness > sat_fit:
+        for i in range(2):
+            f2, bd2 = eval_3x3(agent)
+            if f2 < fitness:
+                fitness = f2
+                bd = copy.deepcopy(bd2)
+    # if fitness > 169:
+    #     logging.debug(f"Evaluation {next(evalc)}") #debug
+    #     logging.debug("=================") #debug
+    #     logging.debug(f"Fitness: {fitness}\t BD: {bd}")
+    #     fitness2, bd2 = eval_one_to_one_3x3(agent, 200,40, 20, True, True)
+    #     logging.debug(f"Fitness2: {fitness2}\t BD: {bd2}\n")
     return [fitness,], bd
 
 def eval_tmaze(ind, config):
