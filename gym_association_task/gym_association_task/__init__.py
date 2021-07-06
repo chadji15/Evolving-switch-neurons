@@ -11,6 +11,11 @@ register(
 )
 
 register(
+    id='OneToOne4x4-v0',
+    entry_point='gym_association_task.envs:OneToOne4x4',
+)
+
+register(
     id='OneToMany3x2-v0',
     entry_point='gym_association_task.envs:OneToMany3x2',
 )

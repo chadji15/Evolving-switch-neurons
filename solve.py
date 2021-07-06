@@ -6,13 +6,28 @@ from math import tanh
 from t_maze.envs import TMazeEnv
 from utilities import mult, clamp, heaviside
 
+def convert_to_action4(scalar):
+    if scalar[0] < -5:
+        return (1,0,0,0)
+    elif scalar[0] > 5:
+        return (0,0,0,1)
+    elif scalar[0] < 0:
+        return (0,1,0,0)
+    else:
+        return (0,0,1,0)
 
-def convert_to_action(scalar):
+def convert_to_action3(scalar):
     if scalar[0] > 3.3:
         return (1,0,0)
     if scalar[0] < -3.3:
         return (0,0,1)
     return (0,1,0)
+
+def convert_to_action2(scalar):
+    if scalar[0] < 0:
+        return (1,0)
+    else:
+        return (0,1)
 #Returns an agent which solves the 3x3 one-to-one association task
 #We say that a network solves this problem when it manages to learn a new association within n*(m-1) steps,
 #in this case 6 steps.

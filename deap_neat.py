@@ -11,8 +11,8 @@ from qdpy.containers import Grid
 from qdpy.plots import plotGridSubplots
 from switch_neat import SwitchNodeGene, SwitchConnectionGene, SwitchGenome, create, Agent
 from neat import DefaultReproduction, DefaultSpeciesSet, DefaultStagnation, Config
-from solve import convert_to_action, convert_to_direction
-from eval import eval_one_to_one_3x3, TmazeEvaluator
+from solve import convert_to_action3, convert_to_action2, convert_to_action4, convert_to_direction
+from eval import eval_one_to_one_3x3, TmazeEvaluator, eval_one_to_one_2x2, eval_one_to_one_4x4
 from functools import partial
 from itertools import count
 import numpy as np
@@ -41,20 +41,20 @@ def expr(config):
     return ind
 
 evalc = count(0)
-def evaluate_skinner(ind, config):
+def evaluate_skinner(ind, config, eval, sat_fit, outf):
     #200 episodes, interval = 40 => max fitness = 170
-    eval_3x3 = partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True)
-    sat_fit = 169
+
     in_proc = lambda x: x
-    out_proc = convert_to_action
+    out_proc = outf
     net = create(ind,config)
     agent = Agent(net, in_proc, out_proc)
-    fitness, bd = eval_3x3(agent)
+    fitness, bd = eval(agent)
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
     if fitness > sat_fit:
         for i in range(99):
             f2, bd2 = eval_3x3(agent)
+
             if f2 < fitness:
                 fitness = f2
                 bd = copy.deepcopy(bd2)
@@ -68,6 +68,19 @@ def evaluate_skinner(ind, config):
     #     fitness2, bd2 = eval_one_to_one_3x3(agent, 200,40, 20, True, True)
     #     logging.debug(f"Fitness2: {fitness2}\t BD: {bd2}\n")
     return [fitness,], bd
+
+evaluate_skinner3 = partial(evaluate_skinner,
+                            eval =partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
+                            sat_fit = 169,
+                            outf = convert_to_action3)
+evaluate_skinner2 = partial(evaluate_skinner,
+                            eval =partial(eval_one_to_one_2x2, num_episodes=50, rand_iter=10, snapshot_inter=5, descriptor_out=True),
+                            sat_fit = 39,
+                            outf = convert_to_action2)
+evaluate_skinner4 = partial(evaluate_skinner,
+                            eval =partial(eval_one_to_one_4x4, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
+                            sat_fit = 139,
+                            outf = convert_to_action4)
 
 def eval_tmaze(ind, config):
     #initializing the evaluator inside the function means different switch intervals for each agent
@@ -105,10 +118,24 @@ def neat_toolbox(conf):
 
 problems = {
     "tmaze" : eval_tmaze,
-    "association" : evaluate_skinner
+    "skinner2" : evaluate_skinner2,
+    "skinner3" : evaluate_skinner3,
+    "skinner4" : evaluate_skinner4
 }
 
-skinner_params = {
+skinner2_params = {
+    'nb_features' : 9, #Length of the descriptor
+    'bins_per_dim' : 2,  #Bins per dimension of the descriptor
+    'fitness_domain' : [(0., 50.)], #Range of fitness
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50 ,#Generations
+    'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
+    'max_items_per_bin' : 1, #How many solutions in each bin
+}
+skinner2_params['features_domain'] = [(0.,1.)] * skinner2_params['nb_features']
+
+skinner3_params = {
     'nb_features' : 9, #Length of the descriptor
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
     'fitness_domain' : [(0., 200.)], #Range of fitness
@@ -118,10 +145,29 @@ skinner_params = {
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
-skinner_params['features_domain'] = [(0.,1.)] * skinner_params['nb_features']
+skinner3_params['features_domain'] = [(0.,1.)] * skinner3_params['nb_features']
 
+skinner4_params = {
+    'nb_features' : 9, #Length of the descriptor
+    'bins_per_dim' : 2,  #Bins per dimension of the descriptor
+    'fitness_domain' : [(0., 200.)], #Range of fitness
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50 ,#Generations
+    'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
+    'max_items_per_bin' : 1, #How many solutions in each bin
+}
+skinner4_params['features_domain'] = [(0.,1.)] * skinner4_params['nb_features']
 parameters ={
-    'association' : skinner_params
+    "skinner2" : skinner2_params,
+    'skinner3' : skinner3_params,
+    "skinner4" : skinner4_params
+}
+
+configs = {
+    "skinner2": "config/deap-skinner2",
+    "skinner3": "config/deap-skinner3",
+    "skinner4": "config/deap-skinner4"
 }
 
 def main():
@@ -136,7 +182,7 @@ def main():
     random.seed(seed)
     print("Seed: %i" % seed)
 
-    config_file = "config/binary-deap"
+    config_file = configs[args.problem]
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
