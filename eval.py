@@ -38,8 +38,8 @@ def eq_snapshots(s1,s2):
 #For num_episodes = 100 | 1000  |   200
 #    rand_iter = 25     | 100   |   20
 #    max fitness = 70   | 940   |   140
-def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=10, descriptor_out=False, debug=False):
-    env = gym.make('OneToOne3x3-v0')
+def eval_one_to_one(env_name, agent, num_episodes, rand_iter,snapshot_inter, descriptor_out=False, debug=False):
+    env = gym.make(env_name)
     s = num_episodes
     observation = env.reset(rand_iter=rand_iter)
     input = tuple(list(observation) + [0])
@@ -74,6 +74,16 @@ def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 20,snapshot_inter=
         #print(bd)
     else:
         return s
+
+def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False, debug=False):
+    return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+
+def eval_one_to_one_2x2(agent, num_episodes = 50, rand_iter= 10,snapshot_inter=5, descriptor_out=False, debug=False):
+    return eval_one_to_one('OneToOne2x2-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+
+def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False, debug=False):
+    return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to
 #to achieve a score of at least 1964 (2000 - 4*(3*(4-1)) = steps - association_changes*(n*(2^m - 1)).

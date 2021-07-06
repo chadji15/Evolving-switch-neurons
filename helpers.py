@@ -1,25 +1,10 @@
 import pickle
 from eval import eval_one_to_one_3x3
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation
-from solve import convert_to_action
+from solve import convert_to_action2, convert_to_action3, convert_to_action4
 from switch_neat import Agent, create
 from deap import creator, base
 from deap_neat import DeapSwitchGenome
-
-def test_network():
-    net = pickle.load(open("winner_net.bin", "rb"))
-    agent = Agent(net, lambda x: x, convert_to_action)
-    c =  1
-    while True:
-        c+=1
-        print("===================")
-        print(f"Evaluation {c}:")
-        print("===================")
-        fitness, bd = eval_one_to_one_3x3(agent, 200 ,40, 20, True)
-
-        print(fitness, bd)
-        if fitness > 169:
-            break
 
 def get_grid():
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -28,24 +13,34 @@ def get_grid():
     grid = res['container']
     return grid
 
-def get_agent_onf():
+def get_agent_onf(size, config_file):
     grid = get_grid()
     ind = grid.solutions[(1,0,1,0,1,0,1,0,1)][0]
-    config_file = "config/binary-deap"
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
     net = create(ind, conf)
-    agent = Agent(net, lambda x: x, convert_to_action)
+    if size == 2:
+        outf = convert_to_action2
+    elif size == 3:
+        outf = convert_to_action3
+    elif size == 4:
+        outf = convert_to_action4
+    agent = Agent(net, lambda x: x, outf)
     return agent
 
-def get_best_agent():
+def get_best_agent(size, config_file):
     grid = get_grid()
     ind = grid.best
-    config_file = "config/binary-deap"
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
     net = create(ind, conf)
-    agent = Agent(net, lambda x: x, convert_to_action)
+    if size == 2:
+        outf = convert_to_action2
+    elif size == 3:
+        outf = convert_to_action3
+    elif size == 4:
+        outf = convert_to_action4
+    agent = Agent(net, lambda x: x, outf)
     return agent

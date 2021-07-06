@@ -184,6 +184,10 @@ class OneToOne3x3(AssociationTaskEnv):
     def __init__(self):
         super().__init__(3,3)
 
+class OneToOne4x4(AssociationTaskEnv):
+    def __init__(self):
+        super().__init__(4,4)
+
 class OneToMany3x2(AssociationTaskEnv):
     def __init__(self):
         super().__init__(3,2,'one-to-many')
