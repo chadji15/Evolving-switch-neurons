@@ -28,16 +28,19 @@ def get_grid():
     grid = res['container']
     return grid
 
-def get_agent_onf():
+def get_agent_onf(f):
     grid = get_grid()
-    ind = grid.solutions[(1,0,1,0,1,0,1,0,1)][0]
+    ind = grid.solutions[f][0]
     config_file = "config/binary-deap"
     conf = Config(DeapSwitchGenome, DefaultReproduction,
-                  DefaultSpeciesSet, DefaultStagnation,
-                  config_file)
+                    DefaultSpeciesSet, DefaultStagnation,
+                    config_file)
     net = create(ind, conf)
     agent = Agent(net, lambda x: x, convert_to_action)
     return agent
+
+def get_agent_osc():
+    return get_agent_onf((1,0,1,0,1,0,1,0,1))
 
 def get_best_agent():
     grid = get_grid()

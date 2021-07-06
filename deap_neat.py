@@ -20,7 +20,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import logging
 
-logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
+#logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 
 
 genome_indexer = count(1)
@@ -53,11 +53,14 @@ def evaluate_skinner(ind, config):
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
     if fitness > sat_fit:
-        for i in range(2):
+        for i in range(99):
             f2, bd2 = eval_3x3(agent)
             if f2 < fitness:
                 fitness = f2
                 bd = copy.deepcopy(bd2)
+                #If the fitness is lower than 170 then the network is not optimal and we don't care
+                if f2 < sat_fit:
+                    break
     # if fitness > 169:
     #     logging.debug(f"Evaluation {next(evalc)}") #debug
     #     logging.debug("=================") #debug
@@ -110,8 +113,8 @@ skinner_params = {
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
     'fitness_domain' : [(0., 200.)], #Range of fitness
     'init_batch_size' : 10000,
-    'batch_size' : 2000,
-    'nb_iterations' : 50 ,#Generations
+    'batch_size' : 3000,
+    'nb_iterations' : 100 ,#Generations
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
@@ -170,7 +173,7 @@ def main():
     fitness_weight = 1.
     grid = Grid(shape=nb_bins, max_items_per_bin=max_items_per_bin, fitness_domain=fitness_domain, fitness_weight=fitness_weight, features_domain=features_domain, storage_type=list)
 
-    with ParallelismManager("none", toolbox=toolbox) as pMgr:
+    with ParallelismManager("multithreading", toolbox=toolbox) as pMgr:
         # Create a QD algorithm
         algo = DEAPQDAlgorithm(pMgr.toolbox, grid, init_batch_size = init_batch_size,
                                batch_size = batch_size, niter = nb_iterations,

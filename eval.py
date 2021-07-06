@@ -8,7 +8,7 @@ import t_maze
 from functools import partial
 import logging
 
-logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
+#logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
