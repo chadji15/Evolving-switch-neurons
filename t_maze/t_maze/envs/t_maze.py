@@ -5,7 +5,7 @@ LOW = 0.2
 HIGH = 1
 CRASH_REWARD = -0.4
 FAIL_HOME = -0.3
-STEP_PENALTY = -0.005
+STEP_PENALTY = -0.005 #Not actually used
 #Helper class for keeping track of reward positions
 class MazeEnd(Ball):
     reward = LOW

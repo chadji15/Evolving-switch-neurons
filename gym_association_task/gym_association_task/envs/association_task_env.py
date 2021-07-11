@@ -1,6 +1,6 @@
 import copy
-import logging
-logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
+#import logging
+#logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 import pprint
 import random
 from itertools import permutations

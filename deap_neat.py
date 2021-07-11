@@ -3,24 +3,26 @@ import copy
 import os
 import pickle
 import random
+from math import sqrt
+
 from deap import base, creator, tools
 from qdpy.algorithms.deap import DEAPQDAlgorithm
 from qdpy.base import ParallelismManager
-from qdpy.containers import Grid
+from qdpy.containers import Grid, NoveltyArchive, OrderedSet
 
 from qdpy.plots import plotGridSubplots
 from switch_neat import SwitchNodeGene, SwitchConnectionGene, SwitchGenome, create, Agent
 from neat import DefaultReproduction, DefaultSpeciesSet, DefaultStagnation, Config
 from solve import convert_to_action3, convert_to_action2, convert_to_action4, convert_to_direction
-from eval import eval_one_to_one_3x3, TmazeEvaluator, eval_one_to_one_2x2, eval_one_to_one_4x4
+from eval import eval_one_to_one_3x3, eval_one_to_one_2x2, eval_one_to_one_4x4, eval_tmaze_v2
 from functools import partial
 from itertools import count
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
-import logging
+#import logging
 
-logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
+#logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 
 
 genome_indexer = count(1)
@@ -78,16 +80,15 @@ evaluate_skinner4 = partial(evaluate_skinner,
                             sat_fit = 139,
                             outf = convert_to_action4)
 
-def eval_tmaze(ind, config):
+def eval_tmaze(ind, config, scenario):
     #initializing the evaluator inside the function means different switch intervals for each agent
     #if the opposite is desired then the evaluator needs to be initialized outside
 
-    evaluator = TmazeEvaluator(num_episodes=8, samples=4,debug=False, descriptor_out=True)
     in_proc = lambda x: x
     out_proc = convert_to_direction
     net = create(ind, config)
     agent = Agent(net, in_proc, out_proc)
-    fitness, bd = evaluator.eval_tmaze(agent)
+    fitness, bd = eval_tmaze_v2(agent, scenario)
     return [fitness,], bd
 
 def mutate_genome(ind, config):
@@ -111,13 +112,6 @@ def neat_toolbox(conf):
     toolbox.register("mutate", mutate_genome, config=genome_conf)
     toolbox.register("mate", mate_genome, genfunc=toolbox.individual, config=genome_conf)
     return toolbox
-
-problems = {
-    "tmaze" : eval_tmaze,
-    "skinner2" : evaluate_skinner2,
-    "skinner3" : evaluate_skinner3,
-    "skinner4" : evaluate_skinner4
-}
 
 skinner2_params = {
     'nb_features' : 9, #Length of the descriptor
@@ -154,17 +148,58 @@ skinner4_params = {
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
 skinner4_params['features_domain'] = [(0.,1.)] * skinner4_params['nb_features']
+
+tmaze_parameters = {
+    'k' : 15,
+    'threshold_novelty' : 0.05,
+    'fitness_domain' : [(-40., 100.)], #Range of fitness
+    'nb_features' : 100,
+    'bins_per_dim': 1,
+    'init_batch_size' : 1000,
+    'batch_size' : 100,
+    'nb_iterations' : 10,
+    'mutation_pb' : 1,
+    'max_items_per_bin' : 1,
+}
+tmaze_parameters['features_domain'] = [(-0.4, 1.)] * tmaze_parameters['nb_features']
+
 parameters ={
     "skinner2" : skinner2_params,
     'skinner3' : skinner3_params,
-    "skinner4" : skinner4_params
+    "skinner4" : skinner4_params,
+    "tmaze" : tmaze_parameters
 }
 
 configs = {
     "skinner2": "config/deap-skinner2",
     "skinner3": "config/deap-skinner3",
-    "skinner4": "config/deap-skinner4"
+    "skinner4": "config/deap-skinner4",
+    "tmaze" : "config/deap-tmaze"
 }
+
+problems = {
+    "tmaze" : partial(eval_tmaze,scenario=5),
+    "skinner2" : evaluate_skinner2,
+    "skinner3" : evaluate_skinner3,
+    "skinner4" : evaluate_skinner4
+}
+
+#Calculate the distance between two feature vectors
+#We don't use the built-in eucleidian because we need to normalize the values in the 0 to 1 range
+#due to the default novelty being 0.1 for some reason
+#Considering a 100 length feature vector and a range of [-0.4, 1] for each one
+#The final distance metric using the eucleidian distance would be in the [0,14] range
+def tmaze_distance(vector1, vector2):
+    dmin = 0
+    dmax = 14
+    d = 0
+    #eucleidian
+    for feat1, feat2 in zip(vector1, vector2):
+        d += (feat1-feat2) ** 2
+    d = sqrt(d)
+    #normalize
+    return (d-dmin) / (dmax-dmin)
+
 
 def main():
 
@@ -211,11 +246,17 @@ def main():
                      'mutation_pb': mutation_pb}
 
     fitness_weight = 1.
-    grid = Grid(shape=nb_bins, max_items_per_bin=max_items_per_bin, fitness_domain=fitness_domain, fitness_weight=fitness_weight, features_domain=features_domain, storage_type=list)
+    if args.problem == 'tmaze':
+        k = params['k']
+        threshold_novelty = params['threshold_novelty']
+        container = NoveltyArchive(k=k, threshold_novelty=threshold_novelty, fitness_domain=fitness_domain, features_domain=features_domain,
+                                   storage_type=list, depot_type=OrderedSet, novelty_distance=tmaze_distance)
+    else:
+        container = Grid(shape=nb_bins, max_items_per_bin=max_items_per_bin, fitness_domain=fitness_domain, fitness_weight=fitness_weight, features_domain=features_domain, storage_type=list)
 
     with ParallelismManager("multithreading", toolbox=toolbox) as pMgr:
         # Create a QD algorithm
-        algo = DEAPQDAlgorithm(pMgr.toolbox, grid, init_batch_size = init_batch_size,
+        algo = DEAPQDAlgorithm(pMgr.toolbox, container, init_batch_size = init_batch_size,
                                batch_size = batch_size, niter = nb_iterations,
                                verbose = verbose, show_warnings = show_warnings,
                                results_infos = results_infos, log_base_path = log_base_path)
@@ -224,9 +265,9 @@ def main():
 
     # Print results info
     print(f"Total elapsed: {algo.total_elapsed}\n")
-    print(grid.summary())
-    print("Best ever fitness: ", grid.best_fitness)
-    print("Best ever ind: ", grid.best)
+    print(container.summary())
+    print("Best ever fitness: ", container.best_fitness)
+    print("Best ever ind: ", container.best)
 
     #plot_path =  os.path.join(log_base_path, "performancesGrid.pdf")
     #ValueError: plotGridSubplots only supports up to 4 dimensions.

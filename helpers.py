@@ -1,7 +1,7 @@
 import pickle
 from eval import eval_one_to_one_3x3
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation
-from solve import convert_to_action2, convert_to_action3, convert_to_action4
+from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction
 from switch_neat import Agent, create
 from deap import creator, base
 from deap_neat import DeapSwitchGenome
@@ -44,3 +44,15 @@ def get_best_agent(size, config_file):
         outf = convert_to_action4
     agent = Agent(net, lambda x: x, outf)
     return agent
+
+def get_best_tmaze():
+    grid = get_grid()
+    ind = grid.best
+    conf = Config(DeapSwitchGenome, DefaultReproduction,
+                  DefaultSpeciesSet, DefaultStagnation,
+                  "config/deap-tmaze")
+    net = create(ind, conf)
+    outf = convert_to_direction
+    agent = Agent(net, lambda x: x, outf)
+    return agent
+
