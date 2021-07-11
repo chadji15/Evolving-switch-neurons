@@ -6,8 +6,7 @@ import gym
 import gym_association_task
 import t_maze
 from functools import partial
-import logging
-
+#import logging
 #logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 ###
 #All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
@@ -240,6 +239,66 @@ class TmazeEvaluator():
             return s, bd
         return s
 
+#In this second version we follow the implementation described in the novelty search paper
+#Max fitness: 100 total trials, an optimal agent is allowed to make mistakes:
+#for the 1-scenario: 2 -> max fitness = 100 - 2*0.8 = 98.4
+#for the 5-scenario: 10 -> max fitness = 100 - 10*0.8 = 92
+#for the 10-scenario: 20 -> max fitness = 100 - 20*0.8 = 84
+def eval_tmaze_v2(agent, scenario=5):
+
+    env = gym.make('MiniGrid-TMaze-v0')  #init environment
+    s = 0.0       #s = total reward
+    bd = []     # behavioural descriptor
+    deployments = 10
+    trials = 10
+    switch_points = None
+    if scenario == 1:
+        switch_points = [5]
+    elif scenario == 5:
+        switch_points = [1,3,5,7,9]
+    elif scenario == 10:
+        switch_points = [0,1,2,3,4,5,6,7,8,9]
+
+    for deployment in range(deployments):
+        pos = 0 #pos = the initial position of the high reward
+        for trial in range(trials):
+            reward = 0
+            #swap the position of the high reward
+            if trial == trials//2 and deployment in switch_points:
+                pos = 1
+            observation = env.reset(reward_pos= pos)
+            #append 0 for the reward
+            input = list(observation)
+            input.append(0)
+            done = False
+            #DEBUG INFO
+            # if debug:
+            #     print("Episode: {}".format(i_episode))
+            #     print("High pos: {}".format(pos))
+            while not done:
+                action = agent.activate(input)
+                observation, reward, done, info = env.step(action)
+                input = list(observation)
+                input.append(reward)
+                #DEBUG INFO
+                # if debug:
+                #     print("     {}".format(int_to_action(action)))
+            # if debug:
+            #     print(input)
+            s += reward
+            #Add this episode to the behavioural descriptor
+            bd.append(reward)
+            agent.activate(input) #We activate the network a second time to allow it to calibrate itself if it needs to
+            #DEBUG INFO
+            # if debug:
+            #     print("Reward: {}".format(reward))
+            #     print("--------------")
+    env.close()
+    # if debug:
+    #     print(f"Total reward: {s}")
+    # if descriptor_out:
+    #     return s, bd
+    return s, bd
 
 #Older version
 #For a network to be considered to be able to solve the single t-maze non-homing task in this case it needs to
