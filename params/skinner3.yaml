@@ -1,11 +1,12 @@
+algorithm: CVTMapElites #MapElites/ NoveltySearch/ CVTMapElites
 nb_features: 9
 bins_per_dim: 2
 max_items_per_bin: 1                     # The number of items in each bin of the grid
-fitness_domain: [[0., 1.]]               # The domain of each fitness objective (here we only have one objective)
+fitness_domain: [[0., 200.]]               # The domain of each fitness objective (here we only have one objective)
 features_domain: [[0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.]] # The domain of each feature
-init_batch_size: 10000
-nb_iterations: 2000       # The total number of allowed evaluations for this algorithm
-batch_size: 128     # The number of evaluations in each subsequent batch
+init_batch_size: 1000
+nb_iterations: 10       # The total number of allowed evaluations for this algorithm
+batch_size: 100     # The number of evaluations in each subsequent batch
 mutation_pb: 1
-container: Grid #Grid/ NoveltyArchive
 final_filename: final.p
+shape: 100

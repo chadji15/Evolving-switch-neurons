@@ -9,7 +9,7 @@ import yaml
 from deap import base, creator, tools
 from qdpy.algorithms.deap import DEAPQDAlgorithm
 from qdpy.base import ParallelismManager
-from qdpy.containers import Grid, NoveltyArchive, OrderedSet
+from qdpy.containers import Grid, NoveltyArchive, OrderedSet, CVTGrid
 
 from qdpy.plots import plotGridSubplots
 from switch_neat import SwitchNodeGene, SwitchConnectionGene, SwitchGenome, create, Agent
@@ -20,7 +20,7 @@ from functools import partial
 from itertools import count
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 
 genome_indexer = count(1)
 
@@ -137,6 +137,10 @@ def tmaze_distance(vector1, vector2):
     #normalize
     return (d-dmin) / (dmax-dmin)
 
+distance_functions = {
+    'tmaze' : tmaze_distance
+}
+
 
 def main():
 
@@ -144,7 +148,7 @@ def main():
     parser.add_argument('-p', '--problem', help=f"Available problems: {','.join(problems.keys())}", required=True, type=str,
                         choices=problems.keys())
     parser.add_argument('-c', '--config', help="The NEAT configuration file", required=True, type=str)
-    parser.add_argument('-h', '--hyperparams', help="The yaml hyperparameter file", required=True, type=str)
+    parser.add_argument('-hp', '--hyperparams', help="The yaml hyperparameter file", required=True, type=str)
     args=parser.parse_args()
 
     seed = np.random.randint(100000000)
@@ -191,18 +195,22 @@ def main():
                      'mutation_pb': mutation_pb}
 
     fitness_weight = 1.
-    if params['container'] == 'NoveltyArchive':
-        if args.problem == 'tmaze':
-            df = tmaze_distance
-        else:
-            print('Distance metric not defined for this problem')
-            exit()
+    if params['algorithm'] == 'NoveltySearch':
+        df = distance_functions[args.problem]
         k = params['k']
         threshold_novelty = params['threshold_novelty']
         container = NoveltyArchive(k=k, threshold_novelty=threshold_novelty, fitness_domain=fitness_domain, features_domain=features_domain,
                                    storage_type=list, depot_type=OrderedSet, novelty_distance=df)
-    else:
+    elif params['algorithm'] == 'CVTMapElites':
+        shape = params['shape']
+        container = CVTGrid(shape=shape, max_items_per_bin=max_items_per_bin, grid_shape=nb_bins, nb_sampled_points=1000,
+                            fitness_domain=fitness_domain, features_domain=features_domain, storage_type=OrderedSet,
+                            depot_type=OrderedSet)
+    elif params['algorithm'] == 'MapElites':
         container = Grid(shape=nb_bins, max_items_per_bin=max_items_per_bin, fitness_domain=fitness_domain, fitness_weight=fitness_weight, features_domain=features_domain, storage_type=list)
+    else:
+        print('Invalid algorithm')
+        exit()
 
     with ParallelismManager("multithreading", toolbox=toolbox) as pMgr:
         # Create a QD algorithm

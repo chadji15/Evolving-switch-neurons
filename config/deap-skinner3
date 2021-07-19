@@ -19,7 +19,7 @@ aggregation_options     = sum
 
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0.2
+is_switch_mutate_rate   = 0.1
 
 # node bias options
 bias_init_mean          = 1
