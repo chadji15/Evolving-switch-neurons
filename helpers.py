@@ -4,7 +4,7 @@ from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnati
 from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction
 from switch_neat import Agent, create
 from deap import creator, base
-from deap_neat import DeapSwitchGenome
+from deap_neat_old import DeapSwitchGenome
 
 def get_grid():
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
