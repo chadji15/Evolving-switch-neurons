@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 170
+fitness_threshold     = 307
 pop_size              = 200
 reset_on_extinction   = False
 
@@ -19,7 +19,7 @@ aggregation_options     = sum
 
 #Switch Neuron
 is_switch_default       = False
-is_switch_mutate_rate   = 0.1
+is_switch_mutate_rate   = 0.2
 
 # node bias options
 bias_init_mean          = 1
@@ -46,11 +46,11 @@ enabled_mutate_rate     = 0
 is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
-feed_forward            = False
+feed_forward            = True
 initial_connection      = full_nodirect
 
 # node add/remove rates
-node_add_prob           = 0.15
+node_add_prob           = 0.2
 node_delete_prob        = 0.05
 
 # network parameters

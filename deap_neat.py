@@ -54,7 +54,7 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf):
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
     if fitness > sat_fit:
         for i in range(99):
-            f2, bd2 = eval_3x3(agent)
+            f2, bd2 = eval(agent)
 
             if f2 < fitness:
                 fitness = f2
@@ -71,8 +71,8 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf):
     return [fitness,], bd
 
 evaluate_skinner3 = partial(evaluate_skinner,
-                            eval =partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
-                            sat_fit = 169,
+                            eval =partial(eval_one_to_one_3x3, num_episodes=350, rand_iter=50, snapshot_inter=25, descriptor_out=True),
+                            sat_fit = 307,
                             outf = convert_to_action3)
 evaluate_skinner2 = partial(evaluate_skinner,
                             eval =partial(eval_one_to_one_2x2, num_episodes=50, rand_iter=10, snapshot_inter=5, descriptor_out=True),
@@ -129,12 +129,12 @@ skinner2_params = {
 skinner2_params['features_domain'] = [(0.,1.)] * skinner2_params['nb_features']
 
 skinner3_params = {
-    'nb_features' : 9, #Length of the descriptor
+    'nb_features' : 13, #Length of the descriptor
     'bins_per_dim' : 2,  #Bins per dimension of the descriptor
-    'fitness_domain' : [(0., 200.)], #Range of fitness
+    'fitness_domain' : [(0., 350.)], #Range of fitness
     'init_batch_size' : 10000,
-    'batch_size' : 3000,
-    'nb_iterations' : 100 ,#Generations
+    'batch_size' : 128,
+    'nb_iterations' : 4000 ,#Generations
     'mutation_pb' : 1., #1 because the actual mutation probabilities are controlled through the config
     'max_items_per_bin' : 1, #How many solutions in each bin
 }
@@ -155,12 +155,12 @@ skinner4_params['features_domain'] = [(0.,1.)] * skinner4_params['nb_features']
 tmaze_parameters = {
     'k' : 15,
     'threshold_novelty' : 0.05,
-    'fitness_domain' : [(-40., 100.)], #Range of fitness
+    'fitness_domain' : [(-41., 101.)], #Range of fitness
     'nb_features' : 100,
     'bins_per_dim': 1,
-    'init_batch_size' : 1000,
-    'batch_size' : 100,
-    'nb_iterations' : 10,
+    'init_batch_size' : 10000,
+    'batch_size' : 2000,
+    'nb_iterations' : 50,
     'mutation_pb' : 1,
     'max_items_per_bin' : 1,
 }
