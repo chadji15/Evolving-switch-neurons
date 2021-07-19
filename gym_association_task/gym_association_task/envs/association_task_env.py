@@ -1,9 +1,6 @@
 import copy
-<<<<<<< HEAD
-import logging
-=======
+
 #import logging
->>>>>>> 3ba7b2f1b8d582f7cc59ced30d5ad84296ad0233
 #logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 import pprint
 import random
