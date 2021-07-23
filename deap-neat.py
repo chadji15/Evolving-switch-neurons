@@ -134,26 +134,6 @@ distance_functions = {
     'tmaze' : tmaze_distance
 }
 
-evaluate_skinner3 = partial(evaluate_skinner,
-                            eval =partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
-                            sat_fit = 170,
-                            outf = convert_to_action3)
-evaluate_skinner2 = partial(evaluate_skinner,
-                            eval =partial(eval_one_to_one_2x2, num_episodes=50, rand_iter=10, snapshot_inter=5, descriptor_out=True),
-                            sat_fit = 40,
-                            outf = convert_to_action2)
-evaluate_skinner4 = partial(evaluate_skinner,
-                            eval =partial(eval_one_to_one_4x4, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
-                            sat_fit = 140,
-                            outf = convert_to_action4)
-
-evalfs = {
-    "tmaze" : partial(eval_tmaze,scenario=5),
-    "skinner2" : evaluate_skinner2,
-    "skinner3" : evaluate_skinner3,
-    "skinner4" : evaluate_skinner4
-}
-
 problems = ['skinner2', 'skinner3', 'skinner4', 'tmaze']
 def main():
 
@@ -180,6 +160,28 @@ def main():
         genome_type = DeapSwitchMapGenome
         map_size = params['map_size']
         createf = partial(switch_maps.create, map_size=map_size)
+
+    evaluate_skinner3 = partial(evaluate_skinner,
+                                eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                sat_fit = params['sat_fit'],outf = convert_to_action3)
+    evaluate_skinner2 = partial(evaluate_skinner,
+                                eval =partial(eval_one_to_one_2x2,  num_episodes=params['num_episodes'],
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                sat_fit = params['sat_fit'],
+                                outf = convert_to_action2)
+    evaluate_skinner4 = partial(evaluate_skinner,
+                                eval =partial(eval_one_to_one_4x4,  num_episodes=params['num_episodes'],
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                sat_fit = params['sat_fit'],
+                                outf = convert_to_action4)
+
+    evalfs = {
+        "tmaze" : partial(eval_tmaze,scenario=5),
+        "skinner2" : evaluate_skinner2,
+        "skinner3" : evaluate_skinner3,
+        "skinner4" : evaluate_skinner4
+    }
 
     evalf = partial(evalfs[args.problem], createf=createf)
     #Load the NEAT configuration file
@@ -226,7 +228,7 @@ def main():
                                    storage_type=list, depot_type=OrderedSet, novelty_distance=df)
     elif params['algorithm'] == 'CVTMapElites':
         shape = params['shape']
-        container = CVTGrid(shape=shape, max_items_per_bin=max_items_per_bin, grid_shape=nb_bins, nb_sampled_points=1000,
+        container = CVTGrid(shape=shape, max_items_per_bin=max_items_per_bin, grid_shape=nb_bins, nb_sampled_points=10000,
                             fitness_domain=fitness_domain, features_domain=features_domain, storage_type=OrderedSet,
                             depot_type=OrderedSet)
     elif params['algorithm'] == 'MapElites':

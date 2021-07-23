@@ -6,9 +6,15 @@ fitness_domain: [[0., 200.]]               # The domain of each fitness objectiv
 features_domain: [[0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.]] # The domain of each feature
 init_batch_size: 1000
 nb_iterations: 10       # The total number of allowed evaluations for this algorithm
-batch_size: 100     # The number of evaluations in each subsequent batch
+batch_size: 128     # The number of evaluations in each subsequent batch
 mutation_pb: 1
 final_filename: final.p
-#shape: 100
+#shape: 4096
+#####################Encoding parameters###############
 encoding: map-based
 map_size: 3
+####################Problem parameters#################
+num_episodes: 200
+rand_iter: 40
+snap_iter: 20
+sat_fit: 170
