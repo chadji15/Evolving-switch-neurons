@@ -1,4 +1,4 @@
-algorithm: CVTMapElites #MapElites/ NoveltySearch/ CVTMapElites
+algorithm: MapElites #MapElites/ NoveltySearch/ CVTMapElites
 nb_features: 9
 bins_per_dim: 2
 max_items_per_bin: 1                     # The number of items in each bin of the grid
@@ -9,6 +9,6 @@ nb_iterations: 10       # The total number of allowed evaluations for this algor
 batch_size: 100     # The number of evaluations in each subsequent batch
 mutation_pb: 1
 final_filename: final.p
-shape: 100
+#shape: 100
 encoding: map-based
 map_size: 3
