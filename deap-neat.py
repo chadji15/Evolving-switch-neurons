@@ -50,7 +50,7 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf):
     fitness, bd = eval(agent)
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
-    if fitness > sat_fit:
+    if fitness >= sat_fit:
         for i in range(99):
             f2, bd2 = eval(agent)
 
@@ -69,16 +69,16 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf):
     return [fitness,], bd
 
 evaluate_skinner3 = partial(evaluate_skinner,
-                            eval =partial(eval_one_to_one_3x3, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
-                            sat_fit = 169,
+                            eval =partial(eval_one_to_one_3x3, num_episodes=500, rand_iter=50, snapshot_inter=25, descriptor_out=True),
+                            sat_fit = 440,
                             outf = convert_to_action3)
 evaluate_skinner2 = partial(evaluate_skinner,
                             eval =partial(eval_one_to_one_2x2, num_episodes=50, rand_iter=10, snapshot_inter=5, descriptor_out=True),
-                            sat_fit = 39,
+                            sat_fit = 40,
                             outf = convert_to_action2)
 evaluate_skinner4 = partial(evaluate_skinner,
                             eval =partial(eval_one_to_one_4x4, num_episodes=200, rand_iter=40, snapshot_inter=20, descriptor_out=True),
-                            sat_fit = 139,
+                            sat_fit = 140,
                             outf = convert_to_action4)
 
 def eval_tmaze(ind, config, scenario):
@@ -203,7 +203,7 @@ def main():
                                    storage_type=list, depot_type=OrderedSet, novelty_distance=df)
     elif params['algorithm'] == 'CVTMapElites':
         shape = params['shape']
-        container = CVTGrid(shape=shape, max_items_per_bin=max_items_per_bin, grid_shape=nb_bins, nb_sampled_points=1000,
+        container = CVTGrid(shape=shape, max_items_per_bin=max_items_per_bin, grid_shape=nb_bins, nb_sampled_points=10000,
                             fitness_domain=fitness_domain, features_domain=features_domain, storage_type=OrderedSet,
                             depot_type=OrderedSet)
     elif params['algorithm'] == 'MapElites':
