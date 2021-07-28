@@ -1,0 +1,20 @@
+algorithm: MapElites #MapElites/ NoveltySearch/ CVTMapElites
+nb_features: 13
+bins_per_dim: 2
+max_items_per_bin: 1                     # The number of items in each bin of the grid
+fitness_domain: [[0., 350.]]               # The domain of each fitness objective (here we only have one objective)
+features_domain: [[0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.], [0., 1.]] # The domain of each feature
+init_batch_size: 5000
+nb_iterations: 2000       # The total number of allowed evaluations for this algorithm
+batch_size: 128     # The number of evaluations in each subsequent batch
+mutation_pb: 1
+final_filename: out/3x3_qd_maps/13d_final.p
+#shape: 4096
+#####################Encoding parameters###############
+encoding: map-based
+map_size: 3
+####################Problem parameters#################
+num_episodes: 350
+rand_iter: 50
+snap_iter: 25
+sat_fit: 308
