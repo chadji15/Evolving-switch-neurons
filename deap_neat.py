@@ -64,7 +64,7 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf, createf):
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
     if fitness >= sat_fit:
-        for i in range(99):
+        for i in range(9):
             f2, bd2 = eval(agent)
 
             if f2 < fitness:

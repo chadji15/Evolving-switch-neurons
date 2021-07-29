@@ -37,15 +37,54 @@ def eq_snapshots(s1,s2):
 #For num_episodes = 100 | 1000  |   200
 #    rand_iter = 25     | 100   |   20
 #    max fitness = 70   | 940   |   140
-def eval_one_to_one(env_name, agent, num_episodes, rand_iter,snapshot_inter, descriptor_out=False, debug=False):
+# def eval_one_to_one(env_name, agent, num_episodes, rand_iter,snapshot_inter, descriptor_out=False, debug=False):
+#     env = gym.make(env_name)
+#     s = num_episodes
+#     observation = env.reset(rand_iter=rand_iter)
+#     input = tuple(list(observation) + [0])
+#     responses = {}
+#     prevsnapshot = {}
+#     bd = []
+#     for i_episode in range(num_episodes):
+#         action = agent.activate(input)
+#         if descriptor_out:
+#             t_in = input[:-1]
+#             if t_in not in prevsnapshot:
+#                 prevsnapshot[t_in] = action
+#             responses[t_in] = action
+#             #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
+#             if i_episode%snapshot_inter == 0 and i_episode > 0:
+#                 if eq_snapshots(responses, prevsnapshot):
+#                     bd.append(0)
+#                 else:
+#                     bd.append(1)
+#                 prevsnapshot = copy.deepcopy(responses)
+#         observation, reward, done, info = env.step(action)
+#         # if debug:
+#         #     logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+#         input = list(input)
+#         input[-1] = reward
+#         agent.activate(input)
+#         input = tuple(list(observation) + [0])
+#         s += reward
+#     env.close()
+#     if descriptor_out:
+#         return s, bd
+#         #print(bd)
+#     else:
+#         return s
+
+#Version 2, separate training and test associations and change the descriptor
+def eval_one_to_one(env_name, agent, num_episodes=36, rand_iter=9,snapshot_inter=3, descriptor_out=False,
+                    mode = 'training',debug=False):
     env = gym.make(env_name)
     s = num_episodes
-    observation = env.reset(rand_iter=rand_iter)
+    observation = env.reset(rand_iter=rand_iter, mode = mode)
     input = tuple(list(observation) + [0])
     responses = {}
     prevsnapshot = {}
     bd = []
-    for i_episode in range(num_episodes):
+    for i_episode in range(1,num_episodes+1):
         action = agent.activate(input)
         if descriptor_out:
             t_in = input[:-1]
@@ -54,14 +93,15 @@ def eval_one_to_one(env_name, agent, num_episodes, rand_iter,snapshot_inter, des
             responses[t_in] = action
             #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
             if i_episode%snapshot_inter == 0 and i_episode > 0:
-                if eq_snapshots(responses, prevsnapshot):
-                    bd.append(0)
-                else:
-                    bd.append(1)
+                if i_episode != snapshot_inter:
+                    if eq_snapshots(responses, prevsnapshot):
+                        bd.append(0)
+                    else:
+                        bd.append(1)
                 prevsnapshot = copy.deepcopy(responses)
         observation, reward, done, info = env.step(action)
-        if debug:
-            logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+        # if debug:
+        #     logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
         input = list(input)
         input[-1] = reward
         agent.activate(input)
@@ -74,14 +114,17 @@ def eval_one_to_one(env_name, agent, num_episodes, rand_iter,snapshot_inter, des
     else:
         return s
 
-def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False, debug=False):
-    return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False,
+                        mode='training', debug=False):
+    return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
 
-def eval_one_to_one_2x2(agent, num_episodes = 50, rand_iter= 10,snapshot_inter=5, descriptor_out=False, debug=False):
-    return eval_one_to_one('OneToOne2x2-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+def eval_one_to_one_2x2(agent, num_episodes = 50, rand_iter= 10,snapshot_inter=5, descriptor_out=False,mode='training',
+                        debug=False):
+    return eval_one_to_one('OneToOne2x2-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
 
-def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False, debug=False):
-    return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out, debug)
+def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False,mode='trainig',
+                        debug=False):
+    return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
 
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to

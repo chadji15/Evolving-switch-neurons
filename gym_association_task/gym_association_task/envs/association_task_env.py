@@ -84,7 +84,8 @@ class AssociationTaskEnv(gym.Env):
             raise ValueError('Unknown mode used: {}'.format(mode))
         self.associations = {}
         self.perms = []
-        self.reset()
+        self.mode = 'training'
+        #self.reset()
 
     def step(self, action):
 
@@ -106,13 +107,15 @@ class AssociationTaskEnv(gym.Env):
             self.randomize_associations()
 
         #self.observation = list(self.associations.keys())[self.step_count % len(self.associations)]
+        #print("Observation: {}, Expected: {}, Agent action: {}".format(self.observation, self.associations[self.observation],action))
         self.observation = next(self.obs_gen)
         done = True
 
         return self.observation, self.reward, done, {}
 
-    def reset(self, rand_iter = -1):
+    def reset(self, rand_iter = -1, mode = 'training'):
         self.step_count = 0
+        self.mode = mode
         self.randomize_associations()
         #self.observation = list(self.associations.keys())[0]
         self.observation = next(self.obs_gen)
@@ -160,6 +163,7 @@ class AssociationTaskEnv(gym.Env):
         #logging.debug(f"Associations: {pprint.pformat(self.associations,indent=4)}")
         #Make sure two consequent associations are not the same
         if self.eq_associations(old_associations, self.associations):
+            self.perms.insert(0, output)
             return self.randomize_associations()
         else:
             return self.associations
@@ -168,13 +172,26 @@ class AssociationTaskEnv(gym.Env):
     def next_obs(self):
         while(True):
             obs = self.observation_space._to_list()
-            random.shuffle(obs)
+            #random.shuffle(obs)
             while(len(obs) > 0):
-                yield obs.pop()
+                nextob = obs.pop()
+                #for i in range(3):
+                    #print(nextob)
+                yield nextob
 
+    # def init_perm(self):
+    #     output = [o for o in self.action_space._to_list()]
+    #     self.perms = [p for p in permutations(output)]
+    #     random.shuffle(self.perms)
+
+    #modified init_perm for training in map elites
     def init_perm(self):
         output = [o for o in self.action_space._to_list()]
         self.perms = [p for p in permutations(output)]
+        if self.mode == 'training':
+            self.perms = self.perms[:-2]
+        else:
+            self.perms = self.perms[4:]
         random.shuffle(self.perms)
 
 class OneToOne2x2(AssociationTaskEnv):

@@ -1,7 +1,7 @@
 import pickle
 from eval import eval_one_to_one_3x3
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation
-from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction
+from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction, solve_one_to_one_3x3
 from switch_neat import Agent
 import switch_neat
 import switch_maps
@@ -59,13 +59,18 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-maps-skinner3','out/3x3_qd_maps/skinner3_final.p')
-    score, bd = eval_one_to_one_3x3(agent, 200,40,20,True)
-    print(f"score: {score}, bd: {bd}")
-    scores = [eval_one_to_one_3x3(agent,200,40) for _ in range(1000)]
-    scores.sort()
-    print(f"scores: {scores}")
-    print(f"{len(list(filter( lambda x: x < 170, scores)))} scores are below 170")
+    agent = get_best_agent(3, 'config/deap-maps-skinner3')#,'out/3x3_qd_maps/skinner3_final.p')
+    score = eval_one_to_one_3x3(agent, 36,9)
+    # print(f"score: {score}, bd: {bd}")
+    # scores = [eval_one_to_one_3x3(agent,200,40) for _ in range(1000)]
+    # scores.sort()
+    # print(f"scores: {scores}")
+    # print(f"{len(list(filter( lambda x: x < 170, scores)))} scores are below 170")
+
+def dry_run_optimal():
+    agent=solve_one_to_one_3x3()
+    score, bd = eval_one_to_one_3x3(agent, 36,9,3,True,'test')
+    print(score, bd)
 
 if __name__ == '__main__':
-    verify_best_agent()
+    dry_run_optimal()
