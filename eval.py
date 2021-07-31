@@ -75,8 +75,8 @@ def eq_snapshots(s1,s2):
 #         return s
 
 #Version 2, separate training and test associations and change the descriptor
-def eval_one_to_one(env_name, agent, num_episodes=36, rand_iter=9,snapshot_inter=3, descriptor_out=False,
-                    mode = 'training',debug=False):
+def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inter=3, descriptor_out=False,
+                    mode = None,debug=False):
     env = gym.make(env_name)
     s = num_episodes
     observation = env.reset(rand_iter=rand_iter, mode = mode)
@@ -108,6 +108,16 @@ def eval_one_to_one(env_name, agent, num_episodes=36, rand_iter=9,snapshot_inter
         input = tuple(list(observation) + [0])
         s += reward
     env.close()
+
+    #prepare bd##########
+    new_bd = copy.deepcopy(bd)
+    for i in range(len(bd)):
+        if i % 4 == 1 or i % 4 == 2:
+            new_bd[i] = None
+        elif i % 4 == 3:
+            new_bd[i] = any((new_bd[i-1], new_bd[i]))
+    new_bd = [x for x in new_bd if x is not None]
+    #####################
     if descriptor_out:
         return s, bd
         #print(bd)

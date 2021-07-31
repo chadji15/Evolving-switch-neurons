@@ -84,7 +84,7 @@ class AssociationTaskEnv(gym.Env):
             raise ValueError('Unknown mode used: {}'.format(mode))
         self.associations = {}
         self.perms = []
-        self.mode = 'training'
+        self.mode = None
         #self.reset()
 
     def step(self, action):
@@ -113,7 +113,7 @@ class AssociationTaskEnv(gym.Env):
 
         return self.observation, self.reward, done, {}
 
-    def reset(self, rand_iter = -1, mode = 'training'):
+    def reset(self, rand_iter = -1, mode = None):
         self.step_count = 0
         self.mode = mode
         self.randomize_associations()
@@ -190,7 +190,7 @@ class AssociationTaskEnv(gym.Env):
         self.perms = [p for p in permutations(output)]
         if self.mode == 'training':
             self.perms = self.perms[:-2]
-        else:
+        elif self.mode == 'test':
             self.perms = self.perms[4:]
         random.shuffle(self.perms)
 
