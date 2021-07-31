@@ -34,10 +34,10 @@ def get_agent_onf(size, config_file):
 def get_best_agent(size, config_file, resfile='final.p'):
     grid = get_grid(resfile)
     ind = grid.best
-    conf = Config(DeapSwitchMapGenome, DefaultReproduction,
+    conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
-    net = switch_maps.create(ind, conf, 3)
+    net = switch_neat.create(ind, conf)
     if size == 2:
         outf = convert_to_action2
     elif size == 3:
@@ -59,13 +59,13 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-maps-skinner3')#,'out/3x3_qd_maps/skinner3_final.p')
-    score = eval_one_to_one_3x3(agent, 36,9)
-    # print(f"score: {score}, bd: {bd}")
-    # scores = [eval_one_to_one_3x3(agent,200,40) for _ in range(1000)]
-    # scores.sort()
-    # print(f"scores: {scores}")
-    # print(f"{len(list(filter( lambda x: x < 170, scores)))} scores are below 170")
+    agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_qd_maps/skinner3_final.p')
+    score, bd = eval_one_to_one_3x3(agent, 36,9, 3, True, 'test')
+    print(f"score: {score}, bd: {bd}")
+    scores = [eval_one_to_one_3x3(agent,36,9) for _ in range(1000)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < 12, scores)))} scores are below 12")
 
 def dry_run_optimal():
     agent=solve_one_to_one_3x3()
@@ -73,4 +73,4 @@ def dry_run_optimal():
     print(score, bd)
 
 if __name__ == '__main__':
-    dry_run_optimal()
+    verify_best_agent()
