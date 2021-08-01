@@ -13,8 +13,7 @@ from functools import partial
 #an activate function which takes as input a vector (list) and returns an output which corresponds to the action
 #of the agent. The actions are described in each environment
 ##############
-
-
+import numpy as np
 from utilities import shuffle_lists
 
 
@@ -74,67 +73,130 @@ def eq_snapshots(s1,s2):
 #     else:
 #         return s
 
-#Version 2, separate training and test associations and change the descriptor
+# #Version 2, separate training and test associations and change the descriptor
+# def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inter=3, descriptor_out=False,
+#                     mode = None,debug=False):
+#     env = gym.make(env_name)
+#     s = num_episodes
+#     observation = env.reset(rand_iter=rand_iter, mode = mode)
+#     input = tuple(list(observation) + [0])
+#     responses = {}
+#     prevsnapshot = {}
+#     bd = []
+#     for i_episode in range(1,num_episodes+1):
+#         action = agent.activate(input)
+#         if descriptor_out:
+#             t_in = input[:-1]
+#             if t_in not in prevsnapshot:
+#                 prevsnapshot[t_in] = action
+#             responses[t_in] = action
+#             #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
+#             if i_episode%snapshot_inter == 0 and i_episode > 0:
+#                 #if i_episode != snapshot_inter:
+#                 if eq_snapshots(responses, prevsnapshot):
+#                     bd.append(0)
+#                 else:
+#                     bd.append(1)
+#                 prevsnapshot = copy.deepcopy(responses)
+#         observation, reward, done, info = env.step(action)
+#         # if debug:
+#         #     logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+#         input = list(input)
+#         input[-1] = reward
+#         agent.activate(input)
+#         input = tuple(list(observation) + [0])
+#         s += reward
+#     env.close()
+#
+#     #prepare bd##########
+#     new_bd = copy.deepcopy(bd)
+#     for i in range(len(bd)):
+#         if i % 4 == 1 or i % 4 == 2:
+#             new_bd[i] = None
+#         elif i % 4 == 3:
+#             new_bd[i] = int(any((new_bd[i-1], new_bd[i])))
+#     new_bd = [x for x in new_bd if x is not None]
+#     #####################
+#     if descriptor_out:
+#         return s, new_bd
+#         #print(bd)
+#     else:
+#         return s
+
+#Version 3, separate training and test associations and change the descriptor, 27 associations, float descriptor
 def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inter=3, descriptor_out=False,
-                    mode = None,debug=False):
+                    mode = None, trials = 10, debug=False):
     env = gym.make(env_name)
-    s = num_episodes
-    observation = env.reset(rand_iter=rand_iter, mode = mode)
-    input = tuple(list(observation) + [0])
-    responses = {}
-    prevsnapshot = {}
-    bd = []
-    for i_episode in range(1,num_episodes+1):
-        action = agent.activate(input)
-        if descriptor_out:
-            t_in = input[:-1]
-            if t_in not in prevsnapshot:
-                prevsnapshot[t_in] = action
-            responses[t_in] = action
-            #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
-            if i_episode%snapshot_inter == 0 and i_episode > 0:
-                #if i_episode != snapshot_inter:
-                if eq_snapshots(responses, prevsnapshot):
+    bds = []
+    scores = []
+    for trial in range(trials):
+        s = num_episodes
+        observation = env.reset(rand_iter=rand_iter, mode = mode)
+        input = tuple(list(observation) + [0])
+        responses = {}
+        prevsnapshot = {}
+        bd = []
+        for i_episode in range(1,num_episodes+1):
+            action = agent.activate(input)
+            if descriptor_out:
+                t_in = input[:-1]
+                if t_in not in prevsnapshot:
+                    prevsnapshot[t_in] = action
+                else:
+                    prevsnapshot[t_in] = responses[t_in]
+                responses[t_in] = action
+                if eq_tuples(prevsnapshot[t_in], responses[t_in]):
                     bd.append(0)
                 else:
                     bd.append(1)
-                prevsnapshot = copy.deepcopy(responses)
-        observation, reward, done, info = env.step(action)
-        # if debug:
-        #     logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
-        input = list(input)
-        input[-1] = reward
-        agent.activate(input)
-        input = tuple(list(observation) + [0])
-        s += reward
+            observation, reward, done, info = env.step(action)
+            # if debug:
+            #     logging.debug(f"Episode{i_episode}:\tInput: {input}\t Action:{action} Reward:{reward}")#debug
+            input = list(input)
+            input[-1] = reward
+            agent.activate(input)
+            input = tuple(list(observation) + [0])
+            s += reward
+
+        #prepare bd
+        if descriptor_out:
+            new_bd = []
+            while bd:
+                for i in range(snapshot_inter):
+                    bd.pop(0)
+                c1 = 0
+                for i in range(2*snapshot_inter):
+                    c1 += bd.pop(0)
+                new_bd.append(c1)
+                c2 = 0
+                for i in range(snapshot_inter):
+                    c2 += bd.pop(0)
+                new_bd.append(c2)
+            bds.append(new_bd)
+        scores.append(s)
     env.close()
 
-    #prepare bd##########
-    new_bd = copy.deepcopy(bd)
-    for i in range(len(bd)):
-        if i % 4 == 1 or i % 4 == 2:
-            new_bd[i] = None
-        elif i % 4 == 3:
-            new_bd[i] = int(any((new_bd[i-1], new_bd[i])))
-    new_bd = [x for x in new_bd if x is not None]
-    #####################
+    fitness = float(np.average(scores))
     if descriptor_out:
-        return s, new_bd
+        bdsarr = np.array(bds, dtype=float)
+        avg = bdsarr.mean(axis=0)
+        bd = avg.tolist()
+        return fitness, bd
         #print(bd)
     else:
-        return s
+        return fitness
 
 def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False,
-                        mode='training', debug=False):
-    return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
+                        mode='training', trials=10, debug=False):
+    return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode,trials, debug)
 
 def eval_one_to_one_2x2(agent, num_episodes = 50, rand_iter= 10,snapshot_inter=5, descriptor_out=False,mode='training',
-                        debug=False):
-    return eval_one_to_one('OneToOne2x2-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
+                        trials=10,debug=False):
+    return eval_one_to_one('OneToOne2x2-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode,trials, debug)
 
 def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False,mode='trainig',
-                        debug=False):
-    return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, debug)
+                        trials=10, debug=False):
+    return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, trials,debug)
 
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to
