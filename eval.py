@@ -93,11 +93,11 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
             responses[t_in] = action
             #if i_episode != snapshot_inter and i_episode%snapshot_inter == 0 and i_episode>0:
             if i_episode%snapshot_inter == 0 and i_episode > 0:
-                if i_episode != snapshot_inter:
-                    if eq_snapshots(responses, prevsnapshot):
-                        bd.append(0)
-                    else:
-                        bd.append(1)
+                #if i_episode != snapshot_inter:
+                if eq_snapshots(responses, prevsnapshot):
+                    bd.append(0)
+                else:
+                    bd.append(1)
                 prevsnapshot = copy.deepcopy(responses)
         observation, reward, done, info = env.step(action)
         # if debug:
@@ -115,11 +115,11 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
         if i % 4 == 1 or i % 4 == 2:
             new_bd[i] = None
         elif i % 4 == 3:
-            new_bd[i] = any((new_bd[i-1], new_bd[i]))
+            new_bd[i] = int(any((new_bd[i-1], new_bd[i])))
     new_bd = [x for x in new_bd if x is not None]
     #####################
     if descriptor_out:
-        return s, bd
+        return s, new_bd
         #print(bd)
     else:
         return s
