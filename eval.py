@@ -119,7 +119,7 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
     new_bd = [x for x in new_bd if x is not None]
     #####################
     if descriptor_out:
-        return s, bd
+        return s, new_bd
         #print(bd)
     else:
         return s
