@@ -60,12 +60,16 @@ def get_best_tmaze():
 
 def verify_best_agent():
     agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_qd_maps/skinner3_final.p')
-    score, bd = eval_one_to_one_3x3(agent, 36,9, 3, True, 'test')
+    eps = 200
+    randiter = 40
+    snapiter = 20
+    satfit = 170
+    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'test')
     print(f"score: {score}, bd: {bd}")
-    scores = [eval_one_to_one_3x3(agent,36,9) for _ in range(1000)]
+    scores = [eval_one_to_one_3x3(agent,eps,randiter) for _ in range(1000)]
     scores.sort()
     print(f"scores: {scores}")
-    print(f"{len(list(filter( lambda x: x < 12, scores)))} scores are below 12")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 def dry_run_optimal():
     agent=solve_one_to_one_3x3()
