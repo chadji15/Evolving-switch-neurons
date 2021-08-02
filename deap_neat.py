@@ -163,16 +163,19 @@ def main():
 
     evaluate_skinner3 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
-                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
+                                              mode='training', trials=10),
                                 sat_fit = params['sat_fit'],outf = convert_to_action3)
     evaluate_skinner2 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_2x2,  num_episodes=params['num_episodes'],
-                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
+                                              mode='training', trials=10),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action2)
     evaluate_skinner4 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_4x4,  num_episodes=params['num_episodes'],
-                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True),
+                                              rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
+                                              mode='training', trials=10),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action4)
 

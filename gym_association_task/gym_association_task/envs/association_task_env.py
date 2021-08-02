@@ -4,7 +4,7 @@ import copy
 #logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
 import pprint
 import random
-from itertools import permutations
+from itertools import permutations, product
 
 import gym
 import numpy as np
@@ -187,11 +187,12 @@ class AssociationTaskEnv(gym.Env):
     #modified init_perm for training in map elites
     def init_perm(self):
         output = [o for o in self.action_space._to_list()]
-        self.perms = [p for p in permutations(output)]
+        #self.perms = [p for p in permutations(output)]
+        self.perms = [p for p in product(output, repeat=3)]
         if self.mode == 'training':
-            self.perms = self.perms[:-2]
+            self.perms = self.perms[:-8]
         elif self.mode == 'test':
-            self.perms = self.perms[4:]
+            self.perms = self.perms[20:]
         random.shuffle(self.perms)
 
 class OneToOne2x2(AssociationTaskEnv):
