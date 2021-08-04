@@ -167,7 +167,7 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
                 c1 = 0
                 for i in range(2*snapshot_inter):
                     c1 += bd.pop(0)
-                new_bd.append(c1/2*snapshot_inter)
+                new_bd.append(c1/(2*snapshot_inter))
                 c2 = 0
                 for i in range(snapshot_inter):
                     c2 += bd.pop(0)
