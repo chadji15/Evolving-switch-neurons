@@ -8,7 +8,6 @@ import switch_maps
 from deap import creator, base
 from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome
 
-
 def get_grid(resfile = 'final.p'):
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", DeapSwitchGenome, fitness=creator.FitnessMax, features = list)
@@ -60,18 +59,64 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-maps-skinner3')#,'out/3x3_qd_maps/skinner3_final.p')
-    score = eval_one_to_one_3x3(agent, 36,9)
-    # print(f"score: {score}, bd: {bd}")
-    # scores = [eval_one_to_one_3x3(agent,200,40) for _ in range(1000)]
+    agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_map_elites/float_desc/skinner3_final.p')
+    eps = 24
+    randiter = 12
+    snapiter = 3
+    satfit = 12
+    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'training')
+    print(f"score: {score}, bd: {bd}")
+    # scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(1000)]
     # scores.sort()
     # print(f"scores: {scores}")
-    # print(f"{len(list(filter( lambda x: x < 170, scores)))} scores are below 170")
+    # print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 def dry_run_optimal():
     agent=solve_one_to_one_3x3()
     score, bd = eval_one_to_one_3x3(agent, 36,9,3,True,'test')
     print(score, bd)
+
+def validate_all():
+    grid = get_grid('out/3x3_map_elites/float_desc/skinner3_final.p')
+    conf = Config(DeapSwitchGenome, DefaultReproduction,
+                  DefaultSpeciesSet, DefaultStagnation,
+                  'config/deap-skinner3')
+    outf = convert_to_action3
+    max_score = 0
+    for item in grid.items:
+        net = switch_neat.create(item, conf)
+        agent = Agent(net, lambda x: x, outf)
+        eps = 24
+        randiter = 12
+        snapiter = 3
+        satfit = 12
+        score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'test')
+        if score > max_score:
+            besta = agent
+            max_score=score
+            maxbd = bd
+    print("Best score:", max_score)
+    print("bd:", maxbd)
+    print(f"Episodes: {eps}, randiter: {randiter}, snapiter: {snapiter}, satfit: {satfit}")
+    scores = [eval_one_to_one_3x3(besta,eps,randiter,snapiter,False,'test') for _ in range(1000)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
+
+
+    return besta
+
+def test_validate():
+    agent = validate_all()
+    eps = 200
+    randiter = 40
+    snapiter = 20
+    satfit = 170
+    print(f"Episodes: {eps}, randiter: {randiter}, snapiter: {snapiter}, satfit: {satfit}")
+    scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(1000)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 def plot_stats(file='skinner3.out'):
     import matplotlib.pyplot as plt
@@ -112,11 +157,4 @@ def plot_stats(file='skinner3.out'):
     plt.show()
 
 if __name__ == '__main__':
-    grid = get_grid('skinner3_final.p')
-    for key in grid.fitness.keys():
-        feat = grid.features[key]
-        if not feat:
-            continue
-        feat = feat[0]
-        if feat[0] != 0 and feat[1] == 0 and feat[2] != 0 and feat[3] == 0:
-            print(f"Key: {key},Features: {feat}, fitness: {grid.fitness[key]}")
+    dry_run_optimal()
