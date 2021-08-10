@@ -167,20 +167,22 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
                 c1 = 0
                 for i in range(2*snapshot_inter):
                     c1 += bd.pop(0)
-                new_bd.append(c1)
+                new_bd.append(c1/(2*snapshot_inter))
                 c2 = 0
                 for i in range(snapshot_inter):
                     c2 += bd.pop(0)
-                new_bd.append(c2)
+                new_bd.append(c2/snapshot_inter)
             bds.append(new_bd)
         scores.append(s)
     env.close()
-
     fitness = float(np.average(scores))
     if descriptor_out:
         bdsarr = np.array(bds, dtype=float)
         avg = bdsarr.mean(axis=0)
         bd = avg.tolist()
+        # print("bds:", bds)
+        # print("bd:", bd)
+
         return fitness, bd
         #print(bd)
     else:

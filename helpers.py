@@ -59,22 +59,64 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_qd_maps/skinner3_final.p')
-    eps = 200
-    randiter = 40
-    snapiter = 20
-    satfit = 170
-    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'test')
+    agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_map_elites/float_desc/skinner3_final.p')
+    eps = 24
+    randiter = 12
+    snapiter = 3
+    satfit = 12
+    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'training')
     print(f"score: {score}, bd: {bd}")
-    scores = [eval_one_to_one_3x3(agent,eps,randiter) for _ in range(1000)]
-    scores.sort()
-    print(f"scores: {scores}")
-    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
+    # scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(1000)]
+    # scores.sort()
+    # print(f"scores: {scores}")
+    # print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 def dry_run_optimal():
     agent=solve_one_to_one_3x3()
     score, bd = eval_one_to_one_3x3(agent, 36,9,3,True,'test')
     print(score, bd)
+
+def validate_all():
+    grid = get_grid('out/3x3_map_elites/float_desc/skinner3_final.p')
+    conf = Config(DeapSwitchGenome, DefaultReproduction,
+                  DefaultSpeciesSet, DefaultStagnation,
+                  'config/deap-skinner3')
+    outf = convert_to_action3
+    max_score = 0
+    for item in grid.items:
+        net = switch_neat.create(item, conf)
+        agent = Agent(net, lambda x: x, outf)
+        eps = 24
+        randiter = 12
+        snapiter = 3
+        satfit = 12
+        score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'test')
+        if score > max_score:
+            besta = agent
+            max_score=score
+            maxbd = bd
+    print("Best score:", max_score)
+    print("bd:", maxbd)
+    print(f"Episodes: {eps}, randiter: {randiter}, snapiter: {snapiter}, satfit: {satfit}")
+    scores = [eval_one_to_one_3x3(besta,eps,randiter,snapiter,False,'test') for _ in range(1000)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
+
+
+    return besta
+
+def test_validate():
+    agent = validate_all()
+    eps = 200
+    randiter = 40
+    snapiter = 20
+    satfit = 170
+    print(f"Episodes: {eps}, randiter: {randiter}, snapiter: {snapiter}, satfit: {satfit}")
+    scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(1000)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 if __name__ == '__main__':
     verify_best_agent()
