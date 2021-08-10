@@ -21,7 +21,7 @@ def get_agent_onf(size, config_file):
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                     DefaultSpeciesSet, DefaultStagnation,
                     config_file)
-    net = create(ind, conf)
+    net = switch_neat.create(ind, conf)
     if size == 2:
         outf = convert_to_action2
     elif size == 3:
@@ -53,7 +53,7 @@ def get_best_tmaze():
     conf = Config(DeapSwitchGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   "config/deap-tmaze")
-    net = create(ind, conf)
+    net = switch_neat.create(ind, conf)
     outf = convert_to_direction
     agent = Agent(net, lambda x: x, outf)
     return agent

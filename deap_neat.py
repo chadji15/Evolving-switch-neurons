@@ -164,18 +164,18 @@ def main():
     evaluate_skinner3 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=10),
+                                              mode='training', trials=20),
                                 sat_fit = params['sat_fit'],outf = convert_to_action3)
     evaluate_skinner2 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_2x2,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=10),
+                                              mode='training', trials=20),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action2)
     evaluate_skinner4 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_4x4,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=10),
+                                              mode='training', trials=20),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action4)
 
@@ -200,7 +200,10 @@ def main():
     #Extract the variables
     nb_features = params['nb_features'] #Length of the descriptor
     bins_per_dim = params['bins_per_dim']  #Bins per dimension of the descriptor
-    nb_bins = (bins_per_dim,) * nb_features #Number of bins
+    if 'nb_bins' in params.keys():
+        nb_bins = params['nb_bins']
+    else:
+        nb_bins = (bins_per_dim,) * nb_features #Number of bins
     fitness_domain = params['fitness_domain'] #Range of fitness
     init_batch_size = params['init_batch_size']
     batch_size = params['batch_size']

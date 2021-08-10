@@ -125,7 +125,7 @@ def eq_snapshots(s1,s2):
 
 #Version 3, separate training and test associations and change the descriptor, 27 associations, float descriptor
 def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inter=3, descriptor_out=False,
-                    mode = None, trials = 10, debug=False):
+                    mode = None, trials = 20, debug=False):
     env = gym.make(env_name)
     bds = []
     scores = []
@@ -165,9 +165,9 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
                 for i in range(snapshot_inter):
                     bd.pop(0)
                 c1 = 0
-                for i in range(2*snapshot_inter):
+                for i in range(8*snapshot_inter):
                     c1 += bd.pop(0)
-                new_bd.append(c1/(2*snapshot_inter))
+                new_bd.append(c1/(8*snapshot_inter))
                 c2 = 0
                 for i in range(snapshot_inter):
                     c2 += bd.pop(0)

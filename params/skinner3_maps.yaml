@@ -9,11 +9,11 @@ init_batch_size: 100
 nb_iterations: 5       # The total number of allowed evaluations for this algorithm
 batch_size: 128     # The number of evaluations in each subsequent batch
 mutation_pb: 1
-final_filename: out/3x3_map_elites/float_desc/batch2/skinner3_final.p
+final_filename: out/3x3_qd_maps/float_desc/skinner3_final.p
 #shape: 4096
 #####################Encoding parameters###############
-encoding: direct
-#map_size: 3
+encoding: map-based #direct/ map-based
+map_size: 3
 ####################Problem parameters#################
 num_episodes: 60
 rand_iter: 30
