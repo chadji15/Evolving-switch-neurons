@@ -8,6 +8,7 @@ import switch_maps
 from deap import creator, base
 from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome
 
+
 def get_grid(resfile = 'final.p'):
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", DeapSwitchGenome, fitness=creator.FitnessMax, features = list)
@@ -72,5 +73,50 @@ def dry_run_optimal():
     score, bd = eval_one_to_one_3x3(agent, 36,9,3,True,'test')
     print(score, bd)
 
+def plot_stats(file='skinner3.out'):
+    import matplotlib.pyplot as plt
+    sizes = []
+    avgs = []
+    mins = []
+    maxs = []
+    gens = list(range(0,9001))
+    maxsize = 10000
+    with open(file, 'r') as fp:
+        fp.readline()
+        fp.readline()
+        for i in range(9001):
+            line = fp.readline()
+            words = line.split()
+            size = words[1]
+            size = float(size.split('/')[0])/maxsize
+            sizes.append(size)
+            avg = float(words[4].strip('[]'))
+            avgs.append(avg)
+            min = float(words[6].strip('[]'))
+            mins.append(min)
+            max = float(words[7].strip('[]'))
+            maxs.append(max)
+
+    plt.subplot(1,2,1)
+    plt.plot(gens,sizes)
+    plt.xlabel('Generations')
+    plt.ylabel('Coverage')
+
+    plt.subplot(1,2,2)
+    plt.plot(gens,mins)
+    plt.plot(gens,avgs)
+    plt.plot(gens,maxs)
+    plt.xlabel('Generations')
+    plt.ylabel('Fitness')
+    plt.legend(['Min', 'Avg', 'Max'])
+    plt.show()
+
 if __name__ == '__main__':
-    dry_run_optimal()
+    grid = get_grid('skinner3_final.p')
+    for key in grid.fitness.keys():
+        feat = grid.features[key]
+        if not feat:
+            continue
+        feat = feat[0]
+        if feat[0] != 0 and feat[1] == 0 and feat[2] != 0 and feat[3] == 0:
+            print(f"Key: {key},Features: {feat}, fitness: {grid.fitness[key]}")
