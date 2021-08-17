@@ -151,10 +151,13 @@ def plot_stats(file='skinner3.out'):
     plt.plot(gens,mins)
     plt.plot(gens,avgs)
     plt.plot(gens,maxs)
+    plt.plot(gens, [48 for _ in range(9001)], '--')
     plt.xlabel('Generations')
     plt.ylabel('Fitness')
-    plt.legend(['Min', 'Avg', 'Max'])
+    plt.legend(['Min', 'Avg', 'Max', 'Satisfactory'])
+
+    plt.suptitle('Direct encoding')
     plt.show()
 
 if __name__ == '__main__':
-    dry_run_optimal()
+    plot_stats()
