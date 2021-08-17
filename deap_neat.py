@@ -24,6 +24,7 @@ import matplotlib as mpl
 #mpl.use('Agg')
 import switch_neat
 import switch_maps
+import guided_maps
 
 genome_indexer = count(1)
 
@@ -38,6 +39,16 @@ class DeapSwitchGenome(SwitchGenome):
         self.nodes = {}
 
 class DeapSwitchMapGenome(SwitchMapGenome):
+
+    def __init__(self,key):
+        # Unique identifier for a genome instance.
+        self.key = key
+
+        # (gene_key, gene) pairs for gene sets.
+        self.connections = {}
+        self.nodes = {}
+
+class DeapGuidedMapGenome(guided_maps.GuidedMapGenome):
 
     def __init__(self,key):
         # Unique identifier for a genome instance.
@@ -160,6 +171,10 @@ def main():
         genome_type = DeapSwitchMapGenome
         map_size = params['map_size']
         createf = partial(switch_maps.create, map_size=map_size)
+    elif params['encoding'] == 'guided-maps':
+        genome_type = DeapGuidedMapGenome
+        map_size = params['map_size']
+        createf = partial(guided_maps.create, map_size=map_size)
 
     evaluate_skinner3 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
