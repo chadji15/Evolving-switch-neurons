@@ -156,5 +156,17 @@ def plot_stats(file='skinner3.out'):
     plt.legend(['Min', 'Avg', 'Max'])
     plt.show()
 
+def find_desc(file='skinner3_final.p'):
+    grid = get_grid(file)
+    for key in grid.features:
+        feat = grid.features[key]
+        if not feat:
+            continue
+        feat = feat[0]
+        if feat[0] != 0 and feat[1] == 0 and feat[2] != 0 and feat[3] == 0:
+            fit = grid.fitness[key]
+            print(f"Features: {feat}, Fitness: {fit}")
+
 if __name__ == '__main__':
-    dry_run_optimal()
+    #find_desc('out/3x3_map_elites/float_desc/batch2/skinner3_final.p')
+    find_desc('out/3x3_qd_maps/float_desc/skinner3_final.p')
