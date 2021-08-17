@@ -159,5 +159,16 @@ def plot_stats(file='skinner3.out'):
     plt.suptitle('Direct encoding')
     plt.show()
 
+def find_desc(file='skinner3_final.p'):
+    grid = get_grid(file)
+    for key in grid.features:
+        feat = grid.features[key]
+        if not feat:
+            continue
+        feat = feat[0]
+        if feat[0] != 0 and feat[1] == 0 and feat[2] != 0 and feat[3] == 0:
+            fit = grid.fitness[key]
+            print(f"Features: {feat}, Fitness: {fit}")
+
 if __name__ == '__main__':
     plot_stats()
