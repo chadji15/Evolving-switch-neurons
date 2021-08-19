@@ -74,16 +74,17 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf, createf):
     fitness, bd = eval(agent)
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
-    if fitness >= sat_fit:
-        for i in range(9):
-            f2, bd2 = eval(agent)
+    #This is no longer needed since we average out 30 trials
+    # if fitness >= sat_fit:
+    #     for i in range(9):
+    #         f2, bd2 = eval(agent)
 
-            if f2 < fitness:
-                fitness = f2
-                bd = copy.deepcopy(bd2)
-                #If the fitness is lower than 170 then the network is not optimal and we don't care
-                if f2 < sat_fit:
-                    break
+    #         if f2 < fitness:
+    #             fitness = f2
+    #             bd = copy.deepcopy(bd2)
+    #             #If the fitness is lower than 170 then the network is not optimal and we don't care
+    #             if f2 < sat_fit:
+    #                 break
     # if fitness > 169:
     #     logging.debug(f"Evaluation {next(evalc)}") #debug
     #     logging.debug("=================") #debug
@@ -179,18 +180,18 @@ def main():
     evaluate_skinner3 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=20),
+                                              mode='training', trials=30),
                                 sat_fit = params['sat_fit'],outf = convert_to_action3)
     evaluate_skinner2 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_2x2,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=20),
+                                              mode='training', trials=30),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action2)
     evaluate_skinner4 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_4x4,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=20),
+                                              mode='training', trials=30),
                                 sat_fit = params['sat_fit'],
                                 outf = convert_to_action4)
 
@@ -210,7 +211,7 @@ def main():
 
     #Create the class for the fitness
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", DeapSwitchGenome, fitness=creator.FitnessMax, features = list)
+    creator.create("Individual", genome_type, fitness=creator.FitnessMax, features = list)
 
     #Extract the variables
     nb_features = params['nb_features'] #Length of the descriptor

@@ -159,7 +159,7 @@ def plot_stats(file='skinner3.out'):
     plt.suptitle('Direct encoding')
     plt.show()
 
-def find_desc(file='skinner3_final.p'):
+def find_desc(file='out/3x3_qd_maps/float_desc/skinner3_final.p'):
     grid = get_grid(file)
     for key in grid.features:
         feat = grid.features[key]
@@ -171,4 +171,4 @@ def find_desc(file='skinner3_final.p'):
             print(f"Features: {feat}, Fitness: {fit}")
 
 if __name__ == '__main__':
-    plot_stats()
+    find_desc()

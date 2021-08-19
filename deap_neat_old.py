@@ -52,16 +52,17 @@ def evaluate_skinner(ind, config, eval, sat_fit, outf):
     fitness, bd = eval(agent)
     #If the agent seems satisfactory, test it a few more times to make sure it is
     #By evaluating it a few more times and taking the minimum fitness we try to punish luck
-    if fitness > sat_fit:
-        for i in range(99):
-            f2, bd2 = eval(agent)
+    #This is no longer needed since we average out 30 trials
+    # if fitness > sat_fit:
+    #     for i in range(99):
+    #         f2, bd2 = eval(agent)
 
-            if f2 < fitness:
-                fitness = f2
-                bd = copy.deepcopy(bd2)
-                #If the fitness is lower than 170 then the network is not optimal and we don't care
-                if f2 < sat_fit:
-                    break
+    #         if f2 < fitness:
+    #             fitness = f2
+    #             bd = copy.deepcopy(bd2)
+    #             #If the fitness is lower than 170 then the network is not optimal and we don't care
+    #             if f2 < sat_fit:
+    #                 break
     # if fitness > 169:
     #     logging.debug(f"Evaluation {next(evalc)}") #debug
     #     logging.debug("=================") #debug
