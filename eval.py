@@ -189,7 +189,7 @@ def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inte
         return fitness
 
 def eval_one_to_one_3x3(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=20, descriptor_out=False,
-                        mode='training', trials=10, debug=False):
+                        mode='training', trials=30, debug=False):
     return eval_one_to_one('OneToOne3x3-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode,trials, debug)
 
 def eval_one_to_one_2x2(agent, num_episodes = 50, rand_iter= 10,snapshot_inter=5, descriptor_out=False,mode='training',

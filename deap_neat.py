@@ -64,10 +64,10 @@ def expr(config):
     return ind
 
 #evalc = count(0)
-def evaluate_skinner(ind, config, eval, sat_fit, outf, createf):
+def evaluate_skinner(ind, config, eval, sat_fit,inf, outf, createf):
     #200 episodes, interval = 40 => max fitness = 170
 
-    in_proc = lambda x: x
+    in_proc = inf
     out_proc = outf
     net = createf(ind,config)
     agent = Agent(net, in_proc, out_proc)
@@ -142,6 +142,9 @@ def tmaze_distance(vector1, vector2):
     #normalize
     return (d-dmin) / (dmax-dmin)
 
+def identity(x):
+    return x
+
 distance_functions = {
     'tmaze' : tmaze_distance
 }
@@ -165,6 +168,7 @@ def main():
     params = yaml.safe_load(open(args.hyperparams, 'r'))
     genome_type = None
     createf = None
+    inf = identity
     if params['encoding'] == 'direct':
         genome_type = DeapSwitchGenome
         createf = switch_neat.create
@@ -176,23 +180,24 @@ def main():
         genome_type = DeapGuidedMapGenome
         map_size = params['map_size']
         createf = partial(guided_maps.create, map_size=map_size)
+        inf = guided_maps.reorder_inputs
 
     evaluate_skinner3 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_3x3, num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=30),
-                                sat_fit = params['sat_fit'],outf = convert_to_action3)
+                                              mode='training', trials=20),
+                                sat_fit = params['sat_fit'],inf=inf,outf = convert_to_action3)
     evaluate_skinner2 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_2x2,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=30),
-                                sat_fit = params['sat_fit'],
+                                              mode='training', trials=20),
+                                sat_fit = params['sat_fit'], inf=inf,
                                 outf = convert_to_action2)
     evaluate_skinner4 = partial(evaluate_skinner,
                                 eval =partial(eval_one_to_one_4x4,  num_episodes=params['num_episodes'],
                                               rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
-                                              mode='training', trials=30),
-                                sat_fit = params['sat_fit'],
+                                              mode='training', trials=20),
+                                sat_fit = params['sat_fit'],inf=inf,
                                 outf = convert_to_action4)
 
     evalfs = {
