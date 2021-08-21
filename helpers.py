@@ -6,7 +6,8 @@ from switch_neat import Agent
 import switch_neat
 import switch_maps
 from deap import creator, base
-from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome
+from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome, DeapGuidedMapGenome
+import guided_maps
 
 def get_grid(resfile = 'final.p'):
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -34,17 +35,19 @@ def get_agent_onf(size, config_file):
 def get_best_agent(size, config_file, resfile='final.p'):
     grid = get_grid(resfile)
     ind = grid.best
-    conf = Config(DeapSwitchMapGenome, DefaultReproduction,
+    conf = Config(DeapGuidedMapGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
-    net = switch_maps.create(ind, conf, 3)
+    net = guided_maps.create(ind, conf, 3)
     if size == 2:
         outf = convert_to_action2
     elif size == 3:
         outf = convert_to_action3
     elif size == 4:
         outf = convert_to_action4
-    agent = Agent(net, lambda x: x, outf)
+    #inf = lambda x: x
+    inf = guided_maps.reorder_inputs
+    agent = Agent(net, inf, outf)
     return agent
 
 def get_best_tmaze():
@@ -59,17 +62,17 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-skinner3', 'out/3x3_map_elites/float_desc/skinner3_final.p')
-    eps = 24
-    randiter = 12
+    agent = get_best_agent(3, 'config/deap-guided-skinner3', 'out/3x3_qd_maps/guided_maps/skinner3_final.p')
+    eps = 60
+    randiter = 30
     snapiter = 3
-    satfit = 12
+    satfit = 48
     score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'training')
     print(f"score: {score}, bd: {bd}")
-    # scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(1000)]
-    # scores.sort()
-    # print(f"scores: {scores}")
-    # print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
+    scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(100)]
+    scores.sort()
+    print(f"scores: {scores}")
+    print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
 
 def dry_run_optimal():
     agent=solve_one_to_one_3x3()
@@ -170,5 +173,17 @@ def find_desc(file='out/3x3_qd_maps/float_desc/skinner3_final.p'):
             fit = grid.fitness[key]
             print(f"Features: {feat}, Fitness: {fit}")
 
+def count_optimal():
+    grid = get_grid('out/3x3_qd_maps/guided_maps/skinner3_final.p')
+    sat_fit = 48
+    for key, fi in grid.fitness.items():
+        if not fi:
+            continue
+        f = fi[0]
+        if f > creator.FitnessMax((48,)):
+            feats = grid.features[key]
+            print(f"Individual with descriptor: {feats} has fitness: {f}")
+    
+
 if __name__ == '__main__':
-    find_desc()
+    count_optimal()
