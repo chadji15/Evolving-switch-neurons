@@ -340,10 +340,15 @@ def make_eval_fun(evaluation_func, in_proc, out_proc):
 
 #For the guided maps encoding
 #input order is: input1, reward, input2, input3
-def reorder_inputs(l):
-    new_l = [l[0], l[3],l[1],l[2]]
-    return new_l
+# def reorder_inputs(l):
+#     new_l = [l[0], l[3],l[1],l[2]]
+#     return new_l
 
+def reorder_inputs(l):
+    new_l = list(l)
+    s = new_l.pop()
+    new_l.insert(1,s)
+    return new_l
 #A dry test run for the binary association problem to test if the above implementation works
 def run(config_file, generations, binary_file, drawfile, progressfile, statsfile):
 

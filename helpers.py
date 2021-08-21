@@ -8,6 +8,7 @@ import switch_maps
 from deap import creator, base
 from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome, DeapGuidedMapGenome
 import guided_maps
+from render_network import draw_net
 
 def get_grid(resfile = 'final.p'):
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -180,10 +181,56 @@ def count_optimal():
         if not fi:
             continue
         f = fi[0]
-        if f > creator.FitnessMax((48,)):
+        if f > creator.FitnessMax((sat_fit,)):
             feats = grid.features[key]
             print(f"Individual with descriptor: {feats} has fitness: {f}")
-    
+
+def test_nonzero():
+    genome = DeapGuidedMapGenome
+    config = 'config/binary-guided-maps'
+    size = 3
+    inf = guided_maps.reorder_inputs
+    outf = convert_to_action3
+    grid = get_grid('out/3x3_qd_maps/guided_maps/skinner3_final.p')
+    sat_fit = 48
+    for key, fi in grid.fitness.items():
+        if not fi:
+            continue
+        f = fi[0]
+        feats = grid.features[key]
+        if f > creator.FitnessMax((sat_fit,)) and (feats[1] > 0 and feats[3] > 0):
+            print(f"Individual with descriptor: {feats} has fitness: {f} on training set")
+            net=guided_maps.create(genome, config,size)
+            agent = Agent(net,inf, outf)
+            score = eval_one_to_one_3x3(agent, 60,30,3,False,'test',30)
+            print(f"On the test set it scores a fitness of {score}")
+
+def visualize_all_optimal():
+    outdir = 'optimal_vizs'
+    import os
+    os.mkdir(outdir)
+    genome = DeapGuidedMapGenome
+    config = 'config/binary-guided-maps'
+    size = 3
+    inf = guided_maps.reorder_inputs
+    outf = convert_to_action3
+    grid = get_grid('out/3x3_qd_maps/guided_maps/skinner3_final.p')
+    sat_fit = 48
+    fp = open(f"{outdir}/index.txt")
+    from itertools import count
+    c = count(start=1, step=1)
+    for key, fi in grid.fitness.items():
+        if not fi:
+            continue
+        f = fi[0]
+        if f > creator.FitnessMax((sat_fit,)):
+            feats = grid.features[key]
+            ind = next(c)
+            net=guided_maps.create(genome, config,size)
+            draw_net(network=net, filename=f"{outdir}/{ind}")
+            fp.write(f"{ind} => Fitness: {f}, descriptor: {feats}\n")
+
+    fp.close()
 
 if __name__ == '__main__':
     count_optimal()
