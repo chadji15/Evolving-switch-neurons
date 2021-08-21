@@ -2,7 +2,7 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 170
+fitness_threshold     = 54
 pop_size              = 200
 reset_on_extinction   = False
 
@@ -14,8 +14,8 @@ activation_options      = sigmoid identity tanh
 
 # node aggregation options
 aggregation_default     = sum
-aggregation_mutate_rate = 0
-aggregation_options     = sum
+aggregation_mutate_rate = 0.1
+aggregation_options     = sum product
 
 #Switch Neuron
 is_switch_default       = False

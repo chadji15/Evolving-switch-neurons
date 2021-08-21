@@ -186,13 +186,15 @@ class AssociationTaskEnv(gym.Env):
 
     #modified init_perm for training in map elites
     def init_perm(self):
+
         output = [o for o in self.action_space._to_list()]
         #self.perms = [p for p in permutations(output)]
-        self.perms = [p for p in product(output, repeat=3)]
+        self.perms = [p for p in product(output, repeat=self.n)]
+        training_len = len(self.perms) * 3 // 4
         if self.mode == 'training':
-            self.perms = self.perms[:-8]
+            self.perms = self.perms[:training_len]
         elif self.mode == 'test':
-            self.perms = self.perms[20:]
+            self.perms = self.perms[training_len:]
         random.shuffle(self.perms)
 
 class OneToOne2x2(AssociationTaskEnv):
