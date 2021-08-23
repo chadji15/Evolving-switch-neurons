@@ -232,5 +232,47 @@ def visualize_all_optimal():
 
     fp.close()
 
+def plot_neat_vs_map_elites():
+    neatresfile = ''
+    mapelitesfile = ''
+    satfit = 48
+    mapelitesevals = list(range(0,128000,step=128))
+    mapelitesevals.insert(0,2000)
+    from itertools import accumulate
+    mapelitesevals = accumulate(mapelitesevals)
+    mapelitesscores = []
+    neatevals = []
+    neatscores = []
+
+    with open(neatresfile,'r') as fp:
+        for line in fp:
+            if line.startswith('Best fitness:'):
+                score = line.split()[2]
+                score = float(score)
+                neatscores.append(score)
+            elif line.startswith('Population of'):
+                popu = line.split()[2]
+                popu = int(popu)
+                neatevals.append(popu)
+    neatevals = accumulate(neatevals)
+    with open(mapelitesfile, 'r') as fp2:
+        fp2.readline()
+        fp2.readline()
+        line = fp2.readline()
+        while not line.startswith('Total elapsed:'):
+            score = line.split()[7].strip('[]')
+            score = float(score)
+            mapelitesscores.append(score)
+
+    maxevals = max(neatevals[-1], mapelitesevals[-1])
+    import matplotlib.pyplot as plt
+
+    plt.xlabel('Evaluations')
+    plt.ylabel('Maximum fitness')
+    plt.plot(mapelitesevals, mapelitesscores)
+    plt.plot(neatevals, neatscores)
+    plt.axhline(satfit)
+    plt.legend(['MAP-Elites', 'NEAT', 'Satisfactory'])
+
 if __name__ == '__main__':
     count_optimal()
