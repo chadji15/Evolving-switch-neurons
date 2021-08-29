@@ -355,7 +355,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
     #Configuring the agent and the evaluation function
     from eval import eval_one_to_one_3x3
     eval_func = partial(eval_one_to_one_3x3, num_episodes=60, rand_iter=30, snapshot_inter=3, descriptor_out=False,
-                        mode='training', trials=30)
+                        mode='training', trials=10)
     #Preprocessing for inputs: none
     in_func = reorder_inputs
     from solve import convert_to_action3

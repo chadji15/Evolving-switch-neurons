@@ -201,9 +201,12 @@ def test_nonzero():
             continue
         f = fi[0]
         feats = grid.features[key]
+        if not feats:
+            continue
+        feats = feats[0]
         if f > creator.FitnessMax((sat_fit,)) and (feats[1] > 0 and feats[3] > 0):
             print(f"Individual with descriptor: {feats} has fitness: {f} on training set")
-            net=guided_maps.create(genome, conf,size)
+            net=guided_maps.create(genome, config,size)
             agent = Agent(net,inf, outf)
             score = eval_one_to_one_3x3(agent, 60,30,3,False,'test',30)
             print(f"On the test set it scores a fitness of {score}")
@@ -211,13 +214,19 @@ def test_nonzero():
 def visualize_all_optimal():
     outdir = 'optimal_vizs'
     import os
-    os.mkdir(outdir)
+    try:
+        os.mkdir(outdir)
+    except OSError as e:
+        pass
+
     genome = DeapGuidedMapGenome
     config = 'config/binary-guided-maps'
     conf = Config(genome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config)
     size = 3
+    inf = guided_maps.reorder_inputs
+    outf = convert_to_action3
     grid = get_grid('out/3x3_qd_maps/guided_maps/skinner3_final.p')
     sat_fit = 48
     fp = open(f"{outdir}/index.txt")
@@ -229,16 +238,17 @@ def visualize_all_optimal():
         f = fi[0]
         if f > creator.FitnessMax((sat_fit,)):
             feats = grid.features[key]
-            ind = next(c)
-            net=guided_maps.create(genome, conf,size)
-            draw_net(network=net, filename=f"{outdir}/{ind}")
-            fp.write(f"{ind} => Fitness: {f}, descriptor: {feats}\n")
+            index = next(c)
+            ind = grid.solutions[key][0]
+            net=guided_maps.create(ind, conf,size)
+            draw_net(network=net, filename=f"{outdir}/{index}")
+            fp.write(f"{index} \n {ind}\n=> Fitness: {f}, descriptor: {feats}\n")
 
     fp.close()
 
 def plot_neat_vs_map_elites():
-    neatresfile = r'C:\Users\xrist\Desktop\2.txt'
-    mapelitesfile = r'C:\Users\xrist\Desktop\skinner3.out'
+    neatresfile = r'out/guided_maps/27_sets/2.txt'
+    mapelitesfile = r'out/3x3_qd_maps/guided_maps/skinner3.out'
     satfit = 48
     mapelitesevals = list(range(0,256000,128))
     mapelitesevals.insert(0,2000)
@@ -268,7 +278,6 @@ def plot_neat_vs_map_elites():
             score = line.split()[7].strip('[]')
             score = float(score)
             mapelitesscores.append(score)
-            line = fp2.readline()
 
     maxevals = max(neatevals[-1], mapelitesevals[-1])
     import matplotlib.pyplot as plt
@@ -279,7 +288,7 @@ def plot_neat_vs_map_elites():
     plt.plot(neatevals, neatscores)
     plt.axhline(satfit,0,1, ls='--', color='green')
     plt.legend(['MAP-Elites', 'NEAT', 'Satisfactory'])
-    plt.show()
+    plt.savefig('neatvsmapelits.jpg')
 
 if __name__ == '__main__':
-    plot_neat_vs_map_elites()
+    count_optimal()
