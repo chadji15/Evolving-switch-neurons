@@ -217,8 +217,13 @@ class ManyToMany2x2Rand(AssociationTaskEnv):
     def __init__(self):
         super().__init__(2,2,'many-to-many',500)
 
+class OneToOne3x10(AssociationTaskEnv):
+    def __init__(self):
+        super().__init__(3,10,'one-to-one')
+
 if __name__ == '__main__':
-    env = OneToMany3x2()
+    env = OneToOne3x10()
+    env.reset(rand_iter=3)
     while True:
         env.render(mode='human')
         x = input("Select action with binary string e.g. 011 or quit: ")

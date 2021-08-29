@@ -59,7 +59,7 @@ class SwitchMapGenome(DefaultGenome):
 def create(genome, config, map_size):
     """ Receives a genome and returns its phenotype (a SwitchNeuronNetwork). """
     genome_config = config.genome_config
-    required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
+    #required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
 
     input_keys = genome_config.input_keys
     output_keys = genome_config.output_keys
@@ -67,7 +67,7 @@ def create(genome, config, map_size):
     std_inputs = {}
     mod_inputs = {}
     children = {}
-    node_keys = set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
+    node_keys = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)#set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
 
     # Here we populate the children dictionay for each unique not isolated node.
     for n in genome.nodes.keys():
@@ -89,8 +89,8 @@ def create(genome, config, map_size):
 
         i, o = cg.key
         #If neither node is required for output then skip the connection
-        if o not in required and i not in required:
-            continue
+        # if o not in required and i not in required:
+        #     continue
 
         #Find the map corresponding to each node of the connection
         in_map = [i] + children[i]
