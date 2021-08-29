@@ -1,5 +1,5 @@
 import pickle
-from eval import eval_one_to_one_3x3
+from eval import eval_one_to_one_3x3, eval_one_to_one_4x4
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation
 from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction, solve_one_to_one_3x3
 from switch_neat import Agent
@@ -39,7 +39,7 @@ def get_best_agent(size, config_file, resfile='final.p'):
     conf = Config(DeapGuidedMapGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
-    net = guided_maps.create(ind, conf, 3)
+    net = guided_maps.create(ind, conf, 4)
     if size == 2:
         outf = convert_to_action2
     elif size == 3:
@@ -63,14 +63,15 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-guided-skinner3', 'out/3x3_qd_maps/guided_maps/skinner3_final.p')
-    eps = 60
-    randiter = 30
-    snapiter = 3
-    satfit = 48
-    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'training')
-    print(f"score: {score}, bd: {bd}")
-    scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(100)]
+    agent = get_best_agent(4, 'config/deap-guided-skinner4', 'out/4x4_map_elites/guided_maps/skinner3_final.p')
+    eps = 200
+    randiter = 50
+    snapiter = 4
+    satfit = 152
+    evalf = eval_one_to_one_4x4
+    # score, bd = evalf(agent, eps,randiter, snapiter, True, 'training')
+    # print(f"score: {score}, bd: {bd}")
+    scores = [evalf(agent,eps,randiter,snapiter,False,'test') for _ in range(100)]
     scores.sort()
     print(f"scores: {scores}")
     print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
@@ -187,7 +188,10 @@ def count_optimal():
 
 def test_nonzero():
     genome = DeapGuidedMapGenome
-    config = 'config/binary-guided-maps'
+    config = 'config/deap-guided-skinner3'
+    conf = Config(genome, DefaultReproduction,
+                    DefaultSpeciesSet, DefaultStagnation,
+                    config)
     size = 3
     inf = guided_maps.reorder_inputs
     outf = convert_to_action3
@@ -198,25 +202,35 @@ def test_nonzero():
             continue
         f = fi[0]
         feats = grid.features[key]
+        if not feats:
+            continue
+        feats = feats[0]
         if f > creator.FitnessMax((sat_fit,)) and (feats[1] > 0 and feats[3] > 0):
             print(f"Individual with descriptor: {feats} has fitness: {f} on training set")
-            net=guided_maps.create(genome, config,size)
+            ind = grid.solutions[key][0]
+            net=guided_maps.create(ind, conf,size)
             agent = Agent(net,inf, outf)
-            score = eval_one_to_one_3x3(agent, 60,30,3,False,'test',30)
+            score = eval_one_to_one_3x3(agent, 60,30,3,False,'test',1)
             print(f"On the test set it scores a fitness of {score}")
 
 def visualize_all_optimal():
     outdir = 'optimal_vizs'
     import os
-    os.mkdir(outdir)
+    try:
+        os.mkdir(outdir)
+    except OSError as e:
+        pass
+
     genome = DeapGuidedMapGenome
-    config = 'config/binary-guided-maps'
+    config = 'config/deap-guided-skinner3'
+    conf = Config(genome, DefaultReproduction,
+                    DefaultSpeciesSet, DefaultStagnation,
+                    config)
     size = 3
-    inf = guided_maps.reorder_inputs
-    outf = convert_to_action3
+
     grid = get_grid('out/3x3_qd_maps/guided_maps/skinner3_final.p')
     sat_fit = 48
-    fp = open(f"{outdir}/index.txt")
+    fp = open(f"{outdir}/index.txt", 'w')
     from itertools import count
     c = count(start=1, step=1)
     for key, fi in grid.fitness.items():
@@ -225,21 +239,22 @@ def visualize_all_optimal():
         f = fi[0]
         if f > creator.FitnessMax((sat_fit,)):
             feats = grid.features[key]
-            ind = next(c)
-            net=guided_maps.create(genome, config,size)
-            draw_net(network=net, filename=f"{outdir}/{ind}")
-            fp.write(f"{ind} => Fitness: {f}, descriptor: {feats}\n")
+            index = next(c)
+            ind = grid.solutions[key][0]
+            net=guided_maps.create(ind, conf,size)
+            draw_net(network=net, filename=f"{outdir}/{index}")
+            fp.write(f"{index} \n {ind}\n=> Fitness: {f}, descriptor: {feats}\n")
 
     fp.close()
 
 def plot_neat_vs_map_elites():
-    neatresfile = ''
-    mapelitesfile = ''
+    neatresfile = r'out/guided_maps/27_sets/2.txt'
+    mapelitesfile = r'out/3x3_qd_maps/guided_maps/skinner3.out'
     satfit = 48
-    mapelitesevals = list(range(0,128000,step=128))
+    mapelitesevals = list(range(0,256000,128))
     mapelitesevals.insert(0,2000)
     from itertools import accumulate
-    mapelitesevals = accumulate(mapelitesevals)
+    mapelitesevals = list(accumulate(mapelitesevals))
     mapelitesscores = []
     neatevals = []
     neatscores = []
@@ -254,7 +269,8 @@ def plot_neat_vs_map_elites():
                 popu = line.split()[2]
                 popu = int(popu)
                 neatevals.append(popu)
-    neatevals = accumulate(neatevals)
+    neatevals.append(neatevals[-1])
+    neatevals = list(accumulate(neatevals))
     with open(mapelitesfile, 'r') as fp2:
         fp2.readline()
         fp2.readline()
@@ -263,6 +279,7 @@ def plot_neat_vs_map_elites():
             score = line.split()[7].strip('[]')
             score = float(score)
             mapelitesscores.append(score)
+            line = fp2.readline()
 
     maxevals = max(neatevals[-1], mapelitesevals[-1])
     import matplotlib.pyplot as plt
@@ -273,6 +290,7 @@ def plot_neat_vs_map_elites():
     plt.plot(neatevals, neatscores)
     plt.axhline(satfit)
     plt.legend(['MAP-Elites', 'NEAT', 'Satisfactory'])
+    plt.savefig('neatvsmapelits.jpg')
 
 if __name__ == '__main__':
-    count_optimal()
+    visualize_all_optimal()
