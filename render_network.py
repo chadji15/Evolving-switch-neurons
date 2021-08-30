@@ -6,6 +6,74 @@ from collections import namedtuple
 import graphviz
 
 
+def draw_map_genotype(config, genome, filename=None, fmt='svg'):
+    if graphviz is None:
+        warnings.warn("This display is not available due to a missing optional dependency (graphviz)")
+        return
+    node_names = {}
+    node_colors = {}
+    node_attrs = {
+        'shape': 'circle',
+        'fontsize': '9',
+        'height': '0.1',
+        'width': '0.1'}
+
+    dot = graphviz.Digraph(format=fmt, node_attr=node_attrs, engine='neato')
+    inputs = set()
+    for k in config.genome_config.input_keys:
+        inputs.add(k)
+        name = node_names.get(k, str(k))
+        input_attrs = {'style': 'filled',
+                       'shape': 'box'}
+        input_attrs['fillcolor'] = node_colors.get(k, 'lightgray')
+        dot.node(name, _attributes=input_attrs)
+
+    outputs = set()
+    for k in config.genome_config.output_keys:
+        outputs.add(k)
+        name = node_names.get(k, str(k))
+        node_attrs = {'style': 'filled'}
+        node_attrs['fillcolor'] = node_colors.get(k, 'lightblue')
+        node_attrs['shape'] = 'doublecircle' if genome.nodes[k].is_switch else 'circle'
+
+        dot.node(name, _attributes=node_attrs)
+
+    used_nodes = set(genome.nodes.keys())
+    for n in used_nodes:
+        if n in inputs or n in outputs:
+            continue
+
+        attrs = {'style': 'filled',
+                 'fillcolor': node_colors.get(n, 'white')}
+        attrs['shape'] = 'doublecircle' if genome.nodes[n].is_switch else 'circle'
+        dot.node(str(n), label=str(genome.nodes[n].activation),_attributes=attrs)
+
+    for cg in genome.connections.values():
+        #if cg.input not in used_nodes or cg.output not in used_nodes:
+        #    continue
+        input, output = cg.key
+        a = node_names.get(input, str(input))
+        b = node_names.get(output, str(output))
+        style = 'solid' if not cg.is_mod else 'dotted'
+        #color = 'green' if cg.weight > 0 else 'red'
+        color = 'black'
+        if cg.one2one and cg.extended:
+            color = 'blue'
+        elif cg.uniform:
+            color = 'yellow'
+        else:
+            color = 'pink'
+
+        width = str(0.1 + abs(cg.weight / 5.0))
+        fontsize = '5'
+        eattrs = {'style': style, 'color': color, 'penwidth': width, 'fontsize': fontsize}
+        addlab = 'one2one' if cg.one2one else 'one2all'
+        label = f"{cg.weight:.3f}, {addlab}"
+        dot.edge(a, b, label= label, _attributes=eattrs)
+    dot.render(filename, view=False)
+    return dot
+
+
 def draw_genotype(config, genome, view=False, filename=None, node_names=None, show_disabled=True, prune_unused=False,
              node_colors=None, fmt='svg', map_size = -1):
     """ Receives a genome and draws a neural network with arbitrary topology. """
