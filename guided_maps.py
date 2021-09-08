@@ -83,7 +83,7 @@ def create(genome, config, map_size):
     mod_inputs = {}
     children = {}
     #Prune all nodes and connections that do not contribute to the output
-    node_keys = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)  #set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
+    node_keys = set(genome.nodes.keys()) #required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)  #set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
     aux_keys = set()
 
 
