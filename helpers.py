@@ -8,7 +8,8 @@ import switch_maps
 from deap import creator, base
 from deap_neat import DeapSwitchGenome, DeapSwitchMapGenome, DeapGuidedMapGenome
 import guided_maps
-from render_network import draw_net
+from render_network import draw_net, draw_map_genotype
+
 
 def get_grid(resfile = 'final.p'):
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -290,5 +291,25 @@ def plot_neat_vs_map_elites():
     plt.legend(['MAP-Elites', 'NEAT', 'Satisfactory'])
     plt.savefig('neatvsmapelits.jpg')
 
+def visualize_genotype_22():
+    grid = get_grid("skinner3_final.p")
+    desc = [0.25416666666666665, 0.03333333333333333, 0.2020833333333333, 0.0]
+    ind = None
+    for key in grid.features:
+        feat = grid.features[key]
+        if not feat:
+            continue
+        feat = feat[0]
+        if list(feat) == list(desc):
+            ind = grid.solutions[key][0]
+
+    genome = DeapGuidedMapGenome
+    config = 'config/deap-guided-skinner3'
+    conf = Config(genome, DefaultReproduction,
+                  DefaultSpeciesSet, DefaultStagnation,
+                  config)
+
+    draw_map_genotype(conf, ind,"map_genotype22")
+
 if __name__ == '__main__':
-    count_optimal()
+    visualize_genotype_22()
