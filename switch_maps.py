@@ -67,7 +67,7 @@ def create(genome, config, map_size):
     std_inputs = {}
     mod_inputs = {}
     children = {}
-    node_keys = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)#set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
+    node_keys = set(genome.nodes.keys()) #required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)#set(genome.nodes.keys())  # + list(genome_config.input_keys[:])
 
     # Here we populate the children dictionay for each unique not isolated node.
     for n in genome.nodes.keys():
