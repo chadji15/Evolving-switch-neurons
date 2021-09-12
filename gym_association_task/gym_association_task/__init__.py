@@ -24,3 +24,8 @@ register(
     id='ManyToMany2x2Rand-v0',
     entry_point='gym_association_task.envs:ManyToMany2x2Rand',
 )
+
+register(
+    id='OneToOne3x10-v0',
+    entry_point='gym_association_task.envs:OneToOne3x10',
+)

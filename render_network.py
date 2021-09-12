@@ -5,12 +5,38 @@ from collections import namedtuple
 
 import graphviz
 
+def get_lbl(aggregation, activation):
+    if activation == 'tri_step':
+        return '+|3s'
 
-def draw_map_genotype(config, genome, filename=None, fmt='svg'):
+    if aggregation == 'sum':
+        label = '+'
+    elif aggregation == 'product' or aggregation == 'prod':
+        label = '*'
+    else:
+        label = ' '
+    label += '|'
+
+    if activation == 'identity':
+        label += '/'
+    elif activation == 'sigmoid':
+        label += 's'
+    elif activation == 'tanh':
+        label += 'th'
+    elif activation == 'heavisize':
+        label += 'step'
+    return label
+
+def get_map_lbl(node):
+    return get_lbl(node.aggregation, node.activation)
+
+def get_net_node_lbl(node):
+    return get_lbl(node.standard['integration_function'].__name__, node.standard['activation_function'].__name__)
+
+def draw_map_genotype(config, genome, filename=None, fmt='svg', node_names = {}):
     if graphviz is None:
         warnings.warn("This display is not available due to a missing optional dependency (graphviz)")
         return
-    node_names = {}
     node_colors = {}
     node_attrs = {
         'shape': 'circle',
@@ -26,7 +52,7 @@ def draw_map_genotype(config, genome, filename=None, fmt='svg'):
         input_attrs = {'style': 'filled',
                        'shape': 'box'}
         input_attrs['fillcolor'] = node_colors.get(k, 'lightgray')
-        dot.node(name, _attributes=input_attrs)
+        dot.node(name, _attributes=input_attrs, margin='0.006,0.0003')
 
     outputs = set()
     for k in config.genome_config.output_keys:
@@ -36,7 +62,7 @@ def draw_map_genotype(config, genome, filename=None, fmt='svg'):
         node_attrs['fillcolor'] = node_colors.get(k, 'lightblue')
         node_attrs['shape'] = 'doublecircle' if genome.nodes[k].is_switch else 'circle'
 
-        dot.node(name, _attributes=node_attrs)
+        dot.node(name, _attributes=node_attrs, margin='0.006,0.0003')
 
     used_nodes = set(genome.nodes.keys())
     for n in used_nodes:
@@ -46,7 +72,7 @@ def draw_map_genotype(config, genome, filename=None, fmt='svg'):
         attrs = {'style': 'filled',
                  'fillcolor': node_colors.get(n, 'white')}
         attrs['shape'] = 'doublecircle' if genome.nodes[n].is_switch else 'circle'
-        dot.node(str(n), label=str(genome.nodes[n].activation),_attributes=attrs)
+        dot.node(str(n), label=str(get_map_lbl(genome.nodes[n])),_attributes=attrs, margin='0.006,0.0003')
 
     for cg in genome.connections.values():
         #if cg.input not in used_nodes or cg.output not in used_nodes:
@@ -262,7 +288,7 @@ def draw_net(network, view=False, filename=None, node_names=None, node_colors=No
         inputs.add(k)
         name = node_names.get(k, str(k))
         input_attrs = {'style': 'filled', 'shape': 'box', 'fillcolor': node_colors.get(k, 'lightgray')}
-        dot.node(name, _attributes=input_attrs)
+        dot.node(name, _attributes=input_attrs, margin='0.006,0.0003')
         maps[str(k)] = [str(k)]
 
     outputs = set()
@@ -272,12 +298,10 @@ def draw_net(network, view=False, filename=None, node_names=None, node_colors=No
         node_attrs = {'style': 'filled', 'fillcolor': node_colors.get(k, 'lightblue'),
                       'shape': 'doublecircle' if type(network.nodes_dict[k]) is SwitchNeuron else 'circle'}
 
-        dot.node(name, _attributes=node_attrs)
+        dot.node(name, _attributes=node_attrs, margin='0.006,0.0003')
         maps[str(k)] = [str(k)]
 
     used_nodes = [n.key for n in network.nodes]
-
-
 
 
     for n in used_nodes:
@@ -287,7 +311,7 @@ def draw_net(network, view=False, filename=None, node_names=None, node_colors=No
         attrs = {'style': 'filled', 'fillcolor': node_colors.get(n, 'white'),
                  'shape': 'doublecircle' if type(network.nodes_dict[n]) is SwitchNeuron else 'circle'}
         #dot.node(str(n), label=str(network.nodes_dict[n].standard['activation_function'].__name__),_attributes=attrs)
-        dot.node(str(n), label=str(n),_attributes=attrs)
+        dot.node(str(n), label=get_net_node_lbl(network.nodes_dict[n]),_attributes=attrs, margin='0.006,0.0003')
 
     Conn = namedtuple('Conn',['key', 'weight','is_mod'])
 

@@ -66,6 +66,8 @@ class GuidedMapGenome(DefaultGenome):
         return DefaultGenomeConfig(param_dict)
 
 def calculate_weights(is_uniform, weight, map_size):
+    if map_size == 1:
+        return weight
     if is_uniform:
         return [weight for _ in range(map_size)]
     start = -weight
@@ -73,7 +75,7 @@ def calculate_weights(is_uniform, weight, map_size):
     weights = list(np.linspace(start, end, map_size, endpoint=True))
     return weights
 
-def create(genome, config, map_size):
+def create(genome, config, map_size, inner_maps):
     """ Receives a genome and returns its phenotype (a SwitchNeuronNetwork). """
     genome_config = config.genome_config
     #required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
@@ -150,7 +152,7 @@ def create(genome, config, map_size):
                         idx = max(node_keys.union(aux_keys)) + 1
                         children[idx] = []
                         aux_keys.add(idx)
-                        for _ in range(1, map_size):
+                        for _ in range(1, inner_maps):
                             new_idx = max(node_keys.union(aux_keys)) + 1
                             children[idx].append(new_idx)
                             aux_keys.add(new_idx)
@@ -158,12 +160,12 @@ def create(genome, config, map_size):
                         for node in aux_map:
                             node_inputs[node] = []
                         #add one to one connections between in_map and aux map with weight 1
-                        for i in range(map_size):
+                        for i in range(inner_maps):
                             node_inputs[aux_map[i]].append((in_map[j], 1))
 
                         #add one to one connections between aux map and out map with stepped weights
-                        weights = calculate_weights(False,cg.weight,map_size)
-                        for i in range(map_size):
+                        weights = calculate_weights(False, cg.weight, inner_maps)
+                        for i in range(inner_maps):
                             node_inputs[out_map[j]].append((aux_map[i], weights[i]))
                 else:
                     weight = cg.weight
@@ -215,8 +217,6 @@ def create(genome, config, map_size):
             node_keys.add(okey)
             std_inputs[okey] = []
 
-    # While we cannot deduce the order of activations of the neurons due to the fact that we allow for arbitrary connection
-    # schemes, we certainly want the output neurons to activate last.
     conns = {}
     for k in node_keys.union(aux_keys):
         conns[k] = []

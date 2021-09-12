@@ -227,12 +227,12 @@ class SwitchNeuronNetwork():
         self.nodes_dict[modulating_key] = modulating_neuron
         #The switch neuron's is only modulated by the modulating neuron with a weight inverse to it's initial
         #input neurons.
-        s_node.modulatory['weights'] = [(modulating_key, 1/len(s_node.standard['weights']))]
+        s_node.modulatory['weights'] = [(modulating_key, 1)]#1/len(s_node.standard['weights']))]
 
         #Create a unique key for the integrating neuron
         integrating_key = max(list(self.nodes_dict.keys())) + 1
         #The integrating neuron shares the connection from the modulating neuron with the switch neuron.
-        integrating_weights = [(modulating_key, 1/len(s_node.standard['weights']))]
+        integrating_weights = [(modulating_key, 1)]#1/len(s_node.standard['weights']))]
         #Create the neuron and add it to the network's neurons.
         integrating_neuron = IntegratingNeuron(integrating_key,integrating_weights)
         self.nodes_dict[integrating_key] = integrating_neuron
