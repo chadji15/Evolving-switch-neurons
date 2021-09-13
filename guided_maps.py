@@ -71,7 +71,7 @@ def calculate_weights(is_uniform, weight, map_size):
     weights = list(np.linspace(start, end, map_size, endpoint=True))
     return weights
 
-def create(genome, config, map_size):
+def create(genome, config, map_size, inner_maps):
     """ Receives a genome and returns its phenotype (a SwitchNeuronNetwork). """
     genome_config = config.genome_config
     #required = required_for_output(genome_config.input_keys, genome_config.output_keys, genome.connections)
@@ -142,13 +142,13 @@ def create(genome, config, map_size):
             # Map to map connectivity
             if cg.one2one:
                 if cg.extended:
-                    #extended one-to-
+                    #extended one-to-one (2)
                     #create a new intermediatery map
                     for j in range(0, map_size):
                         idx = max(node_keys.union(aux_keys)) + 1
                         children[idx] = []
                         aux_keys.add(idx)
-                        for _ in range(1, map_size):
+                        for _ in range(1, inner_maps):
                             new_idx = max(node_keys.union(aux_keys)) + 1
                             children[idx].append(new_idx)
                             aux_keys.add(new_idx)
@@ -156,12 +156,12 @@ def create(genome, config, map_size):
                         for node in aux_map:
                             node_inputs[node] = []
                         #add one to one connections between in_map and aux map with weight 1
-                        for i in range(map_size):
+                        for i in range(inner_maps):
                             node_inputs[aux_map[i]].append((in_map[j], 1))
 
                         #add one to one connections between aux map and out map with stepped weights
-                        weights = calculate_weights(False,cg.weight,map_size)
-                        for i in range(map_size):
+                        weights = calculate_weights(False, cg.weight, inner_maps)
+                        for i in range(inner_maps):
                             node_inputs[out_map[j]].append((aux_map[i], weights[i]))
                 else:
                     weight = cg.weight
@@ -327,11 +327,12 @@ def prod(l):
     return i
 
 MAP_SIZE = 3
+INMAP_SIZE = 10
 def make_eval_fun(evaluation_func, in_proc, out_proc):
 
     def eval_genomes (genomes, config):
         for genome_id, genome in genomes:
-            net = create(genome,config,MAP_SIZE)
+            net = create(genome,config,MAP_SIZE, INMAP_SIZE)
             #Wrap the network around an agent
             agent = Agent(net, in_proc, out_proc)
             #Evaluate its fitness based on the function given above.
@@ -354,13 +355,13 @@ def reorder_inputs(l):
 def run(config_file, generations, binary_file, drawfile, progressfile, statsfile):
 
     #Configuring the agent and the evaluation function
-    from eval import eval_one_to_one_3x3
-    eval_func = partial(eval_one_to_one_3x3, num_episodes=60, rand_iter=30, snapshot_inter=3, descriptor_out=False,
-                        mode='training', trials=10)
+    from eval import eval_one_to_one_3x10
+    eval_func = partial(eval_one_to_one_3x10, num_episodes=300, rand_iter=100, snapshot_inter=10, descriptor_out=False,
+                        mode='training', trials=1)
     #Preprocessing for inputs: none
     in_func = reorder_inputs
-    from solve import convert_to_action3
-    out_func = convert_to_action3
+    from solve import convert_to_action
+    out_func = partial(convert_to_action,range=4,num_actions=10)
     #Preprocessing for output - convert float to boolean
 
     # Load configuration.
@@ -386,7 +387,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = create(winner, config, MAP_SIZE)
+    winner_net = create(winner, config, MAP_SIZE, INMAP_SIZE)
     winner_agent = Agent(winner_net,in_func, out_func)
     print("Score in task: {}".format(eval_func(winner_agent)))
 
@@ -400,7 +401,7 @@ def run(config_file, generations, binary_file, drawfile, progressfile, statsfile
 
     #Uncomment the following if you want to save the network in a binary file
     fp = open(binary_file,'wb')
-    pickle.dump(winner_net,fp)
+    pickle.dump(winner,fp)
     fp.close()
 
 

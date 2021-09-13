@@ -202,7 +202,7 @@ def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=
 
 #n=300, r=100, threshold = 219
 def eval_one_to_one_3x10(agent, num_episodes=300, rand_iter=100, snapshot_inter=10, descriptor_out=False,
-                        mode='training', trials=20, debug=False):
+                        mode='training', trials=10, debug=False):
     return eval_one_to_one('OneToOne3x10-v0', agent, num_episodes, rand_iter, snapshot_inter,descriptor_out, mode, trials,debug)
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to

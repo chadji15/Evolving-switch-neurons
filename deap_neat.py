@@ -15,8 +15,9 @@ from qdpy.plots import plotGridSubplots
 from switch_maps import SwitchMapGenome
 from switch_neat import SwitchNodeGene, SwitchConnectionGene, SwitchGenome, Agent
 from neat import DefaultReproduction, DefaultSpeciesSet, DefaultStagnation, Config
-from solve import convert_to_action3, convert_to_action2, convert_to_action4, convert_to_direction
-from eval import eval_one_to_one_3x3, eval_one_to_one_2x2, eval_one_to_one_4x4, eval_tmaze_v2
+from solve import convert_to_action3, convert_to_action2, convert_to_action4, convert_to_direction, \
+    convert_to_action3x10
+from eval import eval_one_to_one_3x3, eval_one_to_one_2x2, eval_one_to_one_4x4, eval_tmaze_v2, eval_one_to_one_3x10
 from functools import partial
 from itertools import count
 import numpy as np
@@ -149,7 +150,7 @@ distance_functions = {
     'tmaze' : tmaze_distance
 }
 
-problems = ['skinner2', 'skinner3', 'skinner4', 'tmaze']
+problems = ['skinner2', 'skinner3', 'skinner4', 'tmaze', 'skinner3x10']
 def main():
 
     parser = argparse.ArgumentParser(description="Evolve neural networks with neat")
@@ -179,7 +180,8 @@ def main():
     elif params['encoding'] == 'guided-maps':
         genome_type = DeapGuidedMapGenome
         map_size = params['map_size']
-        createf = partial(guided_maps.create, map_size=map_size)
+        inner_maps = params['inner_maps']
+        createf = partial(guided_maps.create, map_size=map_size, inner_maps= inner_maps)
         inf = guided_maps.reorder_inputs
 
     evaluate_skinner3 = partial(evaluate_skinner,
@@ -199,12 +201,19 @@ def main():
                                               mode='training', trials=20),
                                 sat_fit = params['sat_fit'],inf=inf,
                                 outf = convert_to_action4)
+    evaluate_skinner3x10 = partial(evaluate_skinner,
+                                   eval =partial(eval_one_to_one_3x10,  num_episodes=params['num_episodes'],
+                                                 rand_iter=params['rand_iter'], snapshot_inter=params['snap_iter'], descriptor_out=True,
+                                                 mode='training', trials=20),
+                                   sat_fit = params['sat_fit'],inf=inf,
+                                   outf = convert_to_action3x10)
 
     evalfs = {
         "tmaze" : partial(eval_tmaze,scenario=5),
         "skinner2" : evaluate_skinner2,
         "skinner3" : evaluate_skinner3,
-        "skinner4" : evaluate_skinner4
+        "skinner4" : evaluate_skinner4,
+        "skinner3x10": evaluate_skinner3x10
     }
 
     evalf = partial(evalfs[args.problem], createf=createf)

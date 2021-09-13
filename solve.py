@@ -1,6 +1,8 @@
 import copy
 from collections import namedtuple
 from dataclasses import dataclass
+from functools import partial
+
 import gym_association_task
 from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork, Agent
 from math import tanh
@@ -45,6 +47,8 @@ def convert_to_action(scalar, range, num_actions):
     #reverse it because ?
     action = tuple(reversed(action))
     return action
+
+convert_to_action3x10 = partial(convert_to_action,range=4,num_actions=10)
 
 def convert_to_action4(scalar):
     if scalar[0] < -5:

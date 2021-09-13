@@ -2,14 +2,14 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 48
+fitness_threshold     = 219
 pop_size              = 100
 reset_on_extinction   = False
 
 [GuidedMapGenome]
 # node activation options
-activation_default      = sigmoid
-activation_mutate_rate  = 0.2
+activation_default      = identity
+activation_mutate_rate  = 0.1
 activation_options      = sigmoid tanh identity #heaviside
 
 # node aggregation options
