@@ -10,7 +10,7 @@ reset_on_extinction   = False
 # node activation options
 activation_default      = sigmoid
 activation_mutate_rate  = 0.2
-activation_options      = sigmoid tanh identity heaviside
+activation_options      = sigmoid tanh identity #heaviside
 
 # node aggregation options
 aggregation_default     = sum
@@ -63,10 +63,10 @@ is_mod_default          = False
 is_mod_mutate_rate      = 0.1
 
 feed_forward            = True
-initial_connection      = full
+initial_connection      = full_nodirect
 
 # node add/remove rates
-node_add_prob           = 0.2
+node_add_prob           = 0.1
 node_delete_prob        = 0.05
 
 # network parameters

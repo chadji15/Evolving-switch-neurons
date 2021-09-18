@@ -410,10 +410,12 @@ def main():
     # current working directory.
     config = sys.argv[1]
     generations = int(sys.argv[2])
-    binary_file = sys.argv[3]
-    drawfile = sys.argv[4]
-    progressfile = sys.argv[5]
-    statsfile = sys.argv[6]
+    resdir = sys.argv[3]
+    taskno = int(sys.argv[4])
+    binary_file = f"{resdir}/winner_net{taskno}.bin"
+    drawfile = f"{resdir}/graph{taskno}"
+    progressfile = f"{resdir}/progress{taskno}.txt"
+    statsfile = f"{resdir}/stats{taskno}.png"
     run(config, generations, binary_file, drawfile, progressfile, statsfile)
 
 if __name__ == '__main__':
