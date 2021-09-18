@@ -200,16 +200,22 @@ def eval_one_to_one_4x4(agent, num_episodes = 200, rand_iter= 40,snapshot_inter=
                         trials=10, debug=False):
     return eval_one_to_one('OneToOne4x4-v0', agent, num_episodes, rand_iter, snapshot_inter, descriptor_out,mode, trials,debug)
 
+#n=300, r=100, threshold = 219
+def eval_one_to_one_3x10(agent, num_episodes=300, rand_iter=100, snapshot_inter=10, descriptor_out=False,
+                        mode='training', trials=10, debug=False):
+    return eval_one_to_one('OneToOne3x10-v0', agent, num_episodes, rand_iter, snapshot_inter,descriptor_out, mode, trials,debug)
 
 #For a network to be considered to be able to solve the one-to-many 3x2 association task in this case it needs to
 #to achieve a score of at least 1964 (2000 - 4*(3*(4-1)) = steps - association_changes*(n*(2^m - 1)).
 #Note that scores above this threshold do not mean better performance since the score of 1964 is already considered optimal.
 #The network accepts 4 inputs (3 for observation and 1 for reward)  and return a vector with two binary values.
+#evals  | rand  | fitthresh
+#1000   | 200   | 955
 def eval_one_to_many_3x2(agent):
     env = gym.make('OneToMany3x2-v0')
-    num_episodes = 2000
+    num_episodes = 1000
     sum = num_episodes
-    observation = env.reset(rand_iter=500)
+    observation = env.reset(rand_iter=200)
     input = list(observation)
     input.append(0)
     for i_episode in range(num_episodes):

@@ -1,10 +1,54 @@
 import copy
 from collections import namedtuple
+from dataclasses import dataclass
+from functools import partial
 
+import gym_association_task
 from switch_neuron import Neuron, SwitchNeuron, SwitchNeuronNetwork, Agent
 from math import tanh
 from t_maze.envs import TMazeEnv
 from utilities import mult, clamp, heaviside
+from typing import Tuple
+
+
+@dataclass
+class Node:
+    bias: float
+    activation: str
+    aggregation: str
+    is_isolated: bool
+    is_switch: bool
+
+@dataclass
+class Connection:
+    key: Tuple[int, int]
+    one2one: bool
+    extended: bool
+    uniform: bool
+    weight: float
+    enabled: bool
+    is_mod: bool
+
+def convert_to_action(scalar, range, num_actions):
+    def bit_tuple(x, padding=0):
+        return tuple([1 if digit == '1' else 0 for digit in bin(x)[2:].rjust(padding, '0')])
+
+    #produce the ranges that each action will map to
+    from extended_maps import calculate_weights
+    weights = calculate_weights(False,range,num_actions-1)
+    #find which range the number falls into
+    i = 0
+    while i < len(weights):
+        if scalar < weights[i]:
+            break
+        i+=1
+    #create the action from the index of the range
+    action = bit_tuple(2**i, num_actions)
+    #reverse it because ?
+    action = tuple(reversed(action))
+    return action
+
+convert_to_action3x10 = partial(convert_to_action,range=4,num_actions=10)
 
 def convert_to_action4(scalar):
     if scalar[0] < -5:
@@ -135,7 +179,84 @@ def solve_one_to_many():
         nodes.append(Neuron(key,params))
 
     net = SwitchNeuronNetwork(input_keys,output_keys,nodes)
+
+
+    # from eval import eval_one_to_many_3x2
+    # scores = [eval_one_to_many_3x2(agent=net) for _ in range(100)]
+    # scores.sort()
+    # print(scores)
     return net
+
+def solve_one_to_many_maps():
+    n = 3
+    m = 2
+    input_keys = [-1,-2]
+    output_keys = [0,1]
+    swi_maps = [2,3]
+    gate_maps = [4]
+
+    Config = namedtuple("Config",["genome_config"])
+    Genome_config = namedtuple("Genome_config", ["input_keys", "output_keys", "activation_defs", "aggregation_function_defs"])
+    from utilities import identity, heaviside
+    from neat.activations import sigmoid_activation
+    from neat.aggregations import sum_aggregation, product_aggregation
+    activations = {
+        "sigmoid": sigmoid_activation,
+        "identity": identity,
+        'heaviside': heaviside
+    }
+    aggregations = {
+        "sum": sum_aggregation,
+        "product": product_aggregation
+    }
+    genome_config = Genome_config(input_keys=[-1,-2], output_keys= [0,1], activation_defs=activations, aggregation_function_defs=aggregations)
+    config = Config(genome_config=genome_config)
+    Genome = namedtuple("Genome", ["nodes", "connections"])
+
+    gatinglayer = Node(bias=1, activation='identity', aggregation='product', is_isolated=False, is_switch=False)
+    switchlayersub = Node(bias=0, activation='identity', aggregation='sum', is_switch=True, is_isolated=False)
+    switchlayermas = Node(bias=0, activation='identity', aggregation='sum', is_switch=True, is_isolated=False)
+    out1 = Node(bias=0, activation='heaviside', aggregation='sum', is_isolated=True, is_switch=False)
+    out2 = Node(bias=0, activation='heaviside', aggregation='sum', is_isolated=True, is_switch=False)
+
+    nodes = {
+        0: out1, 1: out2, 2: switchlayersub, 3: switchlayermas, 4: gatinglayer
+    }
+
+    inpgatcon = Connection(key=(-1,4), one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    inpsubcon = Connection(key=(-1,2), one2one=True, extended=True, uniform=False, weight=1, enabled=True, is_mod=False)
+    inpmascon = Connection(key=(-1,3), one2one=True, extended=True, uniform=False, weight=1, enabled=True, is_mod=False)
+    rewgatecon = Connection(key=(-2,4), one2one=False, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    gatesubcon = Connection(key=(4,2), one2one=True, extended=False, uniform=True, weight=0.5, enabled=True, is_mod=True)
+    submascon = Connection(key=(2,3), one2one=True, extended=False, uniform=True, weight=0.5, enabled=True, is_mod=True)
+    masout1con = Connection(key=(3,0), one2one=False, extended=False, uniform=True, weight=1 , enabled=True, is_mod=False)
+    subout2con = Connection(key=(2,1), one2one=False, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+
+    connections = {
+        (-1,4): inpgatcon,
+        (-1,2): inpsubcon,
+        (-1,3): inpmascon,
+        (-2,4): rewgatecon,
+        (4,2): gatesubcon,
+        (2,3): submascon,
+        (3,0): masout1con,
+        (2,1): subout2con
+    }
+
+    genome = Genome(nodes, connections)
+    import extended_maps
+    network = extended_maps.create(genome, config, 3, 2)
+    # from switch_neuron import Agent
+    # agent = Agent(network, reorder_inputs, lambda x: tuple(x))
+    # from eval import eval_one_to_many_3x2
+    # scores = [eval_one_to_many_3x2(agent) for _ in range(100)]
+    # scores.sort()
+    # print(scores)
+    import render_network
+    node_names= {-1: "Input1", -2: "Reward", -3: "Input2", -4: "Input3", 0: "out1", 1:"out2"}
+    render_network.draw_net(network, filename="3x2onetomany", node_names=node_names)
+    render_network.draw_map_genotype(config,genome,'3x2oneotmanymap', node_names=node_names)
+    return network
 
 def convert_to_direction(x):
     if x[0] < -0.33:
@@ -271,18 +392,83 @@ def binary_3x3_optimal_genome():
 
     genome = Genome(nodes, connections)
     import extended_maps
-    network = extended_maps.create(genome, config, 3)
     import render_network
-    render_network.draw_net(network,False, "optimal3x3")
+    render_network.draw_map_genotype(config, genome,"optimal_map",'svg')
+    network = extended_maps.create(genome, config, 3, 3)
+    # import render_network
+    # render_network.draw_net(network,False, "optimal3x3")
     from eval import eval_one_to_one_3x3
     from switch_neuron import Agent
-    agent  = Agent(network,reorder_inputs, convert_to_action)
+    agent  = Agent(network,reorder_inputs, convert_to_action3)
     score = eval_one_to_one_3x3(agent, 1000, 100)
     print(score)
 
     # agent = solve_one_to_one_3x3()
     # score = eval_one_to_one_3x3(agent, 1000, 100)
     # print(score)
+
+def solve_3x10_one2one():
+    n=3
+    m=10
+    Config = namedtuple("Config",["genome_config"])
+    Genome_config = namedtuple("Genome_config", ["input_keys", "output_keys", "activation_defs", "aggregation_function_defs"])
+    from utilities import identity
+    from neat.activations import sigmoid_activation
+    from neat.aggregations import sum_aggregation, product_aggregation
+    activations = {
+        "sigmoid": sigmoid_activation,
+        "identity": identity
+    }
+    aggregations = {
+        "sum": sum_aggregation,
+        "product": product_aggregation
+    }
+    genome_config = Genome_config(input_keys=[-1,-2], output_keys= [0], activation_defs=activations, aggregation_function_defs=aggregations)
+    config = Config(genome_config=genome_config)
+    Genome = namedtuple("Genome", ["nodes", "connections"])
+
+    gatinglayer = Node(bias=1, activation='identity', aggregation='product', is_isolated=False, is_switch=False)
+    switchlayer = Node(bias=0, activation='identity', aggregation='sum', is_isolated=False, is_switch=True)
+    outputlayer = Node(bias=0, activation='identity', aggregation="sum", is_isolated=True, is_switch=False)
+
+    nodes = {0: outputlayer,
+             1: gatinglayer,
+             2: switchlayer}
+
+    inpgatconn = Connection(key = (-1,1), one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    inpswiconn = Connection(key = (-1,2),one2one=True, extended=True, uniform=False, weight=4, enabled=True, is_mod=False)
+    gatswiconn = Connection(key = (1,2),one2one=True, extended=False, uniform=True, weight=1/m, enabled=True, is_mod=True)
+    rewgatconn = Connection(key = (-2,1),one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+    swioutconn = Connection(key = (2,0),one2one=True, extended=False, uniform=True, weight=1, enabled=True, is_mod=False)
+
+    connections = {
+        (-1,1) : inpgatconn,
+        (-1,2) : inpswiconn,
+        (-2,1) : rewgatconn,
+        (1,2) : gatswiconn,
+        (2,0) : swioutconn
+    }
+
+    genome = Genome(nodes, connections)
+    import extended_maps
+    import render_network
+    network = extended_maps.create(genome, config,3,10)
+
+    from functools import partial
+    prep_outs = partial(convert_to_action,range=4,num_actions=10)
+    from switch_neuron import Agent
+    agent  = Agent(network,reorder_inputs, prep_outs)
+    import render_network
+    node_names= {-1: "Input1", -2: "Reward", -3: "Input2", -4: "Input3", 0: "out"}
+    render_network.draw_net(network, filename="3x10_one2one", node_names=node_names)
+    render_network.draw_map_genotype(config,genome,'3x10_one2one_map', node_names=node_names)
+    from eval import eval_one_to_one_3x10
+    ev = partial(eval_one_to_one_3x10,num_episodes=300,rand_iter=100,snapshot_inter=10,descriptor_out=False,
+                                      mode='trainig', trials=20, debug=False)
+    scores = [ev(agent) for _ in range(1)]
+    scores.sort()
+    print(scores)
+    return agent
 
 #For the guided maps encoding
 #input order is: input1, reward, input2, input3
@@ -291,4 +477,4 @@ def reorder_inputs(l):
     return new_l
 
 if __name__ == "__main__":
-    binary_3x3_optimal_genome()
+    solve_3x10_one2one()
