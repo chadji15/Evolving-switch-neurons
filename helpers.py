@@ -1,7 +1,8 @@
 import pickle
-from eval import eval_one_to_one_3x3
+from eval import eval_one_to_one_3x3, eval_one_to_one_3x10
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation
-from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_direction, solve_one_to_one_3x3
+from solve import convert_to_action2, convert_to_action3, convert_to_action4, convert_to_action3x10, \
+    convert_to_direction, solve_one_to_one_3x3
 from switch_neat import Agent
 import switch_neat
 import switch_maps
@@ -40,13 +41,14 @@ def get_best_agent(size, config_file, resfile='final.p'):
     conf = Config(DeapGuidedMapGenome, DefaultReproduction,
                   DefaultSpeciesSet, DefaultStagnation,
                   config_file)
-    net = guided_maps.create(ind, conf, 3)
-    if size == 2:
-        outf = convert_to_action2
-    elif size == 3:
-        outf = convert_to_action3
-    elif size == 4:
-        outf = convert_to_action4
+    net = guided_maps.create(ind, conf, 3, 10)
+    # if size == 2:
+    #     outf = convert_to_action2
+    # elif size == 3:
+    #     outf = convert_to_action3
+    # elif size == 4:
+    #     outf = convert_to_action4
+    outf = convert_to_action3x10
     #inf = lambda x: x
     inf = guided_maps.reorder_inputs
     agent = Agent(net, inf, outf)
@@ -64,14 +66,14 @@ def get_best_tmaze():
     return agent
 
 def verify_best_agent():
-    agent = get_best_agent(3, 'config/deap-guided-skinner3', 'out/3x3_qd_maps/guided_maps/skinner3_final.p')
-    eps = 60
-    randiter = 30
-    snapiter = 3
-    satfit = 48
-    score, bd = eval_one_to_one_3x3(agent, eps,randiter, snapiter, True, 'training')
+    agent = get_best_agent(3, 'config/deap-guided-skinner-general', 'out/qd_maps/skinner3x10_final.p')
+    eps = 200
+    randiter = 100
+    snapiter = 10
+    satfit = 146
+    score, bd = eval_one_to_one_3x10(agent, eps,randiter, snapiter, True, 'training')
     print(f"score: {score}, bd: {bd}")
-    scores = [eval_one_to_one_3x3(agent,eps,randiter,snapiter,False,'test') for _ in range(100)]
+    scores = [eval_one_to_one_3x10(agent,eps,randiter,snapiter,False,'test') for _ in range(100)]
     scores.sort()
     print(f"scores: {scores}")
     print(f"{len(list(filter( lambda x: x < satfit, scores)))} scores are below {satfit}")
@@ -312,4 +314,4 @@ def visualize_genotype_22():
     draw_map_genotype(conf, ind,"map_genotype22")
 
 if __name__ == '__main__':
-    visualize_genotype_22()
+    verify_best_agent()
