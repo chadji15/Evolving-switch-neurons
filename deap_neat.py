@@ -5,6 +5,7 @@ import pickle
 import random
 from math import sqrt
 
+import guided_mapsv2
 import yaml
 from deap import base, creator, tools
 from qdpy.algorithms.deap import DEAPQDAlgorithm
@@ -56,6 +57,13 @@ class DeapGuidedMapGenome(guided_maps.GuidedMapGenome):
         self.key = key
 
         # (gene_key, gene) pairs for gene sets.
+        self.connections = {}
+        self.nodes = {}
+
+class DeapGuidedv2MapGenome(guided_mapsv2.GuidedMapv2Genome):
+
+    def __init__(self,key):
+        self.key = {}
         self.connections = {}
         self.nodes = {}
 
@@ -182,6 +190,12 @@ def main():
         map_size = params['map_size']
         inner_maps = params['inner_maps']
         createf = partial(guided_maps.create, map_size=map_size, inner_maps= inner_maps)
+        inf = guided_maps.reorder_inputs
+    elif params['encoding'] == 'guided-maps-v2':
+        genome_type = DeapGuidedv2MapGenome
+        map_size = params['map_size']
+        inner_maps = params['inner_maps']
+        createf = partial(guided_mapsv2.create, map_size=map_size, inner_maps= inner_maps)
         inf = guided_maps.reorder_inputs
 
     evaluate_skinner3 = partial(evaluate_skinner,
