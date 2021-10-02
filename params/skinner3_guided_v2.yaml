@@ -1,0 +1,22 @@
+algorithm: MapElites #MapElites/ NoveltySearch/ CVTMapElites
+nb_features: 4
+bins_per_dim: 10
+nb_bins: [20,5,20,5]
+max_items_per_bin: 1                     # The number of items in each bin of the grid
+fitness_domain: [[0., 60.]]               # The domain of each fitness objective (here we only have one objective)
+features_domain: [[0., 1.], [0., 1.], [0., 1.], [0., 1.]] # The domain of each feature
+init_batch_size: 2000
+nb_iterations: 4000       # The total number of allowed evaluations for this algorithm
+batch_size: 128     # The number of evaluations in each subsequent batch
+mutation_pb: 1
+final_filename: out/3x3_qd_maps/guided_maps/skinner3_final.p
+#shape: 4096
+#####################Encoding parameters###############
+encoding: guided-maps #direct/ map-based/ guided-maps
+map_size: 3
+inner_maps: 3
+####################Problem parameters#################
+num_episodes: 60
+rand_iter: 30
+snap_iter: 3
+sat_fit: 48
