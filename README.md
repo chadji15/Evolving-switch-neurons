@@ -34,11 +34,11 @@ Manual control:
 Run some experiments
 ---------------------
 ---
-<h3>NEAT:</h3>  
-
+NEAT: 
+----
 To run a NEAT experiment with switch neurons, the main file used is evolve.py.  
 Execution:  
-`python evolve.py -s <scheme> -c <config> -g <generations> -p <problem>`  
+`python evolve.py -s <scheme> -c <config> -g <generations> -p <problem>`
 Where `<scheme>` is one of `switch` or `switch_maps`. There is also an option for `recurrent` but it
 hasn't been tested much.  
 `<config>` is the path to the config file for NEAT. A config file defines the various probabilities
@@ -66,12 +66,17 @@ can change with a simple change of the evaluation and creation function.
 Example:
 >python guided_maps.py config/binary-guided-maps 500 out 0
 
-<h3>Quality Diversity:</h3>
+Quality Diversity:
+--------
 The main file used for quality diversity experiments is deap_neat.py  
-`python deap_neat.py -p <problem> -c <config> -hp <params>`   
+`python deap_neat.py -p <problem> -c <config> -hp <params>`
+
+
 `<problem>` is one of `skinner2`, `skinner3`, `skinner4`, `skinner3x10`, `tmaze` although tmaze is
 not tested much.  
+
 `<config>` is the path to the NEAT config file.
+
 `<params>` is the path to a second configuration file that defines the parameters of the problem
 and the QD algorithm. Such parameter files are provided under /params.  
 *Note*: Mutation probability is always set to 1 due to the fact that 
