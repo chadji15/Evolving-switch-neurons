@@ -2,6 +2,8 @@
 #This is an early implementation of a preliminary experiment with very specific guidance provided to NEAT
 #in order to see if it can help the process. If so, then we have a good case for trying with a more
 #generalized toolkit.
+# It's intended to help the evolutionary algorithm by imposing some constraints and thus reduce the complexity of
+# the problem
 #######################################
 import copy
 import os
@@ -63,6 +65,7 @@ class GuidedMapGenome(DefaultGenome):
         param_dict['connection_gene_type'] =GuidedMapConnectionGene
         return DefaultGenomeConfig(param_dict)
 
+# Calculate a number of weights equally spread over a range
 def calculate_weights(is_uniform, weight, map_size):
     if is_uniform:
         return [weight for _ in range(map_size)]

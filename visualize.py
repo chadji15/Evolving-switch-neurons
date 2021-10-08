@@ -1,5 +1,5 @@
 #Straight up copied from the neat's github repository. For some reason it is not included in the package.
-
+# Only the plot stats function is used in other files.
 from __future__ import print_function
 
 import copy

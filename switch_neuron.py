@@ -1,3 +1,7 @@
+##################3
+# In this file we model the switch neuron and a network containing switch neurons.
+# We basically translate the descriptions and equations in Mr. Vassiliades paper to code.
+# For a better understanding of the following code read the relevant part in his paper.
 import math
 import sys
 from math import floor

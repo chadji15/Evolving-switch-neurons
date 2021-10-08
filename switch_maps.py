@@ -1,3 +1,7 @@
+# This file contains the implementation of the map based encoding paired with the switch neurons.
+# It requires different genomes because there are some additional parameters, such as the connection scheme
+# and wether the node is a map or not.
+
 import os
 import pickle
 
@@ -266,9 +270,7 @@ def run(config_file):
     fp = open('winner_net.bin','wb')
     pickle.dump(winner_net,fp)
     fp.close()
-    #visualize.draw_net(config, winner, True)
-    #visualize.plot_stats(stats, ylog=False, view=True)
-    #visualize.plot_species(stats, view=True)
+
 
 def main():
     # Determine path to configuration file. This path manipulation is

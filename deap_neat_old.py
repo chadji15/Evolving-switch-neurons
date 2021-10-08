@@ -1,7 +1,9 @@
+# This is an older version of the deap_neat.py file. It's kept purely because it's included by some other files.
+#
+#
+
 import argparse
-import copy
-import os
-import pickle
+
 import random
 from math import sqrt
 

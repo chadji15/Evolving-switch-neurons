@@ -1,18 +1,18 @@
+###
+# This file contains evaluation functions for all the problems used in the experiments.
+#All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
+#an activate function which takes as input a vector (list) and returns an output which corresponds to the action
+#of the agent. The actions are described in each environment
+##############
 import copy
 import math
 import random
-
 import gym
 import gym_association_task
 import t_maze
 from functools import partial
 #import logging
 #logging.basicConfig(filename="skinner.log", level=logging.DEBUG, format="%(message)s")
-###
-#All the following evaluation functions take as argument an agent variable. It is assumed that the agent has
-#an activate function which takes as input a vector (list) and returns an output which corresponds to the action
-#of the agent. The actions are described in each environment
-##############
 import numpy as np
 from utilities import shuffle_lists
 
@@ -123,6 +123,7 @@ def eq_snapshots(s1,s2):
 #     else:
 #         return s
 
+# Generic evaluation method for all the one-to-one association problems
 #Version 3, separate training and test associations and change the descriptor, 27 associations, float descriptor
 def eval_one_to_one(env_name, agent, num_episodes=72, rand_iter=12,snapshot_inter=3, descriptor_out=False,
                     mode = None, trials = 20, debug=False):
@@ -237,6 +238,9 @@ def int_to_action(x):
         return "Right"
     return "Forward"
 
+#The following evaluator classes were used with my implementation of the novelty search. I deemed it necessary
+# to create these because it was needed to associate each evaluation function with a distance function as well as
+# reevaluate the archive at every generation.
 #Assuming 8 episodes and one switch, the optimal fitness for an agent would be 6 * 1 + 2 * 0.2 = 6.4
 #The one switch will occur at 2 + y
 class TmazeEvaluator():

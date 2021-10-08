@@ -1,3 +1,10 @@
+###############3
+# This is the main file used for running experiments with the NEAT algorithm and switch neurons.
+# It uses the neat-python package and tries to squeeze the utility of all the relevant files into one.
+# It takes from the command line the parameters of the experiment and prints on the standard output the progress of
+# the experiment. It also produces a binary file with the winning genome, a file with the maximum fitness
+# progression and a visualization of the network if told to.
+
 import pickle
 import argparse
 from functools import partial

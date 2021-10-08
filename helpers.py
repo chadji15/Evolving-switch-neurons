@@ -1,3 +1,7 @@
+# Some function I found useful over the course of the past months. Feel free to change anything.
+# No function is used in any other file. They are primarily used after the completion of an experiment
+# for exploring the results.
+
 import pickle
 from eval import eval_one_to_one_3x3, eval_one_to_one_3x10
 from neat import Config, DefaultReproduction, DefaultSpeciesSet, DefaultStagnation

@@ -1,4 +1,9 @@
-
+######################
+# This file contains several functions for visualizations.
+# 1. Draw the extended network
+# 2. Draw the genotype (either from the direct encoding or the map based encoding)
+# 3. Draw the genotype of a guided map genome.
+# It uses the graphviz package
 import copy
 import warnings
 from collections import namedtuple

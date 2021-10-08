@@ -1,3 +1,5 @@
+# Some manually designed networks that solve the problems we use for the evaluations.
+
 import copy
 from collections import namedtuple
 from dataclasses import dataclass

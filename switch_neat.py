@@ -1,7 +1,9 @@
+#######################
+# This file defines the genome to be used with the NEAT algorithm. The need for a custom genome rose due to
+# the inclusion of the switch neurons. We also define a function that takes a genome and returns the corresponding network.
+
 from __future__ import print_function
-
 import pickle
-
 import visualize
 from neat.attributes import FloatAttribute, BoolAttribute, StringAttribute
 from neat.genes import DefaultNodeGene, DefaultConnectionGene

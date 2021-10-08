@@ -1,7 +1,7 @@
 ####################
 # Version 2 of the guided maps. We relax the constraint that any hiddent neuron that is not a switch neuron
-# is a gating neuron
-################################3
+# is a gating neuron. Now each neuron can mutate to a switch neuron, a gating neuron or a linear sum neuron.
+################################
 
 import copy
 import os
