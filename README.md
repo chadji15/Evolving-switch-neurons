@@ -67,8 +67,8 @@ Example:
 >python guided_maps.py config/binary-guided-maps 500 out 0
 
 <h3>Quality Diversity:</h3>
-The main file used for quality diversity experiments is deap_neat.py
-`python deap_neat.py -p <problem> -c <config> -hp <params>`  
+The main file used for quality diversity experiments is deap_neat.py  
+`python deap_neat.py -p <problem> -c <config> -hp <params>`   
 `<problem>` is one of `skinner2`, `skinner3`, `skinner4`, `skinner3x10`, `tmaze` although tmaze is
 not tested much.  
 `<config>` is the path to the NEAT config file.
