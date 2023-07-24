@@ -1,6 +1,6 @@
 cloudpickle==1.3.0
 cycler==0.10.0
-future==0.18.2
+future==0.18.3
 graphviz==0.14.1
 gym==0.17.2
 -e git+https://github.com/chadji15/Evolving-switch-neurons.git@be1ab8cbabe74f1636f35f052357a6d25d8050b3#egg=gym_association_task&subdirectory=gym_association_task
